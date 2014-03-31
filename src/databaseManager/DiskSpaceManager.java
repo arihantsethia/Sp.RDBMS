@@ -32,13 +32,14 @@ public class DiskSpaceManager {
 	 * @return FileChannel corresponding to the opened file
 	 */
 
-	public static FileChannel openFile(final String fileName) {
+	public FileChannel openFile(final String fileName) {
 		RandomAccessFile file;
 		FileChannel fileChannel = null;
 		try {
 			file = new RandomAccessFile(fileName, "rw");
 			fileChannel = file.getChannel();
 		} catch (FileNotFoundException error) {
+			// TODO Auto-generated catch block
 			try {
 				File newFile = new File(fileName);
 				if (newFile.createNewFile()) {
@@ -47,6 +48,7 @@ public class DiskSpaceManager {
 					System.out.println("File Creation Unsuccesful.");
 				}
 			} catch (IOException e) {
+				// TODO Auto-generated catch block
 				System.out.println("Couldn't Create File : " + fileName);
 				e.printStackTrace();
 				System.exit(1);
@@ -77,7 +79,7 @@ public class DiskSpaceManager {
 	 *            : block number of the corresponding block
 	 * @return : returns the bytebuffer of the read data.
 	 */
-	public static ByteBuffer read(final FileChannel fileChannel,
+	public ByteBuffer read(final FileChannel fileChannel,
 			final long block) {
 		MappedByteBuffer buffer = null;
 		try {
@@ -86,6 +88,7 @@ public class DiskSpaceManager {
 						* BLOCK_SIZE, BLOCK_SIZE);
 			}
 		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			System.out.println("Couldn't retrieve data from required file");
 			e.printStackTrace();
 			System.exit(1);
@@ -93,18 +96,19 @@ public class DiskSpaceManager {
 		return buffer;
 	}
 
-	public static ByteBuffer read(final String fileName, final long block) {
+	public ByteBuffer read(final String fileName, final long block) {
 		FileChannel fileChannel = openFile(fileName);
 		return read(fileChannel, block);
 	}
 
-	public static long write(final FileChannel fileChannel, final long block,
+	public long write(final FileChannel fileChannel, final long block,
 			final ByteBuffer writeBuffer) {
 		try {
 			if (isValidBlockNumber(fileChannel, block)) {
 				return fileChannel.write(writeBuffer, block * BLOCK_SIZE);
 			}
 		} catch (IOException e) {
+			// TODO Auto-generated catch block
 			System.out.println("Couldn't write to the required file");
 			e.printStackTrace();
 			System.exit(1);
@@ -112,13 +116,13 @@ public class DiskSpaceManager {
 		return 0;
 	}
 
-	public static long write(final String fileName, final long block,
+	public long write(final String fileName, final long block,
 			final ByteBuffer writeBuffer) {
 		FileChannel fileChannel = openFile(fileName);
 		return write(fileChannel, block, writeBuffer);
 	}
 
-	public static boolean isValidBlockNumber(final FileChannel fileChannel,
+	public boolean isValidBlockNumber(final FileChannel fileChannel,
 			final long block) {
 		try {
 			if (fileChannel.size() <= (block + 1) * BLOCK_SIZE) {
