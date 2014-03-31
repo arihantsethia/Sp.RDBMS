@@ -22,10 +22,13 @@ public class DiskSpaceManager {
 	public DiskSpaceManager() {
 
 	}
-	
+
 	/**
-	 * Function call to open file give by filename if it exists else create a new file.
-	 * @param fileName : name of the file to be opened
+	 * Function call to open file give by filename if it exists else create a
+	 * new file.
+	 * 
+	 * @param fileName
+	 *            : name of the file to be opened
 	 * @return FileChannel corresponding to the opened file
 	 */
 
@@ -51,11 +54,27 @@ public class DiskSpaceManager {
 		}
 		return fileChannel;
 	}
-	
+
+	public static boolean closeFile(final FileChannel fileChannel) {
+		try {
+			fileChannel.close();
+			return true;
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			System.out.println("Couldn't close the required file.");
+			e.printStackTrace();
+		}
+		return false;
+	}
+
 	/**
-	 * This function reads the required block from the file  
-	 * @param fileChannel : FileChannel corresponding to file from which data has to be read.
-	 * @param block : block number of the corresponding block
+	 * This function reads the required block from the file
+	 * 
+	 * @param fileChannel
+	 *            : FileChannel corresponding to file from which data has to be
+	 *            read.
+	 * @param block
+	 *            : block number of the corresponding block
 	 * @return : returns the bytebuffer of the read data.
 	 */
 	public static ByteBuffer read(final FileChannel fileChannel,
