@@ -31,6 +31,7 @@ public class BufferManager {
 	private DiskSpaceManager diskSpaceManager;
 	private ByteBuffer[] pagePool;
 	private Map<Long, FileChannel> openFiles;
+	private RelationHolder relationHolder;
 
 	public BufferManager() {
 		diskSpaceManager = new DiskSpaceManager();
@@ -40,6 +41,7 @@ public class BufferManager {
 		lookUpMap = new HashMap<PhysicalAddress, Long>();
 		openFiles = new HashMap<Long, FileChannel>();
 		pagePool = new ByteBuffer[MAX_PAGE_COUNT];
+		relationHolder = RelationHolder.getRelationHolder();
 		initializeTable();
 	}
 
@@ -99,8 +101,8 @@ public class BufferManager {
 		}
 	}
 
-	private ByteBuffer getPageFromPool(final long relation, final long block) {
-		return getPageFromPool(getPhysicalAddress(relation, block));
+	private ByteBuffer getPageFromPool(final long relationId, final long block) {
+		return getPageFromPool(getPhysicalAddress(relationId, block));
 	}
 
 	private boolean pinPage(final long logicalAddress) {
@@ -112,8 +114,8 @@ public class BufferManager {
 		}
 	}
 
-	private boolean pinPage(final long relation, final long block) {
-		PhysicalAddress physicalAddress = getPhysicalAddress(relation, block);
+	private boolean pinPage(final long relationId, final long block) {
+		PhysicalAddress physicalAddress = getPhysicalAddress(relationId, block);
 		if (lookUpMap.containsKey(physicalAddress)) {
 			return pinPage(lookUpMap.get(physicalAddress));
 		} else {
@@ -130,8 +132,8 @@ public class BufferManager {
 		}
 	}
 
-	private boolean unPinPage(final long relation, final long block) {
-		PhysicalAddress physicalAddress = getPhysicalAddress(relation, block);
+	private boolean unPinPage(final long relationId, final long block) {
+		PhysicalAddress physicalAddress = getPhysicalAddress(relationId, block);
 		if (lookUpMap.containsKey(physicalAddress)) {
 			return unPinPage(lookUpMap.get(physicalAddress));
 		} else {
@@ -139,8 +141,10 @@ public class BufferManager {
 		}
 	}
 
-	private PhysicalAddress getPhysicalAddress(final long relation, final long block) {
-		return new PhysicalAddress(relation,block*DiskSpaceManager.BLOCK_SIZE);
+	private PhysicalAddress getPhysicalAddress(final long relationId,
+			final long block) {
+		return new PhysicalAddress(relationId, block
+				* DiskSpaceManager.BLOCK_SIZE);
 	}
 
 	private boolean isPinned(final PhysicalAddress physicalAddress) {
@@ -151,42 +155,46 @@ public class BufferManager {
 		}
 	}
 
-	private boolean isPinned(final long relation, final long block) {
-		return isPinned(getPhysicalAddress(relation, block));
+	private boolean isPinned(final long relationId, final long block) {
+		return isPinned(getPhysicalAddress(relationId, block));
 	}
 
 	private boolean isPresentInPool(final PhysicalAddress physicalAddress) {
 		return lookUpMap.containsKey(physicalAddress);
 	}
 
-	private boolean isPresentInPool(final long relation, final long block) {
-		return isPresentInPool(getPhysicalAddress(relation, block));
+	private boolean isPresentInPool(final long relationId, final long block) {
+		return isPresentInPool(getPhysicalAddress(relationId, block));
 	}
 
-	public ByteBuffer read(final long relation, final long block) {
-		if (isPresentInPool(relation, block)) {
-			return getPageFromPool(relation, block);
+	public ByteBuffer read(final long relationId, final long block) {
+		if (isPresentInPool(relationId, block)) {
+			return getPageFromPool(relationId, block);
 		} else {
-			if (!openFiles.containsKey(relation)) {
-				FileChannel newFileChannel = diskSpaceManager.openFile("asd");
-				openFiles.put(relation, newFileChannel);
+			if (!openFiles.containsKey(relationId)) {
+				FileChannel newFileChannel = diskSpaceManager
+						.openFile(relationHolder.getRelation(relationId)
+								.getFileName());
+				openFiles.put(relationId, newFileChannel);
 			}
-			ByteBuffer newPage = diskSpaceManager.read(openFiles.get(relation),
+			ByteBuffer newPage = diskSpaceManager.read(openFiles.get(relationId),
 					block);
-			addToPagePool(getPhysicalAddress(relation, block), newPage);
+			addToPagePool(getPhysicalAddress(relationId, block), newPage);
 			return newPage;
 		}
 	}
 
 	public boolean writePhysical(final PhysicalAddress physicalAddress) {
-		if(lookUpMap.containsKey(physicalAddress)){
+		if (lookUpMap.containsKey(physicalAddress)) {
 			int logicalPageNumber = lookUpMap.get(physicalAddress).intValue();
 			if (isDirty[logicalPageNumber]) {
 				if (!openFiles.containsKey(physicalAddress.id)) {
-					FileChannel newFileChannel = diskSpaceManager.openFile("asd");
+					FileChannel newFileChannel = diskSpaceManager
+							.openFile(relationHolder.getRelation(physicalAddress.id).getFileName());
 					openFiles.put(physicalAddress.id, newFileChannel);
 				}
-					diskSpaceManager.write(openFiles.get(physicalAddress.id), physicalAddress.offset, pagePool[logicalPageNumber]);
+				diskSpaceManager.write(openFiles.get(physicalAddress.id),
+						physicalAddress.offset, pagePool[logicalPageNumber]);
 			}
 			isDirty[logicalPageNumber] = false;
 			return true;
@@ -194,9 +202,9 @@ public class BufferManager {
 		return false;
 	}
 
-	public boolean write(final long relation, final long block,
+	public boolean write(final long relationId, final long block,
 			final int blockSeek, final ByteBuffer writeBuffer) {
-		PhysicalAddress physicalAddress = getPhysicalAddress(relation, block);
+		PhysicalAddress physicalAddress = getPhysicalAddress(relationId, block);
 		if (lookUpMap.containsKey(physicalAddress)) {
 			isDirty[lookUpMap.get(physicalAddress).intValue()] = true;
 			byte[] writeStream = new byte[writeBuffer.capacity()];

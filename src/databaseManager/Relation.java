@@ -76,7 +76,11 @@ public class Relation {
 		return numberOfRecords;
 	}
 
-	public String getRelatonName() {
+	public long getRelationId(){
+		return id;
+	}
+	
+	public String getRelationName() {
 		return relationName;
 	}
 
