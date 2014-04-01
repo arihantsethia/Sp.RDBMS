@@ -21,23 +21,28 @@ public class Attribute {
 	private boolean nullable;
 	private ArrayList values;
 
-	public Attribute(String _attributeName, Type _type, int _id) {
+	public Attribute(String _attributeName, Type _type, long _id, long _parentId) {
 		attributeName = _attributeName;
 		type = _type;
 		id = _id;
+		parentId = _parentId;
+		nullable = true;
 		values = new ArrayList();
 	}
 
-	public Attribute(String _attributeName, Type _type, int _id, int _size) {
+	public Attribute(String _attributeName, Type _type, long _id,
+			long _parentId, int _size) {
 		attributeName = _attributeName;
 		type = _type;
 		id = _id;
+		parentId = _parentId;
 		size = _size;
+		nullable = true;
 		values = new ArrayList();
 	}
 
-	public Attribute(String _attributeName, Type _type, int _id, int _parentId,
-			boolean _nullable, int _size) {
+	public Attribute(String _attributeName, Type _type, long _id,
+			long _parentId, int _size, boolean _nullable) {
 		attributeName = _attributeName;
 		type = _type;
 		id = _id;

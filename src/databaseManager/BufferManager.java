@@ -22,7 +22,7 @@ public class BufferManager {
 
 	private long clockTime = 0;
 	/**
-	 * If page is pinned then set the TIME_INDEX of the page to -1 If page is
+	 * If page is in memory & pinned then set the TIME_INDEX of the page to -1 If page is
 	 * not present then the TIME_INDEX of the page = 0 If page is in memory then
 	 * the TIME_INDEX > 0
 	 */
@@ -32,13 +32,13 @@ public class BufferManager {
 	private Map<Long, Long> lookUpMap;
 	private DiskSpaceManager diskSpaceManager;
 	private ByteBuffer[] pagePool;
-	private Map<Integer,FileChannel> openFiles;
+	private Map<Long,FileChannel> openFiles;
 	public BufferManager() {
 		diskSpaceManager = new DiskSpaceManager();
 		isDirty = new boolean[MAX_PAGE_COUNT];
 		lookUpTable = new long[MAX_PAGE_COUNT][2];
 		lookUpMap = new HashMap<Long, Long>();
-		openFiles = new HashMap<Integer,FileChannel>();
+		openFiles = new HashMap<Long,FileChannel>();
 		pagePool = new ByteBuffer[MAX_PAGE_COUNT];
 		initializeTable();
 	}
@@ -101,7 +101,7 @@ public class BufferManager {
 		}
 	}
 	
-	private ByteBuffer getPageFromPool(final int relation, final long block) {
+	private ByteBuffer getPageFromPool(final long relation, final long block) {
 		return getPageFromPool(getPhysicalAddress(relation,block));
 	}
 
@@ -114,7 +114,7 @@ public class BufferManager {
 		}
 	}
 
-	private boolean pinPage(final int relation, final long block) {
+	private boolean pinPage(final long relation, final long block) {
 		long physicalAddress = getPhysicalAddress(relation, block);
 		if (lookUpMap.containsKey(physicalAddress)) {
 			return pinPage(lookUpMap.get(physicalAddress));
@@ -132,7 +132,7 @@ public class BufferManager {
 		}
 	}
 
-	private boolean unPinPage(final int relation, final long block) {
+	private boolean unPinPage(final long relation, final long block) {
 		long physicalAddress = getPhysicalAddress(relation, block);
 		if (lookUpMap.containsKey(physicalAddress)) {
 			return unPinPage(lookUpMap.get(physicalAddress));
@@ -141,7 +141,7 @@ public class BufferManager {
 		}
 	}
 
-	private long getPhysicalAddress(final int relation, final long block) {
+	private long getPhysicalAddress(final long relation, final long block) {
 		long physicalAddress = 0;
 		// Need to implement this
 		return physicalAddress;
@@ -155,7 +155,7 @@ public class BufferManager {
 		}
 	}
 
-	private boolean isPinned(final int relation, final long block) {
+	private boolean isPinned(final long relation, final long block) {
 		return isPinned(getPhysicalAddress(relation, block));
 	}
 
@@ -163,11 +163,11 @@ public class BufferManager {
 		return lookUpMap.containsKey(physicalAddress);
 	}
 
-	private boolean isPresentInPool(final int relation, final long block) {
+	private boolean isPresentInPool(final long relation, final long block) {
 		return isPresentInPool(getPhysicalAddress(relation, block));
 	}
 	
-	public ByteBuffer read(final int relation, final long block){
+	public ByteBuffer read(final long relation, final long block){
 		if(isPresentInPool(relation,block)){
 			return getPageFromPool(relation,block);
 		}else{
@@ -181,7 +181,7 @@ public class BufferManager {
 		}
 	}
 	
-	public ByteBuffer write(final int relation, final long block){
+	public ByteBuffer write(final long relation, final long block){
 		//Write to the logical address;
 		//isDirty[physicalAddress] = true; 
 		return null;
