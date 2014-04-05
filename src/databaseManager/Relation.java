@@ -73,7 +73,7 @@ public class Relation {
 	 * @return
 	 */
 	public long getRecordsPerBlock() {
-		long numberOfRecords = (int) (DiskSpaceManager.BLOCK_SIZE / (1 + 8 * recordSize));
+		long numberOfRecords = (int) (DiskSpaceManager.BLOCK_SIZE*8 / (1 + 8 * recordSize));
 		return numberOfRecords;
 	}
 

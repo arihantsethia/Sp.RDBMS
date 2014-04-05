@@ -71,7 +71,7 @@ public class BufferManager {
 	private void initializeTable() {
 		for (int i = 0; i < MAX_PAGE_COUNT; i++) {
 			isDirty[i] = false;
-			lookUpTable[i].id = -1;
+			lookUpTable[i] = new PhysicalAddress(-1,-1);
 			clockTick[i] = 0;
 		}
 		lookUpMap.clear();
