@@ -85,6 +85,7 @@ public class BufferManager {
 		while (true) {
 			if (clockTick[logicalPageNumber] == 0) {
 				writePhysical(lookUpTable[logicalPageNumber]);
+				lookUpMap.remove(lookUpTable[logicalPageNumber]);
 				break;
 			} else {
 				if (clockTick[logicalPageNumber] == -1) {
