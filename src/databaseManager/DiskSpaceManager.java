@@ -79,8 +79,7 @@ public class DiskSpaceManager {
 	 *            : block number of the corresponding block
 	 * @return : returns the bytebuffer of the read data.
 	 */
-	public ByteBuffer read(final FileChannel fileChannel,
-			final long block) {
+	public ByteBuffer read(final FileChannel fileChannel, final long block) {
 		MappedByteBuffer buffer = null;
 		try {
 			if (isValidBlockNumber(fileChannel, block)) {

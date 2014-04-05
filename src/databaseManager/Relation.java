@@ -63,9 +63,10 @@ public class Relation {
 		}
 	}
 
-	public boolean addRecord(){
+	public boolean addRecord() {
 		return true;
 	}
+
 	/**
 	 * Let number of records per block = X, Let the recordSize = Y, then X*(1) +
 	 * X*(8*Y) = BLOCK_SIZE
@@ -73,14 +74,14 @@ public class Relation {
 	 * @return
 	 */
 	public long getRecordsPerBlock() {
-		long numberOfRecords = (int) (DiskSpaceManager.BLOCK_SIZE*8 / (1 + 8 * recordSize));
+		long numberOfRecords = (int) (DiskSpaceManager.BLOCK_SIZE * 8 / (1 + 8 * recordSize));
 		return numberOfRecords;
 	}
 
-	public long getRelationId(){
+	public long getRelationId() {
 		return id;
 	}
-	
+
 	public String getRelationName() {
 		return relationName;
 	}
@@ -96,17 +97,18 @@ public class Relation {
 	public long getRecordSize() {
 		return recordSize;
 	}
-	
+
 	public ArrayList<Attribute> getAttributes() {
 		return attributes;
 	}
 	
-	public ByteBuffer getMetaData(){
+	public ByteBuffer serialize() {
+		// TODO Auto-generated method stub
 		return null;
 	}
-	
+
 	public void setRelationname(String _relationName) {
 		relationName = _relationName;
 		lastModified = (new Date()).getTime();
-	}
+	}	
 }

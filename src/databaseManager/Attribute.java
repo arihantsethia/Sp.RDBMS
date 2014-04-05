@@ -13,8 +13,25 @@ public class Attribute {
 		public static int toInt(Type value) {
 			return value.ordinal();
 		}
-	};
 
+		public static int getSize(Type _type) {
+			if (_type == Attribute.Type.Int) {
+				return INT_SIZE;
+			} else if (_type == Attribute.Type.Char) {
+				return 1;
+			} else if (_type == Attribute.Type.Boolean) {
+				return CHAR_SIZE;
+			} else if (_type == Attribute.Type.Long) {
+				return LONG_SIZE;
+			} else if (_type == Attribute.Type.Float) {
+				return FLOAT_SIZE;
+			} else if (_type == Attribute.Type.Double) {
+				return DOUBLE_SIZE;
+			} else
+				return 0;
+		}
+	};
+	
 	public static final int CHAR_SIZE = Character.SIZE / Byte.SIZE;
 	public static final int FLOAT_SIZE = Float.SIZE / Byte.SIZE;
 	public static final int DOUBLE_SIZE = Double.SIZE / Byte.SIZE;
@@ -38,6 +55,7 @@ public class Attribute {
 		id = _id;
 		parentId = _parentId;
 		nullable = true;
+		size = getSize();
 		// values = new ArrayList();
 	}
 
@@ -74,23 +92,25 @@ public class Attribute {
 		parentId = serializedBuffer.getLong();
 		size = serializedBuffer.getInt();
 		type = Type.toType(serializedBuffer.getInt());
-		nullable = serializedBuffer.get()!=0;
+		nullable = serializedBuffer.get() != 0;
 	}
 
 	public static Type stringToType(final String _type) {
-		if (_type.equalsIgnoreCase("INT")) {
-			return Type.Int;
-		} else if (_type.equalsIgnoreCase("CHAR")) {
-			return Type.Char;
-		} else if (_type.equalsIgnoreCase("DOUBLE")) {
-			return Type.Double;
-		} else if (_type.equalsIgnoreCase("FLOAT")) {
-			return Type.Float;
-		} else if (_type.equalsIgnoreCase("LONG")) {
-			return Type.Long;
-		} else {
-			return Type.Undeclared;
+		Type returnType = Type.Undeclared;
+		if (_type.toLowerCase().equalsIgnoreCase("int")) {
+			returnType = Attribute.Type.Int;
+		} else if (_type.toLowerCase().equalsIgnoreCase("long")) {
+			returnType = Attribute.Type.Long;
+		} else if (_type.toLowerCase().equalsIgnoreCase("bool")) {
+			returnType = Attribute.Type.Boolean;
+		} else if (_type.toLowerCase().toLowerCase().startsWith("char")) {
+			returnType = Attribute.Type.Char;
+		} else if (_type.toLowerCase().equalsIgnoreCase("float")) {
+			returnType = Attribute.Type.Float;
+		} else if (_type.toLowerCase().equalsIgnoreCase("double")) {
+			returnType = Attribute.Type.Double;
 		}
+		return returnType;
 	}
 
 	/*
@@ -121,6 +141,25 @@ public class Attribute {
 		serializedBuffer.putInt(Type.toInt(type));
 		serializedBuffer.put((byte) (nullable ? 1 : 0));
 		return serializedBuffer;
+	}
+
+	private int getSize() {
+		if (type == Attribute.Type.Int) {
+			return INT_SIZE;
+		} else if (type == Attribute.Type.Char) {
+			return CHAR_SIZE * size;
+		} else if (type == Attribute.Type.Long) {
+			return LONG_SIZE;
+		} else if (type == Attribute.Type.Float) {
+			return FLOAT_SIZE;
+		} else if (type == Attribute.Type.Double) {
+			return DOUBLE_SIZE;
+		} else
+			return 0;
+	}
+
+	public int getAttributeSize() {
+		return size;
 	}
 
 }

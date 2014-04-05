@@ -23,7 +23,7 @@ public class RelationHolder {
 	};
 
 	public boolean addRelation(Relation relation) {
-		if(getRelationIdByRelationName(relation.getRelationName()) != -1){
+		if (getRelationIdByRelationName(relation.getRelationName()) != -1) {
 			return false;
 		}
 		relations.put(relation.getRelationId(), relation);
@@ -43,11 +43,12 @@ public class RelationHolder {
 		}
 		return -1;
 	}
-	
-	public long getNewId(){
-		long id = 1;
-		while(true){
-			if(!relations.containsKey(id)){
+
+	//Deprecated 
+	public long getNewId() {
+		long id = 2;
+		while (true) {
+			if (!relations.containsKey(id)) {
 				return id;
 			}
 			id++;
