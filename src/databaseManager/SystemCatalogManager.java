@@ -11,6 +11,7 @@ package databaseManager;
 import java.util.ArrayList;
 import java.util.Date;
 import java.io.IOException;
+import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.StringTokenizer;
 
@@ -30,13 +31,18 @@ public class SystemCatalogManager {
 
 	public static final String ATTRIBUTE_CATALOG = "attribute_catalog.cat";
 	public static final String RELATION_CATALOG = "relation_catalog.cat";
+	public static final long ATTRIBUTE_RECORD_SIZE = 500;
+	public static final long RELATION_RECORD_SIZE = 500;
+	
 
 	private BufferManager bufferManager;
 	private ArrayList<Attribute> attributesList;
+	private RelationHolder relationHolder;
 	
 	public SystemCatalogManager(){
 		attributesList = new ArrayList<Attribute>();
 		bufferManager = new BufferManager();
+		relationHolder = RelationHolder.getRelationHolder();
 		loadRelationCatalog();
 		loadAttributeCatalog();
 	}
@@ -47,5 +53,22 @@ public class SystemCatalogManager {
 	
 	public void loadAttributeCatalog(){
 		
+	}
+	
+	public void updateRelationCatalog(long relationId,ByteBuffer bufferStream){
+		
+	}
+	
+	public boolean createTable(String relationStmt){
+		String relationName = relationStmt;
+		Relation newRelation = new Relation(relationName, relationHolder.getNewId());
+		if(relationHolder.addRelation(newRelation)){
+			/* Add to relation catalog */
+			updateRelationCatalog(newRelation.getRelationId(), newRelation.getMetaData());
+			System.out.println("Created new table "+relationName+" :-)");
+		}else{
+			System.out.println("Table "+relationName+" already exists!");
+		}
+		return true;
 	}
 }

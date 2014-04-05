@@ -22,8 +22,12 @@ public class RelationHolder {
 		return self;
 	};
 
-	public void addRelation(Relation relation) {
+	public boolean addRelation(Relation relation) {
+		if(getRelationIdByRelationName(relation.getRelationName()) != -1){
+			return false;
+		}
 		relations.put(relation.getRelationId(), relation);
+		return true;
 	}
 
 	public Relation getRelation(final long relationId) {
@@ -38,5 +42,15 @@ public class RelationHolder {
 			}
 		}
 		return -1;
+	}
+	
+	public long getNewId(){
+		long id = 1;
+		while(true){
+			if(!relations.containsKey(id)){
+				return id;
+			}
+			id++;
+		}
 	}
 }

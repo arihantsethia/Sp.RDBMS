@@ -92,7 +92,6 @@ public class BufferManager {
 					if (distinctPinCount == MAX_PAGE_COUNT) {
 						throw new OutOfMemoryError("Out of memory");
 					}
-					/* DON'T DO ANYTHING */
 				} else {
 					clockTick[logicalPageNumber]--;
 				}

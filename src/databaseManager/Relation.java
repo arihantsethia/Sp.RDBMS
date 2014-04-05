@@ -1,5 +1,6 @@
 package databaseManager;
 
+import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
@@ -99,7 +100,11 @@ public class Relation {
 	public ArrayList<Attribute> getAttributes() {
 		return attributes;
 	}
-
+	
+	public ByteBuffer getMetaData(){
+		return null;
+	}
+	
 	public void setRelationname(String _relationName) {
 		relationName = _relationName;
 		lastModified = (new Date()).getTime();
