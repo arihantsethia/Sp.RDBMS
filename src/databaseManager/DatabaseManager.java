@@ -7,8 +7,6 @@
 
 package databaseManager;
 
-import java.util.Scanner;
-
 public class DatabaseManager {
 
 	private static SystemCatalogManager systemCatalog;

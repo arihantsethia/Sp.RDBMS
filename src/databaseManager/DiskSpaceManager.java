@@ -48,7 +48,6 @@ public class DiskSpaceManager {
 					System.out.println("File Creation Unsuccesful.");
 				}
 			} catch (IOException e) {
-				// TODO Auto-generated catch block
 				System.out.println("Couldn't Create File : " + fileName);
 				e.printStackTrace();
 				System.exit(1);
@@ -87,7 +86,6 @@ public class DiskSpaceManager {
 						* BLOCK_SIZE, BLOCK_SIZE);
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			System.out.println("Couldn't retrieve data from required file");
 			e.printStackTrace();
 			System.exit(1);
@@ -128,7 +126,6 @@ public class DiskSpaceManager {
 				return true;
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			System.exit(1);
 		}

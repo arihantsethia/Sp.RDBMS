@@ -73,7 +73,6 @@ public class BufferManager {
 	}
 
 	public void flush() {
-		// TODO Auto-generated method stub
 		for (int i = 0; i < MAX_PAGE_COUNT; i++) {
 			writePhysical(lookUpTable[i]);
 		}
@@ -258,29 +257,30 @@ public class BufferManager {
 	}
 
 	public long getFreeBlockNumber(long relationId) {
-		// TODO Auto-generated method stub
 		byte[] freeBlocks = new byte[(int) DiskSpaceManager.BLOCK_SIZE];
-		getPageFromPool(relationId, 0).get(freeBlocks);
-		for (long i = 0; i < freeBlocks.length * 8; i++) {
-			if ((freeBlocks[(int) (freeBlocks.length - i / 8 - 1)] & (1 << (i % 8))) > 0) {
-				// Do nothing
-			} else {
-				return i;
+		long bitMapBlockNumber = 0;
+		while(true){
+			read(relationId, bitMapBlockNumber).get(freeBlocks);
+			for (long i = 0; i < freeBlocks.length * 8; i++) {
+				if ((freeBlocks[(int) (freeBlocks.length - i / 8 - 1)] & (1 << (i % 8))) > 0) {
+					// Do nothing
+				} else {
+					return i+bitMapBlockNumber;
+				}
 			}
+			bitMapBlockNumber = bitMapBlockNumber + 4096;
 		}
-		return -1;
 	}
 
 	public int getFreeRecordOffset(long relationId, long freeBlockNumber,
 			int recordsPerBlock, int recordSize) {
-		// TODO Auto-generated method stub
-		byte[] freeBlocks = new byte[(int) (recordsPerBlock+7)/8];
-		getPageFromPool(relationId, freeBlockNumber).get(freeBlocks);
-		for (int i = 0; i < freeBlocks.length * 8; i++) {
-			if ((freeBlocks[freeBlocks.length - i / 8 - 1] & (1 << (i % 8))) > 0) {
+		byte[] bitMapFreeRecords = new byte[(int) (recordsPerBlock + 7) / 8];
+		read(relationId, freeBlockNumber).get(bitMapFreeRecords);
+		for (int i = 0; i < bitMapFreeRecords.length * 8; i++) {
+			if ((bitMapFreeRecords[bitMapFreeRecords.length - i / 8 - 1] & (1 << (i % 8))) > 0) {
 				// Do nothing
 			} else {
-				return i*recordSize + (recordsPerBlock+7)/8;
+				return i * recordSize + (recordsPerBlock + 7) / 8;
 			}
 		}
 		return -1;

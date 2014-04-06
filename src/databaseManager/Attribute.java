@@ -1,7 +1,6 @@
 package databaseManager;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
 
 public class Attribute {
 	public enum Type {
@@ -46,7 +45,7 @@ public class Attribute {
 	private Type type;
 	private int size;
 	private boolean nullable;
-
+	private boolean distinctEntries;
 	// private ArrayList values;
 
 	public Attribute(String _attributeName, Type _type, long _id, long _parentId) {
@@ -56,6 +55,7 @@ public class Attribute {
 		parentId = _parentId;
 		nullable = true;
 		size = getSize();
+		distinctEntries = false;
 		// values = new ArrayList();
 	}
 
@@ -67,6 +67,7 @@ public class Attribute {
 		parentId = _parentId;
 		size = _size;
 		nullable = true;
+		distinctEntries = false;
 		// values = new ArrayList();
 	}
 
@@ -78,21 +79,24 @@ public class Attribute {
 		parentId = _parentId;
 		nullable = _nullable;
 		size = _size;
+		distinctEntries = false;
 		// values = new ArrayList();
 	}
 
 	public Attribute(ByteBuffer serializedBuffer) {
-		for (int i = 0; i < 15; i++) {
+		attributeName = "";
+		for (int i = 0; i < ATTRIBUTE_NAME_LENGTH; i++) {
 			if (serializedBuffer.getChar(2 * i) != '\0') {
 				attributeName += serializedBuffer.getChar(2 * i);
 			}
 		}
-		serializedBuffer.position(30);
+		serializedBuffer.position(ATTRIBUTE_NAME_LENGTH*2);
 		id = serializedBuffer.getLong();
 		parentId = serializedBuffer.getLong();
 		size = serializedBuffer.getInt();
 		type = Type.toType(serializedBuffer.getInt());
 		nullable = serializedBuffer.get() != 0;
+		distinctEntries = serializedBuffer.get() != 0;
 	}
 
 	public static Type stringToType(final String _type) {
@@ -111,6 +115,10 @@ public class Attribute {
 			returnType = Attribute.Type.Double;
 		}
 		return returnType;
+	}
+	
+	public void setDistinct(boolean _distinctEntries){
+		distinctEntries = _distinctEntries;
 	}
 
 	/*
@@ -140,6 +148,7 @@ public class Attribute {
 		serializedBuffer.putInt(size);
 		serializedBuffer.putInt(Type.toInt(type));
 		serializedBuffer.put((byte) (nullable ? 1 : 0));
+		serializedBuffer.put((byte) (distinctEntries ? 1 : 0));
 		return serializedBuffer;
 	}
 

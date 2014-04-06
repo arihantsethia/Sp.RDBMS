@@ -27,7 +27,7 @@ public class SystemCatalogManager {
 
 	public static final String ATTRIBUTE_CATALOG = "attribute_catalog.cat";
 	public static final String RELATION_CATALOG = "relation_catalog.cat";
-	public static final int ATTRIBUTE_RECORD_SIZE = 500;
+	public static final int ATTRIBUTE_RECORD_SIZE = 126;
 	public static final long ATTRIBUTE_CATALOG_ID = 1;
 	public static final int RELATION_RECORD_SIZE = 500;
 	public static final long RELATION_CATALOG_ID = 0;
@@ -118,9 +118,7 @@ public class SystemCatalogManager {
 	}
 
 	private void addAttributeToCatalog(Attribute newAttribute) {
-		// TODO Auto-generated method stub
-		int attributeRecordsPerBlock = (int) (DiskSpaceManager.BLOCK_SIZE * 8
-				/ (1 + 8 * ATTRIBUTE_RECORD_SIZE));
+		int attributeRecordsPerBlock = (int) (DiskSpaceManager.BLOCK_SIZE * 8 / (1 + 8 * ATTRIBUTE_RECORD_SIZE));
 		long freeBlockNumber = bufferManager
 				.getFreeBlockNumber(ATTRIBUTE_CATALOG_ID);
 		int freeRecordOffset = bufferManager.getFreeRecordOffset(
@@ -132,9 +130,7 @@ public class SystemCatalogManager {
 	}
 
 	private void addRelationToCatalog(Relation newRelation) {
-		// TODO Auto-generated method stub
-		int relationRecordsPerBlock = (int) (DiskSpaceManager.BLOCK_SIZE * 8
-				/ (1 + 8 * RELATION_RECORD_SIZE));
+		int relationRecordsPerBlock = (int) (DiskSpaceManager.BLOCK_SIZE * 8 / (1 + 8 * RELATION_RECORD_SIZE));
 		long freeBlockNumber = bufferManager
 				.getFreeBlockNumber(RELATION_CATALOG_ID);
 		int freeRecordOffset = bufferManager.getFreeRecordOffset(
@@ -145,7 +141,6 @@ public class SystemCatalogManager {
 	}
 
 	public void close() {
-		// TODO Auto-generated method stub
 		bufferManager.flush();
 	}
 }
