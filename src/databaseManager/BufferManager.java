@@ -9,6 +9,7 @@ package databaseManager;
 
 import java.nio.ByteBuffer;
 import java.nio.channels.FileChannel;
+import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -65,7 +66,6 @@ public class BufferManager {
 		for (int i = 0; i < MAX_PAGE_COUNT; i++) {
 			isDirty[i] = false;
 			lookUpTable[i] = new PhysicalAddress(-1, -1);
-			pagePool[i].allocate((int) DiskSpaceManager.BLOCK_SIZE);
 			clockTick[i] = 0;
 		}
 		lookUpMap.clear();
@@ -122,6 +122,7 @@ public class BufferManager {
 	private ByteBuffer getPageFromPool(final PhysicalAddress physicalAddress) {
 		if (lookUpMap.containsKey(physicalAddress)) {
 			clockTick[lookUpMap.get(physicalAddress).intValue()]++;
+			pagePool[lookUpMap.get(physicalAddress).intValue()].position(0);
 			return pagePool[lookUpMap.get(physicalAddress).intValue()];
 		} else {
 			throw new Error("Trying to access undefined memory");
@@ -217,6 +218,7 @@ public class BufferManager {
 			ByteBuffer newPage = diskSpaceManager.read(
 					openFiles.get(relationId), block);
 			addToPagePool(getPhysicalAddress(relationId, block), newPage);
+			newPage.position(0);
 			return newPage;
 		}
 	}
@@ -231,8 +233,10 @@ public class BufferManager {
 									physicalAddress.id).getFileName());
 					openFiles.put(physicalAddress.id, newFileChannel);
 				}
+				pagePool[logicalPageNumber].position(0);
 				diskSpaceManager.write(openFiles.get(physicalAddress.id),
-						physicalAddress.offset, pagePool[logicalPageNumber]);
+						physicalAddress.offset / DiskSpaceManager.BLOCK_SIZE,
+						pagePool[logicalPageNumber]);
 			}
 			isDirty[logicalPageNumber] = false;
 			return true;
@@ -246,47 +250,61 @@ public class BufferManager {
 		if (lookUpMap.containsKey(physicalAddress)) {
 			isDirty[lookUpMap.get(physicalAddress).intValue()] = true;
 			byte[] writeStream = new byte[writeBuffer.capacity()];
-			pagePool[lookUpMap.get(physicalAddress).intValue()].put(
-					writeStream, blockSeek, writeStream.length);
+			writeBuffer.position(0);
+			writeBuffer.get(writeStream);
+			pagePool[lookUpMap.get(physicalAddress).intValue()]
+					.position(blockSeek);
+			pagePool[lookUpMap.get(physicalAddress).intValue()]
+					.put(writeStream);
+			return true;
 		}
 		return false;
 	}
 
-	public void writeRecordBitmap(long relationId, long block,
+	public boolean writeRecordBitmap(long relationId, long block,
 			int recordNumber, int setValue) {
 		PhysicalAddress physicalAddress = getPhysicalAddress(relationId, block);
 		if (lookUpMap.containsKey(physicalAddress)) {
 			isDirty[lookUpMap.get(physicalAddress).intValue()] = true;
+			byte oldValue = pagePool[lookUpMap.get(physicalAddress).intValue()]
+					.get(recordNumber / Byte.SIZE);
+			BitSet bitSet = BitSet.valueOf(new byte[] { oldValue });
+			bitSet.set(recordNumber % Byte.SIZE, (setValue == 1));
 			pagePool[lookUpMap.get(physicalAddress).intValue()].put(
-					recordNumber, (byte) setValue);
+					recordNumber / Byte.SIZE, bitSet.toByteArray()[0]);
+			return true;
 		}
+		return false;
 	}
 
 	public long getFreeBlockNumber(long relationId) {
 		byte[] freeBlocks = new byte[(int) DiskSpaceManager.BLOCK_SIZE];
+		BitSet bitMapFreeBlocks;
 		long bitMapBlockNumber = 0;
 		while (true) {
 			read(relationId, bitMapBlockNumber).get(freeBlocks);
-			for (long i = 1; i < freeBlocks.length * 8; i++) {
-				if ((freeBlocks[(int) (freeBlocks.length - i / 8 - 1)] & (1 << (i % 8))) > 0) {
-					// Do nothing
-				} else {
+			bitMapFreeBlocks = BitSet.valueOf(freeBlocks);
+			for (int i = 1; i < DiskSpaceManager.BLOCK_SIZE
+					* DiskSpaceManager.BLOCK_SIZE; i++) {
+				if (bitMapFreeBlocks.get(i) == false) {
 					return i + bitMapBlockNumber;
 				}
 			}
-			// bitMapBlockNumber = bitMapBlockNumber +
-			// DiskSpaceManager.BLOCK_SIZE;
+			bitMapBlockNumber = bitMapBlockNumber + DiskSpaceManager.BLOCK_SIZE
+					* Byte.SIZE;
 		}
 	}
 
 	public int getFreeRecordOffset(long relationId, long freeBlockNumber,
 			int recordsPerBlock, int recordSize) {
-		byte[] bitMapFreeRecords = new byte[(int) (recordsPerBlock + 7) / 8];
-		read(relationId, freeBlockNumber).get(bitMapFreeRecords);
-		for (int i = 0; i < bitMapFreeRecords.length * 8; i++) {
-			if ((bitMapFreeRecords[bitMapFreeRecords.length - i / 8 - 1] & (1 << (i % 8))) > 0) {
-				// Do nothing
-			} else {
+		byte[] byteFreeRecords = new byte[(int) (recordsPerBlock + 7) / 8];
+		read(relationId, freeBlockNumber).get(byteFreeRecords);
+		BitSet bitMapFreeRecords = BitSet.valueOf(byteFreeRecords);
+		for (int i = 0; i < recordsPerBlock; i++) {
+			if (bitMapFreeRecords.get(i) == false) {
+				System.out.println("Free Block :" + freeBlockNumber
+						+ " Free record " + i + " offset :"
+						+ (i * recordSize + (recordsPerBlock + 7) / 8));
 				return i * recordSize + (recordsPerBlock + 7) / 8;
 			}
 		}

@@ -79,11 +79,10 @@ public class DiskSpaceManager {
 	 * @return : returns the bytebuffer of the read data.
 	 */
 	public ByteBuffer read(final FileChannel fileChannel, final long block) {
-		MappedByteBuffer buffer = null;
+		ByteBuffer buffer = ByteBuffer.allocate((int) BLOCK_SIZE);
 		try {
 			if (isValidBlockNumber(fileChannel, block)) {
-				buffer = fileChannel.map(FileChannel.MapMode.READ_ONLY, block
-						* BLOCK_SIZE, BLOCK_SIZE);
+				fileChannel.read(buffer, block * BLOCK_SIZE);
 			}
 		} catch (IOException e) {
 			System.out.println("Couldn't retrieve data from required file");
@@ -104,7 +103,6 @@ public class DiskSpaceManager {
 				return fileChannel.write(writeBuffer, block * BLOCK_SIZE);
 			}
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			System.out.println("Couldn't write to the required file");
 			e.printStackTrace();
 			System.exit(1);

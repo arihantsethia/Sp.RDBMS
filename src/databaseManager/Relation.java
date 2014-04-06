@@ -36,6 +36,10 @@ public class Relation {
 		lastModified = (new Date()).getTime();
 		blockCount = 1;
 	}
+	
+	public Relation(ByteBuffer serializedData) {
+
+	}
 
 	public boolean addAttribute(String attributeName, Attribute.Type type,
 			long _id) {

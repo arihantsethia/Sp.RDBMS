@@ -8,6 +8,7 @@
 package databaseManager;
 
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.Date;
 import java.io.IOException;
 import java.nio.ByteBuffer;
@@ -42,48 +43,87 @@ public class SystemCatalogManager {
 		attributesList = new ArrayList<Attribute>();
 		bufferManager = new BufferManager();
 		relationHolder = RelationHolder.getRelationHolder();
-		//loadRelationCatalog();
+		// loadRelationCatalog();
 		loadAttributeCatalog();
 	}
 
 	public void loadRelationCatalog() {
-		Relation attributeRelation = new Relation("relation_catalog",0);
-		
-		totalRelationsCount = 0;
+		Relation tableRelation = new Relation("relation_catalog",
+				RELATION_CATALOG_ID);
+		tableRelation.setRecordSize(ATTRIBUTE_RECORD_SIZE);
+		relationHolder.addRelation(tableRelation);
+		long relationCatalogSize = tableRelation.getFileSize();
+		long bitMapBlockNumber = 0;
+		long recordsPerBlock = tableRelation.getRecordsPerBlock();
+		byte[] bitMapBytes = new byte[(int) (recordsPerBlock + 7) / 8];
+		BitSet bitMapRecords;
+		Relation tempRelation;
+		while (true) {
+			for (long i = 1; i < DiskSpaceManager.BLOCK_SIZE * Byte.SIZE; i++) {
+				if ((i + bitMapBlockNumber + 1) * DiskSpaceManager.BLOCK_SIZE <= relationCatalogSize) {
+					ByteBuffer currentBlock = bufferManager.read(1,
+							bitMapBlockNumber + i);
+					currentBlock.get(bitMapBytes);
+					bitMapRecords = BitSet.valueOf(bitMapBytes);
+					for (int j = 0; j < bitMapRecords.length(); j++) {
+						if (bitMapRecords.get(j)) {
+							byte[] blockEntry = new byte[ATTRIBUTE_RECORD_SIZE];
+							currentBlock.get(blockEntry);
+							tempRelation = new Relation(
+									ByteBuffer.wrap(blockEntry));
+							if (totalRelationsCount < tempRelation
+									.getRelationId()) {
+								totalRelationsCount = tempRelation
+										.getRelationId() + 1;
+							}
+							relationHolder.addRelation(tempRelation);
+						}
+					}
+				} else {
+					return;
+				}
+			}
+			bitMapBlockNumber = bitMapBlockNumber + DiskSpaceManager.BLOCK_SIZE
+					* Byte.SIZE;
+		}
 	}
 
 	public void loadAttributeCatalog() {
-		Relation attributeRelation = new Relation("attribute_catalog",ATTRIBUTE_CATALOG_ID);
+		Relation attributeRelation = new Relation("attribute_catalog",
+				ATTRIBUTE_CATALOG_ID);
 		attributeRelation.setRecordSize(ATTRIBUTE_RECORD_SIZE);
 		relationHolder.addRelation(attributeRelation);
 		long attributeCatalogSize = attributeRelation.getFileSize();
 		long bitMapBlockNumber = 0;
 		long recordsPerBlock = attributeRelation.getRecordsPerBlock();
-		byte[] blocksMap = new byte[(int) DiskSpaceManager.BLOCK_SIZE];
-		byte[] bitMapRecords = new byte[(int) (recordsPerBlock + 7) / 8];
+		byte[] bitMapBytes = new byte[(int) (recordsPerBlock + 7) / 8];
+		BitSet bitMapRecords;
 		Attribute tempAttribute;
-		while (attributeCatalogSize >= (bitMapBlockNumber)*(DiskSpaceManager.BLOCK_SIZE)*(DiskSpaceManager.BLOCK_SIZE)) {
-			bufferManager.read(ATTRIBUTE_CATALOG_ID, bitMapBlockNumber).get(blocksMap);
-			for (long i = 1; i < blocksMap.length * 8; i++) {
-				if (i*DiskSpaceManager.BLOCK_SIZE <= attributeCatalogSize) {
-					ByteBuffer currentBlock = bufferManager.read(1, bitMapBlockNumber + i);
-					currentBlock.get(bitMapRecords);
-					for (int j = 0; j < bitMapRecords.length * 8; j++) {
-						if ((bitMapRecords[bitMapRecords.length - j / 8 - 1] & (1 << (j % 8))) > 0) {
+		while (true) {
+			for (long i = 1; i < DiskSpaceManager.BLOCK_SIZE * Byte.SIZE; i++) {
+				if ((i + bitMapBlockNumber + 1) * DiskSpaceManager.BLOCK_SIZE <= attributeCatalogSize) {
+					ByteBuffer currentBlock = bufferManager.read(1,
+							bitMapBlockNumber + i);
+					currentBlock.get(bitMapBytes);
+					bitMapRecords = BitSet.valueOf(bitMapBytes);
+					for (int j = 0; j < bitMapRecords.length(); j++) {
+						if (bitMapRecords.get(j)) {
 							byte[] blockEntry = new byte[ATTRIBUTE_RECORD_SIZE];
-							currentBlock.get(blockEntry, j * ATTRIBUTE_RECORD_SIZE + (int)(recordsPerBlock + 7) / 8, ATTRIBUTE_RECORD_SIZE);
-							tempAttribute = new Attribute(ByteBuffer.wrap(blockEntry));
-							if(totalAttributesCount < tempAttribute.getId()){
-								totalAttributesCount =  tempAttribute.getId() + 1;
+							currentBlock.get(blockEntry);
+							tempAttribute = new Attribute(
+									ByteBuffer.wrap(blockEntry));
+							if (totalAttributesCount < tempAttribute.getId()) {
+								totalAttributesCount = tempAttribute.getId() + 1;
 							}
 							attributesList.add(tempAttribute);
 						}
 					}
-				}else{
-					break;
+				} else {
+					return;
 				}
 			}
-			bitMapBlockNumber = bitMapBlockNumber + DiskSpaceManager.BLOCK_SIZE;
+			bitMapBlockNumber = bitMapBlockNumber + DiskSpaceManager.BLOCK_SIZE
+					* Byte.SIZE;
 		}
 	}
 
@@ -155,12 +195,14 @@ public class SystemCatalogManager {
 		long freeBlockNumber = bufferManager
 				.getFreeBlockNumber(ATTRIBUTE_CATALOG_ID);
 		int freeRecordOffset = bufferManager.getFreeRecordOffset(
-				ATTRIBUTE_CATALOG_ID, freeBlockNumber, attributeRecordsPerBlock,
-				ATTRIBUTE_RECORD_SIZE);
-		bufferManager.write(1, freeBlockNumber, freeRecordOffset,
-				newAttribute.serialize());
-		int recordNumber = (freeRecordOffset-(attributeRecordsPerBlock+7)/8)/ATTRIBUTE_RECORD_SIZE;
-		bufferManager.writeRecordBitmap(ATTRIBUTE_CATALOG_ID, freeBlockNumber, recordNumber,1);
+				ATTRIBUTE_CATALOG_ID, freeBlockNumber,
+				attributeRecordsPerBlock, ATTRIBUTE_RECORD_SIZE);
+		bufferManager.write(ATTRIBUTE_CATALOG_ID, freeBlockNumber,
+				freeRecordOffset, newAttribute.serialize());
+		int recordNumber = (freeRecordOffset - (attributeRecordsPerBlock + 7) / 8)
+				/ ATTRIBUTE_RECORD_SIZE;
+		bufferManager.writeRecordBitmap(ATTRIBUTE_CATALOG_ID, freeBlockNumber,
+				recordNumber, 1);
 		attributesList.add(newAttribute);
 		totalAttributesCount++;
 	}
@@ -174,8 +216,10 @@ public class SystemCatalogManager {
 				RELATION_RECORD_SIZE);
 		bufferManager.write(1, freeBlockNumber, freeRecordOffset,
 				newRelation.serialize());
-		int recordNumber = (freeRecordOffset-(relationRecordsPerBlock+7)/8)/RELATION_RECORD_SIZE;
-		bufferManager.writeRecordBitmap(RELATION_CATALOG_ID, recordNumber, freeRecordOffset,1);
+		int recordNumber = (freeRecordOffset - (relationRecordsPerBlock + 7) / 8)
+				/ RELATION_RECORD_SIZE;
+		bufferManager.writeRecordBitmap(RELATION_CATALOG_ID, recordNumber,
+				freeRecordOffset, 1);
 		totalRelationsCount++;
 	}
 
