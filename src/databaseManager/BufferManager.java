@@ -302,9 +302,6 @@ public class BufferManager {
 		BitSet bitMapFreeRecords = BitSet.valueOf(byteFreeRecords);
 		for (int i = 0; i < recordsPerBlock; i++) {
 			if (bitMapFreeRecords.get(i) == false) {
-				System.out.println("Free Block :" + freeBlockNumber
-						+ " Free record " + i + " offset :"
-						+ (i * recordSize + (recordsPerBlock + 7) / 8));
 				return i * recordSize + (recordsPerBlock + 7) / 8;
 			}
 		}
