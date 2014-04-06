@@ -72,3 +72,4 @@ local.properties
 
 /src/databaseManager/Test.java
 /src/test/*
+*.db

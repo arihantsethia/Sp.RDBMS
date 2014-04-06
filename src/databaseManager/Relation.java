@@ -1,5 +1,6 @@
 package databaseManager;
 
+import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Date;
@@ -90,6 +91,11 @@ public class Relation {
 		return fileName;
 	}
 
+	public long getFileSize() {
+		File file =new File(fileName);
+		return file.length();
+	}
+
 	public long getCreationDate() {
 		return creationDate;
 	}
@@ -110,5 +116,9 @@ public class Relation {
 	public void setRelationname(String _relationName) {
 		relationName = _relationName;
 		lastModified = (new Date()).getTime();
-	}	
+	}
+	
+	public void setRecordSize(int _recordSize) {
+		recordSize = _recordSize;
+	}
 }

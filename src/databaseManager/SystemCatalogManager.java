@@ -25,8 +25,8 @@ import java.util.StringTokenizer;
 
 public class SystemCatalogManager {
 
-	public static final String ATTRIBUTE_CATALOG = "attribute_catalog.cat";
-	public static final String RELATION_CATALOG = "relation_catalog.cat";
+	public static final String ATTRIBUTE_CATALOG = "attribute_catalog.db";
+	public static final String RELATION_CATALOG = "relation_catalog.db";
 	public static final int ATTRIBUTE_RECORD_SIZE = 126;
 	public static final long ATTRIBUTE_CATALOG_ID = 1;
 	public static final int RELATION_RECORD_SIZE = 500;
@@ -35,23 +35,56 @@ public class SystemCatalogManager {
 	private BufferManager bufferManager;
 	private ArrayList<Attribute> attributesList;
 	private RelationHolder relationHolder;
-	private long totalAttributesCount;
-	private long totalRelationsCount;
+	public long totalAttributesCount;
+	public long totalRelationsCount;
 
 	public SystemCatalogManager() {
 		attributesList = new ArrayList<Attribute>();
 		bufferManager = new BufferManager();
 		relationHolder = RelationHolder.getRelationHolder();
-		loadRelationCatalog();
+		//loadRelationCatalog();
 		loadAttributeCatalog();
 	}
 
 	public void loadRelationCatalog() {
+		Relation attributeRelation = new Relation("relation_catalog",0);
+		
 		totalRelationsCount = 0;
 	}
 
 	public void loadAttributeCatalog() {
-		totalAttributesCount = 0;
+		Relation attributeRelation = new Relation("attribute_catalog",ATTRIBUTE_CATALOG_ID);
+		attributeRelation.setRecordSize(ATTRIBUTE_RECORD_SIZE);
+		relationHolder.addRelation(attributeRelation);
+		long attributeCatalogSize = attributeRelation.getFileSize();
+		long bitMapBlockNumber = 0;
+		long recordsPerBlock = attributeRelation.getRecordsPerBlock();
+		byte[] blocksMap = new byte[(int) DiskSpaceManager.BLOCK_SIZE];
+		byte[] bitMapRecords = new byte[(int) (recordsPerBlock + 7) / 8];
+		Attribute tempAttribute;
+		while (attributeCatalogSize >= (bitMapBlockNumber)*(DiskSpaceManager.BLOCK_SIZE)*(DiskSpaceManager.BLOCK_SIZE)) {
+			bufferManager.read(ATTRIBUTE_CATALOG_ID, bitMapBlockNumber).get(blocksMap);
+			for (long i = 1; i < blocksMap.length * 8; i++) {
+				if (i*DiskSpaceManager.BLOCK_SIZE <= attributeCatalogSize) {
+					ByteBuffer currentBlock = bufferManager.read(1, bitMapBlockNumber + i);
+					currentBlock.get(bitMapRecords);
+					for (int j = 0; j < bitMapRecords.length * 8; j++) {
+						if ((bitMapRecords[bitMapRecords.length - j / 8 - 1] & (1 << (j % 8))) > 0) {
+							byte[] blockEntry = new byte[ATTRIBUTE_RECORD_SIZE];
+							currentBlock.get(blockEntry, j * ATTRIBUTE_RECORD_SIZE + (int)(recordsPerBlock + 7) / 8, ATTRIBUTE_RECORD_SIZE);
+							tempAttribute = new Attribute(ByteBuffer.wrap(blockEntry));
+							if(totalAttributesCount < tempAttribute.getId()){
+								totalAttributesCount =  tempAttribute.getId() + 1;
+							}
+							attributesList.add(tempAttribute);
+						}
+					}
+				}else{
+					break;
+				}
+			}
+			bitMapBlockNumber = bitMapBlockNumber + DiskSpaceManager.BLOCK_SIZE;
+		}
 	}
 
 	public void updateRelationCatalog(long relationId, ByteBuffer bufferStream) {
@@ -117,27 +150,33 @@ public class SystemCatalogManager {
 		return true;
 	}
 
-	private void addAttributeToCatalog(Attribute newAttribute) {
+	public void addAttributeToCatalog(Attribute newAttribute) {
 		int attributeRecordsPerBlock = (int) (DiskSpaceManager.BLOCK_SIZE * 8 / (1 + 8 * ATTRIBUTE_RECORD_SIZE));
 		long freeBlockNumber = bufferManager
 				.getFreeBlockNumber(ATTRIBUTE_CATALOG_ID);
 		int freeRecordOffset = bufferManager.getFreeRecordOffset(
-				RELATION_CATALOG_ID, freeBlockNumber, attributeRecordsPerBlock,
+				ATTRIBUTE_CATALOG_ID, freeBlockNumber, attributeRecordsPerBlock,
 				ATTRIBUTE_RECORD_SIZE);
 		bufferManager.write(1, freeBlockNumber, freeRecordOffset,
 				newAttribute.serialize());
+		int recordNumber = (freeRecordOffset-(attributeRecordsPerBlock+7)/8)/ATTRIBUTE_RECORD_SIZE;
+		bufferManager.writeRecordBitmap(ATTRIBUTE_CATALOG_ID, freeBlockNumber, recordNumber,1);
+		attributesList.add(newAttribute);
 		totalAttributesCount++;
 	}
 
-	private void addRelationToCatalog(Relation newRelation) {
+	public void addRelationToCatalog(Relation newRelation) {
 		int relationRecordsPerBlock = (int) (DiskSpaceManager.BLOCK_SIZE * 8 / (1 + 8 * RELATION_RECORD_SIZE));
 		long freeBlockNumber = bufferManager
 				.getFreeBlockNumber(RELATION_CATALOG_ID);
 		int freeRecordOffset = bufferManager.getFreeRecordOffset(
 				RELATION_CATALOG_ID, freeBlockNumber, relationRecordsPerBlock,
 				RELATION_RECORD_SIZE);
-		bufferManager.write(0, freeBlockNumber, freeRecordOffset,
+		bufferManager.write(1, freeBlockNumber, freeRecordOffset,
 				newRelation.serialize());
+		int recordNumber = (freeRecordOffset-(relationRecordsPerBlock+7)/8)/RELATION_RECORD_SIZE;
+		bufferManager.writeRecordBitmap(RELATION_CATALOG_ID, recordNumber, freeRecordOffset,1);
+		totalRelationsCount++;
 	}
 
 	public void close() {

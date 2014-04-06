@@ -88,7 +88,6 @@ public class DiskSpaceManager {
 		} catch (IOException e) {
 			System.out.println("Couldn't retrieve data from required file");
 			e.printStackTrace();
-			System.exit(1);
 		}
 		return buffer;
 	}
@@ -122,7 +121,10 @@ public class DiskSpaceManager {
 	public boolean isValidBlockNumber(final FileChannel fileChannel,
 			final long block) {
 		try {
-			if (fileChannel.size() <= (block + 1) * BLOCK_SIZE) {
+			if (fileChannel.size() >= (block + 1) * BLOCK_SIZE) {
+				return true;
+			} else if (fileChannel.size() / BLOCK_SIZE == block) {
+				fileChannel.write(getEmptyBlock(), block * BLOCK_SIZE);
 				return true;
 			}
 		} catch (IOException e) {
@@ -130,5 +132,9 @@ public class DiskSpaceManager {
 			System.exit(1);
 		}
 		return false;
+	}
+
+	public static ByteBuffer getEmptyBlock() {
+		return ByteBuffer.allocate((int) BLOCK_SIZE);
 	}
 }
