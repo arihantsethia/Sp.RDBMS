@@ -10,10 +10,10 @@ import java.nio.channels.FileChannel;
 public class DiskSpaceManager {
 
 	/**
-	 * This is the size of the block in bytes which will be taken into and
+	 * This is the size of the page in bytes which will be taken into and
 	 * returned from this class.
 	 */
-	public static final long BLOCK_SIZE = 4096;
+	public static final long PAGE_SIZE = 4096;
 
 	/**
 	 * Creates a new instance of StorageManager with nothing inside of it.
@@ -68,16 +68,16 @@ public class DiskSpaceManager {
 	}
 
 	/**
-	 * This function reads the required block from the file 
+	 * This function reads the required page from the file 
 	 * @param fileChannel: FileChannel corresponding to file from which data has to be read.
-	 * @param block: page number of the corresponding page
+	 * @param page: page number of the corresponding page
 	 * @return : returns the byte buffer of the read data.
 	 */
-	public ByteBuffer read(final FileChannel fileChannel, final long block) {
-		ByteBuffer buffer = ByteBuffer.allocate((int) BLOCK_SIZE);
+	public ByteBuffer read(final FileChannel fileChannel, final long page) {
+		ByteBuffer buffer = ByteBuffer.allocate((int) PAGE_SIZE);
 		try {
-			if (isValidBlockNumber(fileChannel, block)) {
-				fileChannel.read(buffer, block * BLOCK_SIZE);
+			if (isValidPageNumber(fileChannel, page)) {
+				fileChannel.read(buffer, page * PAGE_SIZE);
 			}
 		} catch (IOException e) {
 			System.out.println("Couldn't retrieve data from required file");
@@ -86,16 +86,16 @@ public class DiskSpaceManager {
 		return buffer;
 	}
 
-	public ByteBuffer read(final String fileName, final long block) {
+	public ByteBuffer read(final String fileName, final long page) {
 		FileChannel fileChannel = openFile(fileName);
-		return read(fileChannel, block);
+		return read(fileChannel, page);
 	}
 
-	public long write(final FileChannel fileChannel, final long block,
+	public long write(final FileChannel fileChannel, final long page,
 			final ByteBuffer writeBuffer) {
 		try {
-			if (isValidBlockNumber(fileChannel, block)) {
-				return fileChannel.write(writeBuffer, block * BLOCK_SIZE);
+			if (isValidPageNumber(fileChannel, page)) {
+				return fileChannel.write(writeBuffer, page * PAGE_SIZE);
 			}
 		} catch (IOException e) {
 			System.out.println("Couldn't write to the required file");
@@ -105,19 +105,19 @@ public class DiskSpaceManager {
 		return 0;
 	}
 
-	public long write(final String fileName, final long block,
+	public long write(final String fileName, final long page,
 			final ByteBuffer writeBuffer) {
 		FileChannel fileChannel = openFile(fileName);
-		return write(fileChannel, block, writeBuffer);
+		return write(fileChannel, page, writeBuffer);
 	}
 
-	public boolean isValidBlockNumber(final FileChannel fileChannel,
-			final long block) {
+	public boolean isValidPageNumber(final FileChannel fileChannel,
+			final long page) {
 		try {
-			if (fileChannel.size() >= (block + 1) * BLOCK_SIZE) {
+			if (fileChannel.size() >= (page + 1) * PAGE_SIZE) {
 				return true;
-			} else if (fileChannel.size() / BLOCK_SIZE == block) {
-				fileChannel.write(getEmptyBlock(), block * BLOCK_SIZE);
+			} else if (fileChannel.size() / PAGE_SIZE == page) {
+				fileChannel.write(getEmptyPage(), page * PAGE_SIZE);
 				return true;
 			}
 		} catch (IOException e) {
@@ -127,7 +127,7 @@ public class DiskSpaceManager {
 		return false;
 	}
 
-	public static ByteBuffer getEmptyBlock() {
-		return ByteBuffer.allocate((int) BLOCK_SIZE);
+	public static ByteBuffer getEmptyPage() {
+		return ByteBuffer.allocate((int) PAGE_SIZE);
 	}
 }

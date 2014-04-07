@@ -6,7 +6,7 @@ import java.util.BitSet;
 public class Iterator {
 	private Relation relation;
 	private int position;
-	private long currentBlock;
+	private long currentPage;
 	private long nextRecord;
 	private byte[] bitMapBytes;
 	private byte[] recordEntry;
@@ -27,9 +27,9 @@ public class Iterator {
 	 */
 	public Iterator(final Relation newRelation) {
 		relation = newRelation;
-		currentBlock = 0;
+		currentPage = 0;
 		nextRecord = 0;
-		bitMapBytes = new byte[(int) (relation.getRecordsPerBlock() + 7) / 8];
+		bitMapBytes = new byte[(int) (relation.getRecordsPerPage() + 7) / 8];
 		recordEntry = new byte[(int) relation.getRecordSize()];
 		bufferManager = BufferManager.getBufferManager();
 	}
@@ -45,12 +45,12 @@ public class Iterator {
 
 	public ByteBuffer getNext() {
 		long relationFileSize = relation.getFileSize();
-		while(relationFileSize >= currentBlock*DiskSpaceManager.BLOCK_SIZE ){
-			if (currentBlock % (DiskSpaceManager.BLOCK_SIZE * Byte.SIZE) == 0) {
-				currentBlock++;
+		while(relationFileSize >= currentPage*DiskSpaceManager.PAGE_SIZE ){
+			if (currentPage % (DiskSpaceManager.PAGE_SIZE * Byte.SIZE) == 0) {
+				currentPage++;
 			}
 			if(nextRecord == 0){
-				currentBuffer = bufferManager.read(relation.getRelationId(), currentBlock);
+				currentBuffer = bufferManager.read(relation.getRelationId(), currentPage);
 				currentBuffer.get(bitMapBytes);
 				position = currentBuffer.position();
 				bitMapRecords = BitSet.valueOf(bitMapBytes);
@@ -68,7 +68,7 @@ public class Iterator {
 				}				
 			}
 			nextRecord = 0;
-			currentBlock++;
+			currentPage++;
 		}
 		return null;
 	}
@@ -79,11 +79,11 @@ public class Iterator {
 	 * @return If there is another record.
 	 */
 	public boolean hasNext() {
-		long blockTotal = relation.getFileSize() / DiskSpaceManager.BLOCK_SIZE;
-		if (currentBlock >= blockTotal) {
+		long pageTotal = relation.getFileSize() / DiskSpaceManager.PAGE_SIZE;
+		if (currentPage >= pageTotal) {
 			return false;
-		} else if (currentBlock == blockTotal - 1) {
-			if (nextRecord >= relation.getRecordsPerBlock()) {
+		} else if (currentPage == pageTotal - 1) {
+			if (nextRecord >= relation.getRecordsPerPage()) {
 				return false;
 			} else {
 				return true;
@@ -95,7 +95,7 @@ public class Iterator {
 
 	public PhysicalAddress getAddress() {
 		return BufferManager.getPhysicalAddress(relation.getRelationId(),
-				currentBlock);
+				currentPage);
 	}
 
 }

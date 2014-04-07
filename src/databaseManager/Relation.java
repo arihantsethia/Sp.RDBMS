@@ -20,7 +20,7 @@ public class Relation {
 	private Map<String, String> indexFiles;
 	private Set<String> indexed;
 	private long id;
-	private long blockCount;
+	private long pageCount;
 	private long recordsCount;
 	private int recordSize;
 	private long creationDate;
@@ -36,7 +36,7 @@ public class Relation {
 		indexed = new HashSet<String>();
 		creationDate = (new Date()).getTime();
 		lastModified = (new Date()).getTime();
-		blockCount = 1;
+		pageCount = 1;
 		recordSize = 0;
 		recordsCount = 0;
 	}
@@ -51,7 +51,7 @@ public class Relation {
 		serializedBuffer.position(RELATION_NAME_LENGTH * 2);
 		id = serializedBuffer.getLong();
 		recordSize = serializedBuffer.getInt();
-		blockCount = serializedBuffer.getLong();
+		pageCount = serializedBuffer.getLong();
 		recordsCount = serializedBuffer.getLong();
 		creationDate = serializedBuffer.getLong();
 		lastModified = serializedBuffer.getLong();
@@ -96,13 +96,13 @@ public class Relation {
 	}
 
 	/**
-	 * Let number of records per block = X, Let the recordSize = Y, then X*(1) +
-	 * X*(8*Y) = BLOCK_SIZE
+	 * Let number of records per page = X, Let the recordSize = Y, then X*(1) +
+	 * X*(8*Y) = PAGE_SIZE
 	 * 
 	 * @return
 	 */
-	public long getRecordsPerBlock() {
-		long numberOfRecords = (int) (DiskSpaceManager.BLOCK_SIZE * 8 / (1 + 8 * recordSize));
+	public long getRecordsPerPage() {
+		long numberOfRecords = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * recordSize));
 		return numberOfRecords;
 	}
 
@@ -147,7 +147,7 @@ public class Relation {
 		}
 		serializedBuffer.putLong(id);
 		serializedBuffer.putInt(recordSize);
-		serializedBuffer.putLong(blockCount);
+		serializedBuffer.putLong(pageCount);
 		serializedBuffer.putLong(recordsCount);
 		serializedBuffer.putLong(creationDate);
 		serializedBuffer.putLong(lastModified);
