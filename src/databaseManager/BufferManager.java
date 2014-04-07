@@ -42,7 +42,10 @@ public class BufferManager {
 	private RelationHolder relationHolder;
 	private DiskSpaceManager diskSpaceManager;
 
-	public BufferManager() {
+	/**For singleton use*/
+	private static BufferManager thisbuffer;
+	
+	private BufferManager() {
 		diskSpaceManager = new DiskSpaceManager();
 		isDirty = new boolean[MAX_PAGE_COUNT];
 		lookUpTable = new PhysicalAddress[MAX_PAGE_COUNT];
@@ -53,6 +56,19 @@ public class BufferManager {
 		relationHolder = RelationHolder.getRelationHolder();
 		initializeTable();
 	}
+		 
+    /**
+     * The Singleton accessor for BufferManagers.  This is the only way to get a BufferManager.
+     * @return The copy of BufferManager for the system.
+     */
+    public static BufferManager getBufferManager() {
+    	if (thisbuffer != null) {
+    		return thisbuffer;
+    	} else {
+    		thisbuffer = new BufferManager();
+    		return thisbuffer;
+    	}
+    }
 
 	/**
 	 * initializes all the attributes of bufferManager to its default values.
@@ -207,7 +223,7 @@ public class BufferManager {
 
 	// given relation id and block no. as argument find physical address of a
 	// block.
-	private PhysicalAddress getPhysicalAddress(final long relationId,
+	public static PhysicalAddress getPhysicalAddress(final long relationId,
 			final long block) {
 		return new PhysicalAddress(relationId, block
 				* DiskSpaceManager.BLOCK_SIZE);

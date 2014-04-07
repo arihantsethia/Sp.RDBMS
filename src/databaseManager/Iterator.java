@@ -1,88 +1,100 @@
 package databaseManager;
 
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
+import java.util.BitSet;
 
 public class Iterator {
-
-	private  Relation relation ;
-	private long currentBlock = 0;
-	private long nextRecord   = 0;
-	BufferManager bufferManager = BufferManager.getBufferManager(); 
+	private Relation relation;
+	private int position;
+	private long currentBlock;
+	private long nextRecord;
+	private byte[] bitMapBytes;
+	private byte[] recordEntry;
+	private BitSet bitMapRecords;
+	private ByteBuffer currentBuffer;
+	BufferManager bufferManager;
 	
 	public Iterator() {
-		
+
 	}
-	
-	/**Creates a new instance of Iterator that will work on the specified
+
+	/**
+	 * Creates a new instance of Iterator that will work on the specified
 	 * relation.
-	 * @param newRelation The relation who's records the new Iterator will 
-	 * fetch.
+	 * 
+	 * @param newRelation
+	 *            The relation who's records the new Iterator will fetch.
 	 */
 	public Iterator(final Relation newRelation) {
-		this.relation = newRelation;
-		System.out.println(relation); //TODO delete later, used to remove warning about not using relation.
+		relation = newRelation;
+		currentBlock = 0;
+		nextRecord = 0;
+		bitMapBytes = new byte[(int) (relation.getRecordsPerBlock() + 7) / 8];
+		recordEntry = new byte[(int) relation.getRecordSize()];
+		bufferManager = BufferManager.getBufferManager();
 	}
-	
-	/**This method will close the iterator.
+
+	/**
+	 * This method will close the iterator.
 	 * @return Whether or not the close was successful.
 	 */
 	public boolean close() {
-		//TODO close the Iterator.
+		// TODO close the Iterator.
 		return true;
 	}
-	
+
 	public byte[] getNext() {
-		byte[] recordEntry = new byte[(int)relation.getRecordSize()];
 		long relationFileSize = relation.getFileSize();
-		long bitMapBlockNumber = 0;
-		long recordsPerBlock = relation.getRecordsPerBlock();
-		byte[] blocksMap = new byte[(int) DiskSpaceManager.BLOCK_SIZE];
-		byte[] bitMapRecords = new byte[(int) (recordsPerBlock + 7) / 8];
-		
-		while (relationFileSize > (bitMapBlockNumber)*(DiskSpaceManager.BLOCK_SIZE)) {
-			bufferManager.read(1, bitMapBlockNumber).get(blocksMap);
-			for (long i = 1; i < blocksMap.length * 8; i++) {
-				if ((blocksMap[(int) (blocksMap.length - i / 8 - 1)] & (1 << (i % 8))) > 0) {
-					ByteBuffer currentBlock = bufferManager.read(1, i);
-					currentBlock.get(bitMapRecords);
-					for (int j = 0; j < bitMapRecords.length * 8; j++) {
-						if ((bitMapRecords[bitMapRecords.length - j / 8 - 1] & (1 << (j % 8))) > 0) {
-							byte[] blockEntry = new byte[ATTRIBUTE_RECORD_SIZE];
-							currentBlock.get(blockEntry, j * ATTRIBUTE_RECORD_SIZE + (int)(recordsPerBlock + 7) / 8, ATTRIBUTE_RECORD_SIZE);
-							tempAttribute = new Attribute(ByteBuffer.wrap(blockEntry));
-							attributesList.add(tempAttribute);
-						}
-					}
-				}
+		while(relationFileSize >= currentBlock*DiskSpaceManager.BLOCK_SIZE ){
+			if (currentBlock % (DiskSpaceManager.BLOCK_SIZE * Byte.SIZE) == 0) {
+				currentBlock++;
 			}
-			bitMapBlockNumber = bitMapBlockNumber + DiskSpaceManager.BLOCK_SIZE;
+			if(nextRecord == 0){
+				currentBuffer = bufferManager.read(relation.getRelationId(), currentBlock);
+				currentBuffer.get(bitMapBytes);
+				position = currentBuffer.get();
+				bitMapRecords = BitSet.valueOf(bitMapBytes);
+			}
+			for(;nextRecord < bitMapRecords.length();){
+				if(bitMapRecords.get((int) nextRecord)){
+					currentBuffer.position(position);
+					currentBuffer.get(recordEntry);
+					position += relation.getRecordSize();
+					nextRecord++;
+					return recordEntry;
+				}else{
+					nextRecord++;
+					position += relation.getRecordSize();
+				}				
+			}
+			nextRecord = 0;
 		}
-		return recordEntry ;
+		return null;
 	}
 
-	
 	/**
 	 * Returns if there is another record in the Relation.
+	 * 
 	 * @return If there is another record.
 	 */
 	public boolean hasNext() {
-		int Blocktotal = relation.getFileSize()  / DiskSpaceManager.BLOCK_SIZE  ;
-		if(currentBlock > Blocktotal -1){
-			return false ;
-		}else if(currentBlock == Blocktotal -1){
-			if(nextRecord >= relation.getRecordsPerBlock()){
-				return false ;
-			}else{
-				return true ;
+		long Blocktotal = relation.getFileSize() / DiskSpaceManager.BLOCK_SIZE;
+		if (currentBlock > Blocktotal - 1) {
+			return false;
+		} else if (currentBlock == Blocktotal - 1) {
+			if (nextRecord >= relation.getRecordsPerBlock()) {
+				return false;
+			} else {
+				return true;
 			}
+		} else {
+			return false;
 		}
 	}
-	
-	
+
 	public PhysicalAddress getAddress() {
-		return BufferManager.getPhysicalAddress(relation.getRelationId(), currentBlock);
+		return BufferManager.getPhysicalAddress(relation.getRelationId(),
+				currentBlock);
 	}
-	
-	
+
 }

@@ -41,7 +41,7 @@ public class SystemCatalogManager {
 
 	public SystemCatalogManager() {
 		attributesList = new ArrayList<Attribute>();
-		bufferManager = new BufferManager();
+		bufferManager = BufferManager.getBufferManager();
 		relationHolder = RelationHolder.getRelationHolder();
 		totalRelationsCount = 2;
 		loadRelationCatalog();
