@@ -1,5 +1,6 @@
 package databaseManager;
 
+import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Date;
@@ -8,8 +9,12 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
+import databaseManager.Attribute.Type;
+
 public class Relation {
 
+	public static final int RELATION_NAME_LENGTH = 50;
+	
 	private String relationName;
 	private String fileName;
 	private ArrayList<Attribute> attributes;
@@ -17,8 +22,8 @@ public class Relation {
 	private Map<String, String> indexFiles;
 	private Set<String> indexed;
 	private long id;
-	private int blockCount;
-	private int recordsCount;
+	private long blockCount;
+	private long recordsCount;
 	private int recordSize;
 	private long creationDate;
 	private long lastModified;
@@ -34,6 +39,29 @@ public class Relation {
 		creationDate = (new Date()).getTime();
 		lastModified = (new Date()).getTime();
 		blockCount = 1;
+		recordSize = 0;
+		recordsCount = 0;
+	}
+
+	public Relation(ByteBuffer serializedBuffer) {
+		relationName = "";
+		for (int i = 0; i < RELATION_NAME_LENGTH; i++) {
+			if (serializedBuffer.getChar(2 * i) != '\0') {
+				relationName += serializedBuffer.getChar(2 * i);
+			}
+		}
+		serializedBuffer.position(RELATION_NAME_LENGTH * 2);
+		id = serializedBuffer.getLong();
+		recordSize = serializedBuffer.getInt();
+		blockCount = serializedBuffer.getInt();
+		recordsCount = serializedBuffer.getLong();
+		creationDate = serializedBuffer.getLong();
+		lastModified = serializedBuffer.getLong();
+		fileName = relationName+".db";
+		attributes = new ArrayList<Attribute>();
+		attributesNames = new HashSet<String>();
+		indexFiles = new HashMap<String, String>();
+		indexed = new HashSet<String>();
 	}
 
 	public boolean addAttribute(String attributeName, Attribute.Type type,
@@ -48,6 +76,7 @@ public class Relation {
 			long _id, int length) {
 		if (!attributesNames.contains(attributeName)) {
 			attributes.add(new Attribute(attributeName, type, id, id, length));
+			recordSize = recordSize + length;
 		}
 		return false;
 	}
@@ -64,6 +93,7 @@ public class Relation {
 	}
 
 	public boolean addRecord() {
+		recordsCount++;
 		return true;
 	}
 
@@ -90,6 +120,11 @@ public class Relation {
 		return fileName;
 	}
 
+	public long getFileSize() {
+		File file = new File(fileName);
+		return file.length();
+	}
+
 	public long getCreationDate() {
 		return creationDate;
 	}
@@ -101,14 +136,32 @@ public class Relation {
 	public ArrayList<Attribute> getAttributes() {
 		return attributes;
 	}
-	
+
 	public ByteBuffer serialize() {
-		// TODO Auto-generated method stub
-		return null;
+		ByteBuffer serializedBuffer = ByteBuffer
+				.allocate((int) SystemCatalogManager.RELATION_RECORD_SIZE);
+		for (int i = 0; i < RELATION_NAME_LENGTH; i++) {
+			if (i < relationName.length()) {
+				serializedBuffer.putChar(relationName.charAt(i));
+			} else {
+				serializedBuffer.putChar('\0');
+			}
+		}
+		serializedBuffer.putLong(id);
+		serializedBuffer.putInt(recordSize);
+		serializedBuffer.putLong(blockCount);
+		serializedBuffer.putLong(recordsCount);
+		serializedBuffer.putLong(creationDate);
+		serializedBuffer.putLong(lastModified);
+		return serializedBuffer;
 	}
 
 	public void setRelationname(String _relationName) {
 		relationName = _relationName;
 		lastModified = (new Date()).getTime();
-	}	
+	}
+
+	public void setRecordSize(int _recordSize) {
+		recordSize = _recordSize;
+	}
 }
