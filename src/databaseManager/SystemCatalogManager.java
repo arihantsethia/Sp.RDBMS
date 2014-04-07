@@ -30,7 +30,7 @@ public class SystemCatalogManager {
 	public static final String RELATION_CATALOG = "relation_catalog.db";
 	public static final int ATTRIBUTE_RECORD_SIZE = 126;
 	public static final long ATTRIBUTE_CATALOG_ID = 1;
-	public static final int RELATION_RECORD_SIZE = 500;
+	public static final int RELATION_RECORD_SIZE = 144;
 	public static final long RELATION_CATALOG_ID = 0;
 
 	private BufferManager bufferManager;
@@ -43,14 +43,15 @@ public class SystemCatalogManager {
 		attributesList = new ArrayList<Attribute>();
 		bufferManager = new BufferManager();
 		relationHolder = RelationHolder.getRelationHolder();
-		// loadRelationCatalog();
+		totalRelationsCount = 2;
+		loadRelationCatalog();
 		loadAttributeCatalog();
 	}
 
 	public void loadRelationCatalog() {
 		Relation tableRelation = new Relation("relation_catalog",
 				RELATION_CATALOG_ID);
-		tableRelation.setRecordSize(ATTRIBUTE_RECORD_SIZE);
+		tableRelation.setRecordSize(RELATION_RECORD_SIZE);
 		relationHolder.addRelation(tableRelation);
 		long relationCatalogSize = tableRelation.getFileSize();
 		long bitMapBlockNumber = 0;
@@ -61,13 +62,13 @@ public class SystemCatalogManager {
 		while (true) {
 			for (long i = 1; i < DiskSpaceManager.BLOCK_SIZE * Byte.SIZE; i++) {
 				if ((i + bitMapBlockNumber + 1) * DiskSpaceManager.BLOCK_SIZE <= relationCatalogSize) {
-					ByteBuffer currentBlock = bufferManager.read(1,
-							bitMapBlockNumber + i);
+					ByteBuffer currentBlock = bufferManager.read(
+							RELATION_CATALOG_ID, bitMapBlockNumber + i);
 					currentBlock.get(bitMapBytes);
 					bitMapRecords = BitSet.valueOf(bitMapBytes);
 					for (int j = 0; j < bitMapRecords.length(); j++) {
 						if (bitMapRecords.get(j)) {
-							byte[] blockEntry = new byte[ATTRIBUTE_RECORD_SIZE];
+							byte[] blockEntry = new byte[RELATION_RECORD_SIZE];
 							currentBlock.get(blockEntry);
 							tempRelation = new Relation(
 									ByteBuffer.wrap(blockEntry));
@@ -102,8 +103,8 @@ public class SystemCatalogManager {
 		while (true) {
 			for (long i = 1; i < DiskSpaceManager.BLOCK_SIZE * Byte.SIZE; i++) {
 				if ((i + bitMapBlockNumber + 1) * DiskSpaceManager.BLOCK_SIZE <= attributeCatalogSize) {
-					ByteBuffer currentBlock = bufferManager.read(1,
-							bitMapBlockNumber + i);
+					ByteBuffer currentBlock = bufferManager.read(
+							ATTRIBUTE_CATALOG_ID, bitMapBlockNumber + i);
 					currentBlock.get(bitMapBytes);
 					bitMapRecords = BitSet.valueOf(bitMapBytes);
 					for (int j = 0; j < bitMapRecords.length(); j++) {
@@ -202,7 +203,7 @@ public class SystemCatalogManager {
 		int recordNumber = (freeRecordOffset - (attributeRecordsPerBlock + 7) / 8)
 				/ ATTRIBUTE_RECORD_SIZE;
 		bufferManager.writeRecordBitmap(ATTRIBUTE_CATALOG_ID, freeBlockNumber,
-				recordNumber, 1);
+				attributeRecordsPerBlock, recordNumber, true);
 		attributesList.add(newAttribute);
 		totalAttributesCount++;
 	}
@@ -214,12 +215,12 @@ public class SystemCatalogManager {
 		int freeRecordOffset = bufferManager.getFreeRecordOffset(
 				RELATION_CATALOG_ID, freeBlockNumber, relationRecordsPerBlock,
 				RELATION_RECORD_SIZE);
-		bufferManager.write(1, freeBlockNumber, freeRecordOffset,
-				newRelation.serialize());
+		bufferManager.write(RELATION_CATALOG_ID, freeBlockNumber,
+				freeRecordOffset, newRelation.serialize());
 		int recordNumber = (freeRecordOffset - (relationRecordsPerBlock + 7) / 8)
 				/ RELATION_RECORD_SIZE;
-		bufferManager.writeRecordBitmap(RELATION_CATALOG_ID, recordNumber,
-				freeRecordOffset, 1);
+		bufferManager.writeRecordBitmap(RELATION_CATALOG_ID, freeBlockNumber,
+				relationRecordsPerBlock, recordNumber, true);
 		totalRelationsCount++;
 	}
 

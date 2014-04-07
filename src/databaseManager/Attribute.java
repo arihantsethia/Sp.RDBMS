@@ -2,7 +2,16 @@ package databaseManager;
 
 import java.nio.ByteBuffer;
 
+/**
+ * @author Arihant Sethia, Arun Bhati, Vishavdeep Mattu
+ * This class defines the member functions and properties of attributes of a relation. 
+ */
 public class Attribute {
+	
+	/**
+	 * @author arihant
+	 * This is an enum of Type. This is used to define the data type of attribute. 
+	 */
 	public enum Type {
 		Int, Long, Boolean, Float, Double, Char, Undeclared;
 		public static Type toType(int value) {
@@ -30,7 +39,7 @@ public class Attribute {
 				return 0;
 		}
 	};
-	
+
 	public static final int CHAR_SIZE = Character.SIZE / Byte.SIZE;
 	public static final int FLOAT_SIZE = Float.SIZE / Byte.SIZE;
 	public static final int DOUBLE_SIZE = Double.SIZE / Byte.SIZE;
@@ -46,8 +55,14 @@ public class Attribute {
 	private int size;
 	private boolean nullable;
 	private boolean distinctEntries;
-	// private ArrayList values;
 
+	/**
+	 * Constructor function to create an object of Attribute Class
+	 * @param _attributeName : This is the name of the attribute
+	 * @param _type : This is the data type of the attribute
+	 * @param _id : This is the unique identifier of the attribute
+	 * @param _parentId : This is the identifier of the relation to which attribute belongs
+	 */
 	public Attribute(String _attributeName, Type _type, long _id, long _parentId) {
 		attributeName = _attributeName;
 		type = _type;
@@ -56,9 +71,16 @@ public class Attribute {
 		nullable = true;
 		size = getSize();
 		distinctEntries = false;
-		// values = new ArrayList();
 	}
 
+	/**
+	 * Constructor function to create an object of Attribute Class
+	 * @param _attributeName : This is the name of the attribute
+	 * @param _type : This is the data type of the attribute
+	 * @param _id : This is the unique identifier of the attribute
+	 * @param _parentId : This is the identifier of the relation to which attribute belongs
+	 * @param _size: This is the length of the attribute(needed mostly for attribute with data type as char.
+	 */
 	public Attribute(String _attributeName, Type _type, long _id,
 			long _parentId, int _size) {
 		attributeName = _attributeName;
@@ -68,9 +90,17 @@ public class Attribute {
 		size = _size;
 		nullable = true;
 		distinctEntries = false;
-		// values = new ArrayList();
 	}
 
+	/**
+	 * Constructor function to create an object of Attribute Class
+	 * @param _attributeName : This is the name of the attribute
+	 * @param _type : This is the data type of the attribute
+	 * @param _id : This is the unique identifier of the attribute
+	 * @param _parentId : This is the identifier of the relation to which attribute belongs
+	 * @param _size: This is the length of the attribute(needed mostly for attribute with data type as char.
+	 * @param _nullable: This defines if an attribute can take null values or not.
+	 */
 	public Attribute(String _attributeName, Type _type, long _id,
 			long _parentId, int _size, boolean _nullable) {
 		attributeName = _attributeName;
@@ -80,9 +110,12 @@ public class Attribute {
 		nullable = _nullable;
 		size = _size;
 		distinctEntries = false;
-		// values = new ArrayList();
 	}
 
+	/**
+	 * This constructor accepts a buffer and parses it to give an attribute object 
+	 * @param serializedBuffer : Buffer containing serialized data of an attribute object 
+	 */
 	public Attribute(ByteBuffer serializedBuffer) {
 		attributeName = "";
 		for (int i = 0; i < ATTRIBUTE_NAME_LENGTH; i++) {
@@ -90,7 +123,7 @@ public class Attribute {
 				attributeName += serializedBuffer.getChar(2 * i);
 			}
 		}
-		serializedBuffer.position(ATTRIBUTE_NAME_LENGTH*2);
+		serializedBuffer.position(ATTRIBUTE_NAME_LENGTH * 2);
 		id = serializedBuffer.getLong();
 		parentId = serializedBuffer.getLong();
 		size = serializedBuffer.getInt();
@@ -99,6 +132,11 @@ public class Attribute {
 		distinctEntries = serializedBuffer.get() != 0;
 	}
 
+	/**
+	 * This function parses the string to data type.
+	 * @param _type : String to be parsed.
+	 * @return : Data Type derived after parsing the input string.
+	 */
 	public static Type stringToType(final String _type) {
 		Type returnType = Type.Undeclared;
 		if (_type.toLowerCase().equalsIgnoreCase("int")) {
@@ -116,15 +154,15 @@ public class Attribute {
 		}
 		return returnType;
 	}
-	
-	public void setDistinct(boolean _distinctEntries){
+
+	/**
+	 * This function sets the distinct property of the attribute.
+	 * @param _distinctEntries : This defines if an attribute must take distinct values only.
+	 */
+	public void setDistinct(boolean _distinctEntries) {
 		distinctEntries = _distinctEntries;
 	}
 
-	/*
-	 * public boolean addToValueList(Object _val) { if (values.contains(_val)) {
-	 * return false; } else { values.add(_val); return true; } }
-	 */
 	public String toString() {
 		String str = attributeName + " " + type;
 		if (type == Type.Char) {
@@ -133,6 +171,10 @@ public class Attribute {
 		return str;
 	}
 
+	/**
+	 * This function serializes the attribute object.
+	 * @return : This returns the ByteBuffer containing serialized data of attribute object.
+	 */
 	public ByteBuffer serialize() {
 		ByteBuffer serializedBuffer = ByteBuffer
 				.allocate((int) SystemCatalogManager.ATTRIBUTE_RECORD_SIZE);
@@ -152,6 +194,10 @@ public class Attribute {
 		return serializedBuffer;
 	}
 
+	/**
+	 * This function evaluates and returns size of the attribute.
+	 * @return : The size of attribute.
+	 */
 	private int getSize() {
 		if (type == Attribute.Type.Int) {
 			return INT_SIZE;
@@ -167,10 +213,18 @@ public class Attribute {
 			return 0;
 	}
 
+	/**
+	 * This function returns the attribute size as set in member variable size.
+	 * @return : attribute size as set in member variable size.
+	 */
 	public int getAttributeSize() {
 		return size;
 	}
-	
+
+	/**
+	 * This function returns the attribute id.
+	 * @return : attribute id.
+	 */
 	public long getId() {
 		return id;
 	}

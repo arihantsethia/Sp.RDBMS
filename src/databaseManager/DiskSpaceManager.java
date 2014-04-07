@@ -24,12 +24,9 @@ public class DiskSpaceManager {
 	}
 
 	/**
-	 * Function call to open file give by filename if it exists else create a
-	 * new file.
-	 * 
-	 * @param fileName
-	 *            : name of the file to be opened
-	 * @return FileChannel corresponding to the opened file
+	 * Function call to open file given by filename if it exists else create a new file.
+	 * @param fileName : name of the file to be opened.
+	 * @return FileChannel: FileChannel of the corresponding file.
 	 */
 
 	public FileChannel openFile(final String fileName) {
@@ -56,6 +53,11 @@ public class DiskSpaceManager {
 		return fileChannel;
 	}
 
+	/**
+	 * Function call to close the fileChannel.
+	 * @param fileChannel : FileChannel of the file to be closed.
+	 * @return FileChannel: Whether the fileChannel was closed or not.
+	 */
 	public static boolean closeFile(final FileChannel fileChannel) {
 		try {
 			fileChannel.close();
@@ -69,14 +71,10 @@ public class DiskSpaceManager {
 	}
 
 	/**
-	 * This function reads the required block from the file
-	 * 
-	 * @param fileChannel
-	 *            : FileChannel corresponding to file from which data has to be
-	 *            read.
-	 * @param block
-	 *            : block number of the corresponding block
-	 * @return : returns the bytebuffer of the read data.
+	 * This function reads the required block from the file 
+	 * @param fileChannel: FileChannel corresponding to file from which data has to be read.
+	 * @param block: page number of the corresponding page
+	 * @return : returns the byte buffer of the read data.
 	 */
 	public ByteBuffer read(final FileChannel fileChannel, final long block) {
 		ByteBuffer buffer = ByteBuffer.allocate((int) BLOCK_SIZE);

@@ -13,40 +13,34 @@ import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * @param MAX_PAGE_COUNT
- *            maximum number of pages can be in buffer pool of main memory.
- *            clockTime used in replacement algorithm. isDirty used to tell
- *            whether a page is written by query or not. lookUpTable it gives
- *            extra information about pages lies on buffer pool like it returns
- *            block number corresponding to physical storage and also it tells
- *            about whether a page is PINNED or UNPINNED. lookUpMap it return
- *            logical address corresponding to given a physical address.
- *            diskSpaceManager object of class diskSpaceManager use to do low
- *            level operations like read or write blocks to disk. pagePool list
- *            of pages lies at main memory. openFiles return file descriptor
- *            corresponding to file id.
- */
-
 public class BufferManager {
 
 	/* This stores the maximum number of pages that can be in the main memory. */
 	public static final int MAX_PAGE_COUNT = 4096;
-
-	/**
-	 * If page is in memory & pinned then set the TIME_INDEX of the page to -1
-	 * If page is not present then the TIME_INDEX of the page = 0 If page is in
-	 * memory then the TIME_INDEX > 0
+	/*
+	 * isDirty used to tell whether a page is written by query or not.If isDirty
+	 * is set to true then the page needs to be written to physical memory.
 	 */
-
 	private boolean[] isDirty;
-	private PhysicalAddress[] lookUpTable;
+	/*
+	 * clockTick maintains the access frequency of each page. It is set to -1 is
+	 * a particular page is pinned. For a page in memory clockTick > 0 and if
+	 * clockTick = 0 then page can be evicted by page replacment algorithm.
+	 */
 	private long[] clockTick;
-	private Map<PhysicalAddress, Long> lookUpMap;
-	private DiskSpaceManager diskSpaceManager;
-	private ByteBuffer[] pagePool;
+	/*
+	 * openFiles is Map from relationId to FileChannel for the file containing
+	 * the table.
+	 */
 	private Map<Long, FileChannel> openFiles;
+	// lookUpTable is array of PhysicalAddress present in current page pool.
+	private PhysicalAddress[] lookUpTable;
+	// lookUpMap is a map from PhysicalAddresss to the index on lookUpTable.
+	private Map<PhysicalAddress, Long> lookUpMap;
+	// pagePool is an array of pages currently in main memory.
+	private ByteBuffer[] pagePool;
 	private RelationHolder relationHolder;
+	private DiskSpaceManager diskSpaceManager;
 
 	public BufferManager() {
 		diskSpaceManager = new DiskSpaceManager();
@@ -60,8 +54,9 @@ public class BufferManager {
 		initializeTable();
 	}
 
-	// initialize lookUpTable by default all pages will be free and they will
-	// point to -1 block number.
+	/**
+	 * initializes all the attributes of bufferManager to its default values.
+	 */
 	private void initializeTable() {
 		for (int i = 0; i < MAX_PAGE_COUNT; i++) {
 			isDirty[i] = false;
@@ -72,14 +67,22 @@ public class BufferManager {
 		openFiles.clear();
 	}
 
+	/**
+	 * This function clears the page pool and writes all the pages back to
+	 * physical memory
+	 */
 	public void flush() {
 		for (int i = 0; i < MAX_PAGE_COUNT; i++) {
 			writePhysical(lookUpTable[i]);
 		}
 	}
 
-	// return logical address of a block that is free. and if no block is free
-	// then use some replacement algorithms to free that block.
+	/**
+	 * This function returns the logical address of a free page. If no such
+	 * block exists then it evicts is page use LFU replacement algorithm.
+	 * 
+	 * @return logical address of a block that is free
+	 */
 	private long getFreeBlock() {
 		int logicalPageNumber = 0;
 		int distinctPinCount = 0;
@@ -107,7 +110,15 @@ public class BufferManager {
 		return (long) logicalPageNumber;
 	}
 
-	// assign a page in main memory to a new block retrieve from Disk Storage.
+	/**
+	 * Adds a page to the current page pool
+	 * 
+	 * @param physicalAddress
+	 *            : Physical Address of page.
+	 * @param pageData
+	 *            : Data stored on the page
+	 * @return the logical address where this page has been stored
+	 */
 	private long addToPagePool(final PhysicalAddress physicalAddress,
 			final ByteBuffer pageData) {
 		long logicalAddress = getFreeBlock();
@@ -118,7 +129,15 @@ public class BufferManager {
 		return logicalAddress;
 	}
 
-	// retrieve data from page in buffer pool given physicalAddress as argument.
+	/**
+	 * This function retrieves page date from page pool corresponding to
+	 * particular physicalAddress.
+	 * 
+	 * @param physicalAddress
+	 *            : PhysicalAddress of page to be fetched from pagePool.
+	 * @return The data stored on the particular page pointed by the
+	 *         PhysicalAddress.
+	 */
 	private ByteBuffer getPageFromPool(final PhysicalAddress physicalAddress) {
 		if (lookUpMap.containsKey(physicalAddress)) {
 			clockTick[lookUpMap.get(physicalAddress).intValue()]++;
@@ -129,8 +148,17 @@ public class BufferManager {
 		}
 	}
 
-	// retrieve data from page in buffer pool given relation and block no. as
-	// argument.
+	/**
+	 * This function retrieves page date from page pool corresponding to
+	 * particular relation, id.
+	 * 
+	 * @param relationId
+	 *            : relation table for which page needs to be fetched.
+	 * @param block
+	 *            : page number of the corresponding page
+	 * @return The data stored on the particular page pointed by the relationId
+	 *         and page number.
+	 */
 	private ByteBuffer getPageFromPool(final long relationId, final long block) {
 		return getPageFromPool(getPhysicalAddress(relationId, block));
 	}
@@ -261,17 +289,38 @@ public class BufferManager {
 		return false;
 	}
 
-	public boolean writeRecordBitmap(long relationId, long block,
-			int recordNumber, int setValue) {
+	public boolean writeBlockBitmap(long relationId, long blockNumber,
+			boolean setValue) {
+		long block = blockNumber / (DiskSpaceManager.BLOCK_SIZE * Byte.SIZE);
+		int blockMod = (int) (blockNumber % (DiskSpaceManager.BLOCK_SIZE * Byte.SIZE));
 		PhysicalAddress physicalAddress = getPhysicalAddress(relationId, block);
 		if (lookUpMap.containsKey(physicalAddress)) {
 			isDirty[lookUpMap.get(physicalAddress).intValue()] = true;
 			byte oldValue = pagePool[lookUpMap.get(physicalAddress).intValue()]
-					.get(recordNumber / Byte.SIZE);
+					.get((int) (blockMod / Byte.SIZE));
 			BitSet bitSet = BitSet.valueOf(new byte[] { oldValue });
-			bitSet.set(recordNumber % Byte.SIZE, (setValue == 1));
+			bitSet.set((int) (blockMod % Byte.SIZE), setValue);
+			pagePool[lookUpMap.get(physicalAddress).intValue()].put(blockMod
+					/ Byte.SIZE, bitSet.toByteArray()[0]);
+			return true;
+		}
+		return false;
+	}
+
+	public boolean writeRecordBitmap(long relationId, long block,
+			int recordsPerBlock, int recordNumber, boolean setValue) {
+		PhysicalAddress physicalAddress = getPhysicalAddress(relationId, block);
+		if (lookUpMap.containsKey(physicalAddress)) {
+			isDirty[lookUpMap.get(physicalAddress).intValue()] = true;
+			ByteBuffer currentBlock = pagePool[lookUpMap.get(physicalAddress).intValue()];
+			byte oldValue = currentBlock.get(recordNumber / Byte.SIZE);
+			BitSet bitSet = BitSet.valueOf(new byte[] { oldValue });
+			bitSet.set(recordNumber % Byte.SIZE, setValue);
 			pagePool[lookUpMap.get(physicalAddress).intValue()].put(
 					recordNumber / Byte.SIZE, bitSet.toByteArray()[0]);
+			if(getFreeRecordOffset(relationId,block,recordsPerBlock,50) == -1){
+				writeBlockBitmap(relationId, block, true);
+			}
 			return true;
 		}
 		return false;
@@ -284,8 +333,7 @@ public class BufferManager {
 		while (true) {
 			read(relationId, bitMapBlockNumber).get(freeBlocks);
 			bitMapFreeBlocks = BitSet.valueOf(freeBlocks);
-			for (int i = 1; i < DiskSpaceManager.BLOCK_SIZE
-					* DiskSpaceManager.BLOCK_SIZE; i++) {
+			for (int i = 1; i < DiskSpaceManager.BLOCK_SIZE * Byte.SIZE; i++) {
 				if (bitMapFreeBlocks.get(i) == false) {
 					return i + bitMapBlockNumber;
 				}
