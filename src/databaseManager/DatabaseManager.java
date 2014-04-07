@@ -22,4 +22,8 @@ public class DatabaseManager {
 	public void close() {
 		systemCatalog.close();
 	}
+	
+	public void parseCommand(String stmt){
+		systemCatalog.createTable(stmt);
+	}
 }

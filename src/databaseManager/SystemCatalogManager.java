@@ -8,11 +8,7 @@
 package databaseManager;
 
 import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Date;
-import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.util.StringTokenizer;
 
 /**
@@ -53,43 +49,18 @@ public class SystemCatalogManager {
 				RELATION_CATALOG_ID);
 		tableRelation.setRecordSize(RELATION_RECORD_SIZE);
 		relationHolder.addRelation(tableRelation);
-		int position = 0;
-		long relationCatalogSize = tableRelation.getFileSize();
-		long bitMapBlockNumber = 0;
-		long recordsPerBlock = tableRelation.getRecordsPerBlock();
-		byte[] bitMapBytes = new byte[(int) (recordsPerBlock + 7) / 8];
-		BitSet bitMapRecords;
 		Relation tempRelation;
-		while (true) {
-			for (long i = 1; i < DiskSpaceManager.BLOCK_SIZE * Byte.SIZE; i++) {
-				if ((i + bitMapBlockNumber + 1) * DiskSpaceManager.BLOCK_SIZE <= relationCatalogSize) {
-					ByteBuffer currentBlock = bufferManager.read(
-							RELATION_CATALOG_ID, bitMapBlockNumber + i);
-					currentBlock.get(bitMapBytes);
-					position = currentBlock.position();
-					bitMapRecords = BitSet.valueOf(bitMapBytes);
-					for (int j = 0; j < bitMapRecords.length(); j++) {
-						if (bitMapRecords.get(j)) {
-							byte[] blockEntry = new byte[RELATION_RECORD_SIZE];
-							currentBlock.position(position);
-							currentBlock.get(blockEntry);
-							tempRelation = new Relation(
-									ByteBuffer.wrap(blockEntry));
-							if (totalRelationsCount < tempRelation
-									.getRelationId()) {
-								totalRelationsCount = tempRelation
-										.getRelationId() + 1;
-							}
-							relationHolder.addRelation(tempRelation);
-						}
-						position += RELATION_RECORD_SIZE;
-					}
-				} else {
-					return;
+		Iterator relationIterator = new Iterator(tableRelation);
+		while (relationIterator.hasNext()) {
+			ByteBuffer relationRecord = relationIterator.getNext();
+			if (relationRecord != null) {
+				relationRecord.position(0);
+				tempRelation = new Relation(relationRecord);
+				if (totalRelationsCount < tempRelation.getRelationId()) {
+					totalRelationsCount = tempRelation.getRelationId() + 1;
 				}
+				relationHolder.addRelation(tempRelation);
 			}
-			bitMapBlockNumber = bitMapBlockNumber + DiskSpaceManager.BLOCK_SIZE
-					* Byte.SIZE;
 		}
 	}
 
@@ -98,40 +69,18 @@ public class SystemCatalogManager {
 				ATTRIBUTE_CATALOG_ID);
 		attributeRelation.setRecordSize(ATTRIBUTE_RECORD_SIZE);
 		relationHolder.addRelation(attributeRelation);
-		int position = 0;
-		long attributeCatalogSize = attributeRelation.getFileSize();
-		long bitMapBlockNumber = 0;
-		long recordsPerBlock = attributeRelation.getRecordsPerBlock();
-		byte[] bitMapBytes = new byte[(int) (recordsPerBlock + 7) / 8];
-		BitSet bitMapRecords;
 		Attribute tempAttribute;
-		while (true) {
-			for (long i = 1; i < DiskSpaceManager.BLOCK_SIZE * Byte.SIZE; i++) {
-				if ((i + bitMapBlockNumber + 1) * DiskSpaceManager.BLOCK_SIZE <= attributeCatalogSize) {
-					ByteBuffer currentBlock = bufferManager.read(
-							ATTRIBUTE_CATALOG_ID, bitMapBlockNumber + i);
-					currentBlock.position(position);
-					currentBlock.get(bitMapBytes);
-					bitMapRecords = BitSet.valueOf(bitMapBytes);
-					for (int j = 0; j < bitMapRecords.length(); j++) {
-						if (bitMapRecords.get(j)) {
-							byte[] blockEntry = new byte[ATTRIBUTE_RECORD_SIZE];
-							currentBlock.get(blockEntry);
-							tempAttribute = new Attribute(
-									ByteBuffer.wrap(blockEntry));
-							if (totalAttributesCount < tempAttribute.getId()) {
-								totalAttributesCount = tempAttribute.getId() + 1;
-							}
-							attributesList.add(tempAttribute);
-						}
-						position += RELATION_RECORD_SIZE;
-					}
-				} else {
-					return;
+		Iterator attributeIterator = new Iterator(attributeRelation);
+		while (attributeIterator.hasNext()) {
+			ByteBuffer attributeRecord = attributeIterator.getNext();
+			if (attributeRecord != null) {
+				attributeRecord.position(0);
+				tempAttribute = new Attribute(attributeRecord);
+				if (totalAttributesCount < tempAttribute.getId()) {
+					totalAttributesCount = tempAttribute.getId() + 1;
 				}
+				attributesList.add(tempAttribute);
 			}
-			bitMapBlockNumber = bitMapBlockNumber + DiskSpaceManager.BLOCK_SIZE
-					* Byte.SIZE;
 		}
 	}
 
@@ -149,7 +98,7 @@ public class SystemCatalogManager {
 			addRelationToCatalog(newRelation);
 			StringTokenizer tokens = new StringTokenizer(
 					relationStmt.substring(relationStmt.indexOf("(") + 1,
-							relationStmt.indexOf(")")), ",");
+							relationStmt.lastIndexOf(")")), ",");
 			while (tokens.hasMoreTokens()) {
 				StringTokenizer attributeTokens = new StringTokenizer(tokens
 						.nextToken().trim(), " ");

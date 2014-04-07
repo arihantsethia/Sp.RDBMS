@@ -43,7 +43,7 @@ public class Iterator {
 		return true;
 	}
 
-	public byte[] getNext() {
+	public ByteBuffer getNext() {
 		long relationFileSize = relation.getFileSize();
 		while(relationFileSize >= currentBlock*DiskSpaceManager.BLOCK_SIZE ){
 			if (currentBlock % (DiskSpaceManager.BLOCK_SIZE * Byte.SIZE) == 0) {
@@ -52,7 +52,7 @@ public class Iterator {
 			if(nextRecord == 0){
 				currentBuffer = bufferManager.read(relation.getRelationId(), currentBlock);
 				currentBuffer.get(bitMapBytes);
-				position = currentBuffer.get();
+				position = currentBuffer.position();
 				bitMapRecords = BitSet.valueOf(bitMapBytes);
 			}
 			for(;nextRecord < bitMapRecords.length();){
@@ -61,13 +61,14 @@ public class Iterator {
 					currentBuffer.get(recordEntry);
 					position += relation.getRecordSize();
 					nextRecord++;
-					return recordEntry;
+					return ByteBuffer.wrap(recordEntry);
 				}else{
 					nextRecord++;
 					position += relation.getRecordSize();
 				}				
 			}
 			nextRecord = 0;
+			currentBlock++;
 		}
 		return null;
 	}
@@ -78,17 +79,17 @@ public class Iterator {
 	 * @return If there is another record.
 	 */
 	public boolean hasNext() {
-		long Blocktotal = relation.getFileSize() / DiskSpaceManager.BLOCK_SIZE;
-		if (currentBlock > Blocktotal - 1) {
+		long blockTotal = relation.getFileSize() / DiskSpaceManager.BLOCK_SIZE;
+		if (currentBlock >= blockTotal) {
 			return false;
-		} else if (currentBlock == Blocktotal - 1) {
+		} else if (currentBlock == blockTotal - 1) {
 			if (nextRecord >= relation.getRecordsPerBlock()) {
 				return false;
 			} else {
 				return true;
 			}
 		} else {
-			return false;
+			return true;
 		}
 	}
 

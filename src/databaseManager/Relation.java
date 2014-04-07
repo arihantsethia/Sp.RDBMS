@@ -9,8 +9,6 @@ import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 
-import databaseManager.Attribute.Type;
-
 public class Relation {
 
 	public static final int RELATION_NAME_LENGTH = 50;
@@ -53,7 +51,7 @@ public class Relation {
 		serializedBuffer.position(RELATION_NAME_LENGTH * 2);
 		id = serializedBuffer.getLong();
 		recordSize = serializedBuffer.getInt();
-		blockCount = serializedBuffer.getInt();
+		blockCount = serializedBuffer.getLong();
 		recordsCount = serializedBuffer.getLong();
 		creationDate = serializedBuffer.getLong();
 		lastModified = serializedBuffer.getLong();

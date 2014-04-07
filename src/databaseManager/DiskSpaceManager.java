@@ -5,7 +5,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.RandomAccessFile;
 import java.nio.ByteBuffer;
-import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 
 public class DiskSpaceManager {
@@ -36,7 +35,6 @@ public class DiskSpaceManager {
 			file = new RandomAccessFile(fileName, "rw");
 			fileChannel = file.getChannel();
 		} catch (FileNotFoundException error) {
-			// TODO Auto-generated catch block
 			try {
 				File newFile = new File(fileName);
 				if (newFile.createNewFile()) {
@@ -63,7 +61,6 @@ public class DiskSpaceManager {
 			fileChannel.close();
 			return true;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			System.out.println("Couldn't close the required file.");
 			e.printStackTrace();
 		}
