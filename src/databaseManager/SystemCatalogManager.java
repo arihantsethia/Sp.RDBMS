@@ -53,6 +53,7 @@ public class SystemCatalogManager {
 				RELATION_CATALOG_ID);
 		tableRelation.setRecordSize(RELATION_RECORD_SIZE);
 		relationHolder.addRelation(tableRelation);
+		int position = 0;
 		long relationCatalogSize = tableRelation.getFileSize();
 		long bitMapBlockNumber = 0;
 		long recordsPerBlock = tableRelation.getRecordsPerBlock();
@@ -65,10 +66,12 @@ public class SystemCatalogManager {
 					ByteBuffer currentBlock = bufferManager.read(
 							RELATION_CATALOG_ID, bitMapBlockNumber + i);
 					currentBlock.get(bitMapBytes);
+					position = currentBlock.position();
 					bitMapRecords = BitSet.valueOf(bitMapBytes);
 					for (int j = 0; j < bitMapRecords.length(); j++) {
 						if (bitMapRecords.get(j)) {
 							byte[] blockEntry = new byte[RELATION_RECORD_SIZE];
+							currentBlock.position(position);
 							currentBlock.get(blockEntry);
 							tempRelation = new Relation(
 									ByteBuffer.wrap(blockEntry));
@@ -79,6 +82,7 @@ public class SystemCatalogManager {
 							}
 							relationHolder.addRelation(tempRelation);
 						}
+						position += RELATION_RECORD_SIZE;
 					}
 				} else {
 					return;
@@ -94,6 +98,7 @@ public class SystemCatalogManager {
 				ATTRIBUTE_CATALOG_ID);
 		attributeRelation.setRecordSize(ATTRIBUTE_RECORD_SIZE);
 		relationHolder.addRelation(attributeRelation);
+		int position = 0;
 		long attributeCatalogSize = attributeRelation.getFileSize();
 		long bitMapBlockNumber = 0;
 		long recordsPerBlock = attributeRelation.getRecordsPerBlock();
@@ -105,6 +110,7 @@ public class SystemCatalogManager {
 				if ((i + bitMapBlockNumber + 1) * DiskSpaceManager.BLOCK_SIZE <= attributeCatalogSize) {
 					ByteBuffer currentBlock = bufferManager.read(
 							ATTRIBUTE_CATALOG_ID, bitMapBlockNumber + i);
+					currentBlock.position(position);
 					currentBlock.get(bitMapBytes);
 					bitMapRecords = BitSet.valueOf(bitMapBytes);
 					for (int j = 0; j < bitMapRecords.length(); j++) {
@@ -118,6 +124,7 @@ public class SystemCatalogManager {
 							}
 							attributesList.add(tempAttribute);
 						}
+						position += RELATION_RECORD_SIZE;
 					}
 				} else {
 					return;
