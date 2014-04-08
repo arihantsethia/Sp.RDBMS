@@ -1,4 +1,5 @@
 package databaseManager;
+import java.util.ArrayList;
 
 public class Utility {
 	private static Utility uty ;
@@ -36,4 +37,18 @@ public class Utility {
 	public char stringToChar(String s){
 			return s.charAt(1) ;
 	}
+	
+	public boolean isVarChar(String s , int size)
+	{
+		s = s.trim();
+		if(s.length() >= 2 && s.length() <= size )
+		{
+			if(s.charAt(0)=='\'' && s.charAt(s.length()-1)=='\''){
+				return true ;
+			}
+			return false ;
+		}
+		return false ;
+	}
+	
 }

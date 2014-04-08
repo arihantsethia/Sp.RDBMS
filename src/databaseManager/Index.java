@@ -119,7 +119,21 @@ public class Index {
 	}
 
 	public boolean containsDuplicates() {
+		return duplicates;
+	}
+
+	public long getPageNumber() {
 		// TODO Auto-generated method stub
-		return false;
+		return 0;
+	}
+
+	public int getRecordNumber() {
+		// TODO Auto-generated method stub
+		return 0;
+	}
+
+	public void setAddress(long freePageNumber, int recordNumber) {
+		// TODO Auto-generated method stub
+		
 	}
 }

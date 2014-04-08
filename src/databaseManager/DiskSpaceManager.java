@@ -66,6 +66,11 @@ public class DiskSpaceManager {
 		}
 		return false;
 	}
+	
+	public boolean deleteFile(String fileName) {
+		File file = new File(fileName);
+		return file.delete();
+	}
 
 	/**
 	 * This function reads the required page from the file 
