@@ -67,39 +67,44 @@ public class Relation {
 		indexed = new HashSet<String>();
 	}
 
-	public int addAttribute(String attributeName, Attribute.Type type, long _id) {
+	public boolean addAttribute(String attributeName, Attribute.Type type, long _id) {
 		if (!attributesNames.containsKey(attributeName)) {
-			attributes.add(new Attribute(attributeName, type, id, id));
+			Attribute newAttribute = new Attribute(attributeName, type, id, id);
+			newAttribute.setPosition(attributes.size());
+			attributes.add(newAttribute);
 			attributesNames.put(attributeName, attributes.size() - 1);
 			recordSize = recordSize + Attribute.Type.getSize(type);
-			return attributes.size() - 1;
+			return true;
 		}
-		return -1;
+		return false;
 	}
 
-	public int addAttribute(String attributeName, Attribute.Type type,
+	public boolean addAttribute(String attributeName, Attribute.Type type,
 			long _id, int length) {
 		if (!attributesNames.containsKey(attributeName)) {
-			attributes.add(new Attribute(attributeName, type, id, id, length));
+			Attribute newAttribute = new Attribute(attributeName, type, id, id, length);
+			newAttribute.setPosition(attributes.size());
+			attributes.add(newAttribute);
 			attributesNames.put(attributeName, attributes.size() - 1);
 			recordSize = recordSize + length;
-			return attributes.size() - 1;
+			return true;
 		}
-		return -1;
+		return false;
 	}
-
-	public int addAttribute(Attribute attribute, boolean addToSize) {
-		if (!attributesNames.containsKey(attribute)) {
-			attributes.add(attribute.getPosition(), attribute);
-			attributesNames.put(attribute.getAttributeName(),
-					attribute.getPosition());
+	
+	public boolean addAttribute(Attribute attribute, boolean addToSize) {
+		if(!attributesNames.containsKey(attribute.getAttributeName())){
+			if(attribute.getPosition() == -1){
+				attribute.setPosition(attributes.size());
+			}
+			attributes.add(attribute.getPosition(),attribute);
+			attributesNames.put(attribute.getAttributeName(),attribute.getPosition());
 			if(addToSize){
-				System.out.println("Inserr" + attribute.getAttributeSize());
 				recordSize = recordSize + attribute.getAttributeSize();
 			}
-			return attribute.getPosition();
+			return true;
 		}
-		return -1;
+		return false;
 	}
 	
 	public boolean addIndex(String indexName) {

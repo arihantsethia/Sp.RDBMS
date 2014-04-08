@@ -159,8 +159,6 @@ public class SystemCatalogManager {
 				Attribute newAttribute = new Attribute(attributeName,
 						attributeType, totalAttributesCount,
 						newRelation.getRelationId(), size, nullable);
-				System.out.println(newRelation.getRecordSize());
-				newAttribute.setPosition(newRelation.getAttributesCount());
 				newRelation.addAttribute(newAttribute, true);
 				addAttributeToCatalog(newAttribute);
 			}

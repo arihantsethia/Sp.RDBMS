@@ -71,6 +71,7 @@ public class Attribute {
 		parentId = _parentId;
 		nullable = true;
 		size = getSize();
+		position = -1;
 		distinctEntries = false;
 	}
 
@@ -89,6 +90,7 @@ public class Attribute {
 		id = _id;
 		parentId = _parentId;
 		size = _size;
+		position = -1;
 		nullable = true;
 		distinctEntries = false;
 	}
@@ -110,6 +112,7 @@ public class Attribute {
 		parentId = _parentId;
 		nullable = _nullable;
 		size = _size;
+		position = -1;
 		distinctEntries = false;
 	}
 
