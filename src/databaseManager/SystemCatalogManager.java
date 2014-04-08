@@ -227,4 +227,21 @@ public class SystemCatalogManager {
 	public void close() {
 		bufferManager.flush();
 	}
+	
+	public boolean dropTable(String query){
+		return true ;
+	}
+	
+	public boolean removeRelationFromCatalog(String RelationName){
+		return true ;
+	}
+	
+	public boolean insertRecord(String query){
+		String relationName  = query.split(" ")[2].trim() ;
+		long relationId = relationHolder.getRelationIdByRelationName(relationName) ;
+		Relation relation = relationHolder.getRelation(relationId) ;
+		long blockCount = relation.getFileSize() / DiskSpaceManager.BLOCK_SIZE - 1 ;
+		
+		return true ;
+	}
 }
