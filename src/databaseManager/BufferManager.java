@@ -61,7 +61,7 @@ public class BufferManager {
      * The Singleton accessor for BufferManagers.  This is the only way to get a BufferManager.
      * @return The copy of BufferManager for the system.
      */
-    public static BufferManager getBufferManager() {
+    public synchronized static BufferManager getBufferManager() {
     	if (thisbuffer != null) {
     		return thisbuffer;
     	} else {
@@ -387,5 +387,9 @@ public class BufferManager {
 		}
 		diskSpaceManager.closeFile(openFiles.get(indexId));
 		openFiles.remove(indexId);
+	}
+
+	public boolean deleteFile(String fileName) {
+		return diskSpaceManager.deleteFile(fileName);		
 	}
 }

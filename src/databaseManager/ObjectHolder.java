@@ -38,6 +38,22 @@ public class ObjectHolder {
 
 		return true;
 	}
+	
+	public boolean addObjectToRelation(Object object){
+		if (object instanceof Attribute) {
+			Attribute aObject = (Attribute) object;
+			Relation relation = (Relation) objects.get(aObject.getParentId());
+			relation.addAttribute(aObject);
+		} else if (object instanceof Index) {
+			Index iObject = (Index) object;
+			if (getRelationIdByRelationName(iObject.getIndexName()) != -1) {
+				return false;
+			}
+			objects.put(iObject.getIndexId(), iObject);
+		}
+
+		return true;
+	}
 
 	public Object getObject(final long objectId) {
 		return objects.get(objectId);
@@ -72,6 +88,14 @@ public class ObjectHolder {
 			}
 		}
 		return -1;
+	}
+	
+	public boolean removeObject(long id){
+		if(objects.containsKey(id)){
+			objects.remove(id);
+			return true;
+		}
+		return false;
 	}
 
 	// Deprecated

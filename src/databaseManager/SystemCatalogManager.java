@@ -25,7 +25,7 @@ public class SystemCatalogManager {
 	public static final String RELATION_CATALOG = "relation_catalog.db";
 	public static final String ATTRIBUTE_CATALOG = "attribute_catalog.db";
 	public static final String INDEX_CATALOG = "index_catalog.db";
-	public static final int RELATION_RECORD_SIZE = 144;
+	public static final int RELATION_RECORD_SIZE = 160;
 	public static final long RELATION_CATALOG_ID = 0;
 	public static final int ATTRIBUTE_RECORD_SIZE = 126;
 	public static final long ATTRIBUTE_CATALOG_ID = 1;
@@ -160,6 +160,8 @@ public class SystemCatalogManager {
 				Attribute newAttribute = new Attribute(attributeName,
 						attributeType, totalAttributesCount,
 						newRelation.getRelationId(), size, nullable);
+				newAttribute.setPosition(newRelation.getAttributesCount());
+				newRelation.addAttribute(newAttribute);
 				addAttributeToCatalog(newAttribute);
 			}
 			updateRelationCatalog(newRelation.getRelationId(),
@@ -195,12 +197,30 @@ public class SystemCatalogManager {
 		int freeRecordOffset = bufferManager.getFreeRecordOffset(
 				RELATION_CATALOG_ID, freePageNumber, relationRecordsPerPage,
 				RELATION_RECORD_SIZE);
-		bufferManager.write(RELATION_CATALOG_ID, freePageNumber,
-				freeRecordOffset, newRelation.serialize());
 		int recordNumber = (freeRecordOffset - (relationRecordsPerPage + 7) / 8)
 				/ RELATION_RECORD_SIZE;
+		newRelation.setAddress(freePageNumber, recordNumber);
+		bufferManager.write(RELATION_CATALOG_ID, freePageNumber,
+				freeRecordOffset, newRelation.serialize());
 		bufferManager.writeRecordBitmap(RELATION_CATALOG_ID, freePageNumber,
 				relationRecordsPerPage, recordNumber, true);
+		totalObjectsCount++;
+	}
+	
+	public void addIndexToCatalog(Index newIndex) {
+		int indexRecordsPerPage = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * INDEX_RECORD_SIZE));
+		long freePageNumber = bufferManager
+				.getFreePageNumber(RELATION_CATALOG_ID);
+		int freeRecordOffset = bufferManager.getFreeRecordOffset(
+				RELATION_CATALOG_ID, freePageNumber, indexRecordsPerPage,
+				RELATION_RECORD_SIZE);
+		int recordNumber = (freeRecordOffset - (indexRecordsPerPage + 7) / 8)
+				/ RELATION_RECORD_SIZE;
+		newIndex.setAddress(freePageNumber, recordNumber);
+		bufferManager.write(RELATION_CATALOG_ID, freePageNumber,
+				freeRecordOffset, newIndex.serialize());
+		bufferManager.writeRecordBitmap(RELATION_CATALOG_ID, freePageNumber,
+				indexRecordsPerPage, recordNumber, true);
 		totalObjectsCount++;
 	}
 
@@ -208,12 +228,32 @@ public class SystemCatalogManager {
 		bufferManager.flush();
 	}
 	
-	public boolean dropTable(String query){
-		return true ;
+	public boolean dropTable(String relationName){
+		long newRelationId = objectHolder.getRelationIdByRelationName(relationName);
+		if(newRelationId !=-1){
+			Relation newRelation = (Relation) objectHolder.getObject(newRelationId);
+			bufferManager.writeRecordBitmap(newRelationId, newRelation.getPageNumber(),
+					newRelation.getRecordsPerPage(), newRelation.getRecordNumber(), false);
+			bufferManager.closeFile(newRelationId);
+			bufferManager.deleteFile(newRelation.getFileName());
+			objectHolder.removeObject(newRelationId);
+			return true ;
+		}
+		return false;
 	}
 	
-	public boolean removeRelationFromCatalog(String RelationName){
-		return true ;
+	public boolean dropIndex(String indexName){
+		long newIndexId = objectHolder.getRelationIdByRelationName(indexName);
+		if(newIndexId !=-1){
+			Index newIndex = (Index) objectHolder.getObject(newIndexId);
+			bufferManager.writeRecordBitmap(newIndexId, newIndex.getPageNumber(),
+					newIndex.getRecordsPerPage(), newIndex.getRecordNumber(), false);
+			bufferManager.closeFile(newIndexId);
+			bufferManager.deleteFile(newIndex.getFileName());
+			objectHolder.removeObject(newIndexId);
+			return true ;
+		}
+		return false;
 	}
 	
 	public boolean insertRecord(String query){

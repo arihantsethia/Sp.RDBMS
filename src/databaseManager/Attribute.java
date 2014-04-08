@@ -53,6 +53,7 @@ public class Attribute {
 	private long id;
 	private Type type;
 	private int size;
+	private int position;
 	private boolean nullable;
 	private boolean distinctEntries;
 
@@ -127,6 +128,7 @@ public class Attribute {
 		id = serializedBuffer.getLong();
 		parentId = serializedBuffer.getLong();
 		size = serializedBuffer.getInt();
+		position = serializedBuffer.getInt(position);
 		type = Type.toType(serializedBuffer.getInt());
 		nullable = serializedBuffer.get() != 0;
 		distinctEntries = serializedBuffer.get() != 0;
@@ -162,6 +164,10 @@ public class Attribute {
 	public void setDistinct(boolean _distinctEntries) {
 		distinctEntries = _distinctEntries;
 	}
+	
+	public void setPosition(int _position){
+		position = _position;
+	}
 
 	public String toString() {
 		String str = attributeName + " " + type;
@@ -188,6 +194,7 @@ public class Attribute {
 		serializedBuffer.putLong(id);
 		serializedBuffer.putLong(parentId);
 		serializedBuffer.putInt(size);
+		serializedBuffer.putInt(position);
 		serializedBuffer.putInt(Type.toInt(type));
 		serializedBuffer.put((byte) (nullable ? 1 : 0));
 		serializedBuffer.put((byte) (distinctEntries ? 1 : 0));
@@ -227,6 +234,14 @@ public class Attribute {
 	 */
 	public long getId() {
 		return id;
+	}
+	
+	public long getParentId(){
+		return parentId;
+	}
+
+	public int getPosition() {
+		return position;
 	}
 
 }

@@ -2,7 +2,7 @@ package databaseManager;
 
 import java.io.File;
 import java.nio.ByteBuffer;
-import java.util.ArrayList;
+import java.util.Vector;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -15,8 +15,8 @@ public class Relation {
 	
 	private String relationName;
 	private String fileName;
-	private ArrayList<Attribute> attributes;
-	private Set<String> attributesNames;
+	private Vector<Attribute> attributes;
+	private Map<String , Integer> attributesNames;
 	private Map<String, String> indexFiles;
 	private Set<String> indexed;
 	private long id;
@@ -25,13 +25,15 @@ public class Relation {
 	private int recordSize;
 	private long creationDate;
 	private long lastModified;
+	private long pageNumber;
+	private int recordNumber;
 
 	public Relation(String _relationName, long _id) {
 		relationName = _relationName;
 		fileName = _relationName + ".db";
 		id = _id;
-		attributes = new ArrayList<Attribute>();
-		attributesNames = new HashSet<String>();
+		attributes = new Vector<Attribute>();
+		attributesNames = new HashMap<String,Integer>();
 		indexFiles = new HashMap<String, String>();
 		indexed = new HashSet<String>();
 		creationDate = (new Date()).getTime();
@@ -51,32 +53,50 @@ public class Relation {
 		serializedBuffer.position(RELATION_NAME_LENGTH * 2);
 		id = serializedBuffer.getLong();
 		recordSize = serializedBuffer.getInt();
+		int attributesCount = serializedBuffer.getInt();
 		pageCount = serializedBuffer.getLong();
 		recordsCount = serializedBuffer.getLong();
 		creationDate = serializedBuffer.getLong();
 		lastModified = serializedBuffer.getLong();
+		pageNumber = serializedBuffer.getLong();
+		recordNumber = serializedBuffer.getInt();
 		fileName = relationName+".db";
-		attributes = new ArrayList<Attribute>();
-		attributesNames = new HashSet<String>();
+		attributes = new Vector<Attribute>(attributesCount);
+		attributesNames = new HashMap<String,Integer>();
 		indexFiles = new HashMap<String, String>();
 		indexed = new HashSet<String>();
 	}
 
-	public boolean addAttribute(String attributeName, Attribute.Type type,
+	public int addAttribute(String attributeName, Attribute.Type type,
 			long _id) {
-		if (!attributesNames.contains(attributeName)) {
+		if (!attributesNames.containsKey(attributeName)) {
 			attributes.add(new Attribute(attributeName, type, id, id));
+			attributesNames.put(attributeName,attributes.size()-1);
+			recordSize = recordSize + Attribute.Type.getSize(type);
+			return attributes.size()-1;
 		}
-		return false;
+		return -1;
 	}
 
-	public boolean addAttribute(String attributeName, Attribute.Type type,
+	public int addAttribute(String attributeName, Attribute.Type type,
 			long _id, int length) {
-		if (!attributesNames.contains(attributeName)) {
+		if (!attributesNames.containsKey(attributeName)) {
 			attributes.add(new Attribute(attributeName, type, id, id, length));
+			attributesNames.put(attributeName,attributes.size()-1);
 			recordSize = recordSize + length;
+			return attributes.size()-1;
 		}
-		return false;
+		return -1;
+	}
+	
+	public int addAttribute(Attribute attribute) {
+		if(!attributesNames.containsKey(attribute)){
+			attributes.add(attribute.getPosition(),attribute);
+			attributesNames.put(attribute.getAttributeName(),attribute.getPosition());
+			return attribute.getPosition();
+		}
+		return -1;
+		
 	}
 
 	public boolean addIndex(String indexName) {
@@ -101,13 +121,17 @@ public class Relation {
 	 * 
 	 * @return
 	 */
-	public long getRecordsPerPage() {
-		long numberOfRecords = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * recordSize));
+	public int getRecordsPerPage() {
+		int numberOfRecords = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * recordSize));
 		return numberOfRecords;
 	}
 
 	public long getRelationId() {
 		return id;
+	}
+	
+	public int getAttributesCount(){
+		return attributes.size();
 	}
 
 	public String getRelationName() {
@@ -127,11 +151,19 @@ public class Relation {
 		return creationDate;
 	}
 
-	public long getRecordSize() {
+	public int getRecordSize() {
 		return recordSize;
 	}
 
-	public ArrayList<Attribute> getAttributes() {
+	public int getRecordNumber() {
+		return recordNumber;
+	}
+
+	public long getPageNumber() {
+		return pageNumber;
+	}
+	
+	public Vector<Attribute> getAttributes() {
 		return attributes;
 	}
 
@@ -146,11 +178,14 @@ public class Relation {
 			}
 		}
 		serializedBuffer.putLong(id);
+		serializedBuffer.putInt(attributes.size());
 		serializedBuffer.putInt(recordSize);
 		serializedBuffer.putLong(pageCount);
 		serializedBuffer.putLong(recordsCount);
 		serializedBuffer.putLong(creationDate);
 		serializedBuffer.putLong(lastModified);
+		serializedBuffer.putLong(pageNumber);
+		serializedBuffer.putInt(recordNumber);
 		return serializedBuffer;
 	}
 
@@ -162,4 +197,10 @@ public class Relation {
 	public void setRecordSize(int _recordSize) {
 		recordSize = _recordSize;
 	}
+	
+	public void setAddress(long page, int offset){
+		pageNumber = page;
+		recordNumber = offset;
+	}
+	
 }
