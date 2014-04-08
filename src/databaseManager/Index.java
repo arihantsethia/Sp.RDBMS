@@ -10,17 +10,21 @@ public class Index {
 	
 	private String indexName;
 	private String fileName;
+	private boolean duplicates;
 	private long id;
+	private PhysicalAddress rootPage;
+	private int rootOffset;
 	private long pageCount;
 	private long recordsCount;
 	private int recordSize;
 	private long creationDate;
 	private long lastModified;
 
-	public Index(String _indexName, long _id) {
+	public Index(String _indexName, long _id, boolean _duplicates) {
 		indexName = _indexName;
 		fileName = _indexName + ".index";
 		id = _id;
+		duplicates = _duplicates;
 		creationDate = (new Date()).getTime();
 		lastModified = (new Date()).getTime();
 		pageCount = 1;
@@ -51,8 +55,8 @@ public class Index {
 	 * 
 	 * @return
 	 */
-	public long getRecordsPerPage() {
-		long numberOfRecords = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * recordSize));
+	public int getRecordsPerPage() {
+		int numberOfRecords = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * recordSize));
 		return numberOfRecords;
 	}
 
@@ -77,7 +81,7 @@ public class Index {
 		return creationDate;
 	}
 
-	public long getRecordSize() {
+	public int getRecordSize() {
 		return recordSize;
 	}
 
@@ -107,5 +111,15 @@ public class Index {
 
 	public void setRecordSize(int _recordSize) {
 		recordSize = _recordSize;
+	}
+	
+	public void setRoot(PhysicalAddress _physicalAddress, int _rootOffset){
+		rootPage = _physicalAddress;
+		rootOffset = _rootOffset;
+	}
+
+	public boolean containsDuplicates() {
+		// TODO Auto-generated method stub
+		return false;
 	}
 }

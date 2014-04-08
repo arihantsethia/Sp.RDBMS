@@ -375,4 +375,17 @@ public class BufferManager {
 		}
 		return -1;
 	}
+
+	public void closeFile(long indexId) {
+		for(int i=0; i<MAX_PAGE_COUNT; i++){
+			if(lookUpTable[i].id == indexId){
+				writePhysical(lookUpTable[i]);
+				lookUpMap.remove(lookUpTable[i]);
+				clockTick[i]=0;
+				lookUpTable[i] = new PhysicalAddress(-1,-1);
+			}
+		}
+		diskSpaceManager.closeFile(openFiles.get(indexId));
+		openFiles.remove(indexId);
+	}
 }
