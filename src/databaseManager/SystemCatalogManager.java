@@ -8,11 +8,7 @@
 package databaseManager;
 
 import java.util.ArrayList;
-import java.util.BitSet;
-import java.util.Date;
-import java.io.IOException;
 import java.nio.ByteBuffer;
-import java.nio.channels.FileChannel;
 import java.util.StringTokenizer;
 
 /**
@@ -26,66 +22,49 @@ import java.util.StringTokenizer;
 
 public class SystemCatalogManager {
 
-	public static final String ATTRIBUTE_CATALOG = "attribute_catalog.db";
 	public static final String RELATION_CATALOG = "relation_catalog.db";
-	public static final int ATTRIBUTE_RECORD_SIZE = 126;
-	public static final long ATTRIBUTE_CATALOG_ID = 1;
+	public static final String ATTRIBUTE_CATALOG = "attribute_catalog.db";
+	public static final String INDEX_CATALOG = "index_catalog.db";
 	public static final int RELATION_RECORD_SIZE = 144;
 	public static final long RELATION_CATALOG_ID = 0;
+	public static final int ATTRIBUTE_RECORD_SIZE = 126;
+	public static final long ATTRIBUTE_CATALOG_ID = 1;
+	public static final int INDEX_RECORD_SIZE = 144;
+	public static final long INDEX_CATALOG_ID = 2;
 
 	private BufferManager bufferManager;
 	private ArrayList<Attribute> attributesList;
-	private RelationHolder relationHolder;
+	private ObjectHolder objectHolder;
 	public long totalAttributesCount;
-	public long totalRelationsCount;
+	public long totalObjectsCount;
 
 	public SystemCatalogManager() {
 		attributesList = new ArrayList<Attribute>();
 		bufferManager = BufferManager.getBufferManager();
-		relationHolder = RelationHolder.getRelationHolder();
-		totalRelationsCount = 2;
+		objectHolder = ObjectHolder.getObjectHolder();
+		totalObjectsCount = 3;
 		loadRelationCatalog();
 		loadAttributeCatalog();
+		loadIndexCatalog();
 	}
 
 	public void loadRelationCatalog() {
 		Relation tableRelation = new Relation("relation_catalog",
 				RELATION_CATALOG_ID);
 		tableRelation.setRecordSize(RELATION_RECORD_SIZE);
-		relationHolder.addRelation(tableRelation);
-		long relationCatalogSize = tableRelation.getFileSize();
-		long bitMapBlockNumber = 0;
-		long recordsPerBlock = tableRelation.getRecordsPerBlock();
-		byte[] bitMapBytes = new byte[(int) (recordsPerBlock + 7) / 8];
-		BitSet bitMapRecords;
+		objectHolder.addObject(tableRelation);
 		Relation tempRelation;
-		while (true) {
-			for (long i = 1; i < DiskSpaceManager.BLOCK_SIZE * Byte.SIZE; i++) {
-				if ((i + bitMapBlockNumber + 1) * DiskSpaceManager.BLOCK_SIZE <= relationCatalogSize) {
-					ByteBuffer currentBlock = bufferManager.read(
-							RELATION_CATALOG_ID, bitMapBlockNumber + i);
-					currentBlock.get(bitMapBytes);
-					bitMapRecords = BitSet.valueOf(bitMapBytes);
-					for (int j = 0; j < bitMapRecords.length(); j++) {
-						if (bitMapRecords.get(j)) {
-							byte[] blockEntry = new byte[RELATION_RECORD_SIZE];
-							currentBlock.get(blockEntry);
-							tempRelation = new Relation(
-									ByteBuffer.wrap(blockEntry));
-							if (totalRelationsCount < tempRelation
-									.getRelationId()) {
-								totalRelationsCount = tempRelation
-										.getRelationId() + 1;
-							}
-							relationHolder.addRelation(tempRelation);
-						}
-					}
-				} else {
-					return;
+		Iterator relationIterator = new Iterator(tableRelation);
+		while (relationIterator.hasNext()) {
+			ByteBuffer relationRecord = relationIterator.getNext();
+			if (relationRecord != null) {
+				relationRecord.position(0);
+				tempRelation = new Relation(relationRecord);
+				if (totalObjectsCount < tempRelation.getRelationId()) {
+					totalObjectsCount = tempRelation.getRelationId() + 1;
 				}
+				objectHolder.addObject(tempRelation);
 			}
-			bitMapBlockNumber = bitMapBlockNumber + DiskSpaceManager.BLOCK_SIZE
-					* Byte.SIZE;
 		}
 	}
 
@@ -93,38 +72,39 @@ public class SystemCatalogManager {
 		Relation attributeRelation = new Relation("attribute_catalog",
 				ATTRIBUTE_CATALOG_ID);
 		attributeRelation.setRecordSize(ATTRIBUTE_RECORD_SIZE);
-		relationHolder.addRelation(attributeRelation);
-		long attributeCatalogSize = attributeRelation.getFileSize();
-		long bitMapBlockNumber = 0;
-		long recordsPerBlock = attributeRelation.getRecordsPerBlock();
-		byte[] bitMapBytes = new byte[(int) (recordsPerBlock + 7) / 8];
-		BitSet bitMapRecords;
+		objectHolder.addObject(attributeRelation);
 		Attribute tempAttribute;
-		while (true) {
-			for (long i = 1; i < DiskSpaceManager.BLOCK_SIZE * Byte.SIZE; i++) {
-				if ((i + bitMapBlockNumber + 1) * DiskSpaceManager.BLOCK_SIZE <= attributeCatalogSize) {
-					ByteBuffer currentBlock = bufferManager.read(
-							ATTRIBUTE_CATALOG_ID, bitMapBlockNumber + i);
-					currentBlock.get(bitMapBytes);
-					bitMapRecords = BitSet.valueOf(bitMapBytes);
-					for (int j = 0; j < bitMapRecords.length(); j++) {
-						if (bitMapRecords.get(j)) {
-							byte[] blockEntry = new byte[ATTRIBUTE_RECORD_SIZE];
-							currentBlock.get(blockEntry);
-							tempAttribute = new Attribute(
-									ByteBuffer.wrap(blockEntry));
-							if (totalAttributesCount < tempAttribute.getId()) {
-								totalAttributesCount = tempAttribute.getId() + 1;
-							}
-							attributesList.add(tempAttribute);
-						}
-					}
-				} else {
-					return;
+		Iterator attributeIterator = new Iterator(attributeRelation);
+		while (attributeIterator.hasNext()) {
+			ByteBuffer attributeRecord = attributeIterator.getNext();
+			if (attributeRecord != null) {
+				attributeRecord.position(0);
+				tempAttribute = new Attribute(attributeRecord);
+				if (totalAttributesCount < tempAttribute.getId()) {
+					totalAttributesCount = tempAttribute.getId() + 1;
 				}
+				attributesList.add(tempAttribute);
 			}
-			bitMapBlockNumber = bitMapBlockNumber + DiskSpaceManager.BLOCK_SIZE
-					* Byte.SIZE;
+		}
+	}
+	
+	public void loadIndexCatalog() {
+		Relation indexRelation = new Relation("index_catalog",
+				INDEX_CATALOG_ID);
+		indexRelation.setRecordSize(INDEX_RECORD_SIZE);
+		objectHolder.addObject(indexRelation);
+		Index tempIndex;
+		Iterator indexIterator = new Iterator(indexRelation);
+		while (indexIterator.hasNext()) {
+			ByteBuffer indexRecord = indexIterator.getNext();
+			if (indexRecord != null) {
+				indexRecord.position(0);
+				tempIndex = new Index(indexRecord);
+				if (totalObjectsCount < tempIndex.getIndexId()) {
+					totalObjectsCount = tempIndex.getIndexId() + 1;
+				}
+				objectHolder.addObject(tempIndex);
+			}
 		}
 	}
 
@@ -137,12 +117,12 @@ public class SystemCatalogManager {
 				relationStmt.toLowerCase().indexOf("table") + 5).trim();
 		String relationName = relationStmt.substring(0,
 				relationStmt.indexOf("(")).trim();
-		Relation newRelation = new Relation(relationName, totalRelationsCount);
-		if (relationHolder.addRelation(newRelation)) {
+		Relation newRelation = new Relation(relationName, totalObjectsCount);
+		if (objectHolder.addObject(newRelation)) {
 			addRelationToCatalog(newRelation);
 			StringTokenizer tokens = new StringTokenizer(
 					relationStmt.substring(relationStmt.indexOf("(") + 1,
-							relationStmt.indexOf(")")), ",");
+							relationStmt.lastIndexOf(")")), ",");
 			while (tokens.hasMoreTokens()) {
 				StringTokenizer attributeTokens = new StringTokenizer(tokens
 						.nextToken().trim(), " ");
@@ -192,36 +172,36 @@ public class SystemCatalogManager {
 	}
 
 	public void addAttributeToCatalog(Attribute newAttribute) {
-		int attributeRecordsPerBlock = (int) (DiskSpaceManager.BLOCK_SIZE * 8 / (1 + 8 * ATTRIBUTE_RECORD_SIZE));
-		long freeBlockNumber = bufferManager
-				.getFreeBlockNumber(ATTRIBUTE_CATALOG_ID);
+		int attributeRecordsPerPage = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * ATTRIBUTE_RECORD_SIZE));
+		long freePageNumber = bufferManager
+				.getFreePageNumber(ATTRIBUTE_CATALOG_ID);
 		int freeRecordOffset = bufferManager.getFreeRecordOffset(
-				ATTRIBUTE_CATALOG_ID, freeBlockNumber,
-				attributeRecordsPerBlock, ATTRIBUTE_RECORD_SIZE);
-		bufferManager.write(ATTRIBUTE_CATALOG_ID, freeBlockNumber,
+				ATTRIBUTE_CATALOG_ID, freePageNumber,
+				attributeRecordsPerPage, ATTRIBUTE_RECORD_SIZE);
+		bufferManager.write(ATTRIBUTE_CATALOG_ID, freePageNumber,
 				freeRecordOffset, newAttribute.serialize());
-		int recordNumber = (freeRecordOffset - (attributeRecordsPerBlock + 7) / 8)
+		int recordNumber = (freeRecordOffset - (attributeRecordsPerPage + 7) / 8)
 				/ ATTRIBUTE_RECORD_SIZE;
-		bufferManager.writeRecordBitmap(ATTRIBUTE_CATALOG_ID, freeBlockNumber,
-				attributeRecordsPerBlock, recordNumber, true);
+		bufferManager.writeRecordBitmap(ATTRIBUTE_CATALOG_ID, freePageNumber,
+				attributeRecordsPerPage, recordNumber, true);
 		attributesList.add(newAttribute);
 		totalAttributesCount++;
 	}
 
 	public void addRelationToCatalog(Relation newRelation) {
-		int relationRecordsPerBlock = (int) (DiskSpaceManager.BLOCK_SIZE * 8 / (1 + 8 * RELATION_RECORD_SIZE));
-		long freeBlockNumber = bufferManager
-				.getFreeBlockNumber(RELATION_CATALOG_ID);
+		int relationRecordsPerPage = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * RELATION_RECORD_SIZE));
+		long freePageNumber = bufferManager
+				.getFreePageNumber(RELATION_CATALOG_ID);
 		int freeRecordOffset = bufferManager.getFreeRecordOffset(
-				RELATION_CATALOG_ID, freeBlockNumber, relationRecordsPerBlock,
+				RELATION_CATALOG_ID, freePageNumber, relationRecordsPerPage,
 				RELATION_RECORD_SIZE);
-		bufferManager.write(RELATION_CATALOG_ID, freeBlockNumber,
+		bufferManager.write(RELATION_CATALOG_ID, freePageNumber,
 				freeRecordOffset, newRelation.serialize());
-		int recordNumber = (freeRecordOffset - (relationRecordsPerBlock + 7) / 8)
+		int recordNumber = (freeRecordOffset - (relationRecordsPerPage + 7) / 8)
 				/ RELATION_RECORD_SIZE;
-		bufferManager.writeRecordBitmap(RELATION_CATALOG_ID, freeBlockNumber,
-				relationRecordsPerBlock, recordNumber, true);
-		totalRelationsCount++;
+		bufferManager.writeRecordBitmap(RELATION_CATALOG_ID, freePageNumber,
+				relationRecordsPerPage, recordNumber, true);
+		totalObjectsCount++;
 	}
 
 	public void close() {
@@ -238,9 +218,10 @@ public class SystemCatalogManager {
 	
 	public boolean insertRecord(String query){
 		String relationName  = query.split(" ")[2].trim() ;
-		long relationId = relationHolder.getRelationIdByRelationName(relationName) ;
-		Relation relation = relationHolder.getRelation(relationId) ;
-		long blockCount = relation.getFileSize() / DiskSpaceManager.BLOCK_SIZE - 1 ;
+		ObjectHolder objectHolder = ObjectHolder.getObjectHolder() ;
+		long relationId = objectHolder.getRelationIdByRelationName(relationName) ;
+		Relation relation = (Relation) objectHolder.getObject(relationId) ;
+		long blockCount = relation.getFileSize() / DiskSpaceManager.PAGE_SIZE - 1 ;
 		
 		return true ;
 	}

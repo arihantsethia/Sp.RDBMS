@@ -1,0 +1,87 @@
+package databaseManager;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class ObjectHolder {
+
+	private Map<Long, Object> objects;
+	private static ObjectHolder self;
+
+	private ObjectHolder() {
+		if (objects == null) {
+			objects = new HashMap<Long, Object>();
+		}
+	}
+
+	public synchronized static ObjectHolder getObjectHolder() {
+		if (self == null) {
+			self = new ObjectHolder();
+		}
+		return self;
+	};
+
+	public boolean addObject(Object object) {
+		if (object instanceof Relation) {
+			Relation rObject = (Relation) object;
+			if (getRelationIdByRelationName(rObject.getRelationName()) != -1) {
+				return false;
+			}
+			objects.put(rObject.getRelationId(), rObject);
+		} else if (object instanceof Index) {
+			Index iObject = (Index) object;
+			if (getRelationIdByRelationName(iObject.getIndexName()) != -1) {
+				return false;
+			}
+			objects.put(iObject.getIndexId(), iObject);
+		}
+
+		return true;
+	}
+
+	public Object getObject(final long objectId) {
+		return objects.get(objectId);
+	}
+
+	public String getObjectFileName(final long objectId) {
+		Object object = objects.get(objectId);
+		if (object instanceof Relation) {
+			Relation relation = (Relation) object;
+			return relation.getFileName();
+		} else if (object instanceof Index) {
+			Index index = (Index) object;
+			return index.getFileName();
+		}else{
+			return "";
+		}
+	}
+
+	public long getRelationIdByRelationName(String name) {
+		for (Map.Entry<Long, Object> entry : objects.entrySet()) {
+			Object objectEntry = entry.getValue();
+			if (objectEntry instanceof Relation) {
+				Relation relationEntry = (Relation) objectEntry;
+				if (relationEntry.getRelationName().equalsIgnoreCase(name)) {
+					return relationEntry.getRelationId();
+				}
+			} else if (objectEntry instanceof Index) {
+				Index indexEntry = (Index) objectEntry;
+				if (indexEntry.getIndexName().equalsIgnoreCase(name)) {
+					return indexEntry.getIndexId();
+				}
+			}
+		}
+		return -1;
+	}
+
+	// Deprecated
+	public long getNewId() {
+		long id = 2;
+		while (true) {
+			if (!objects.containsKey(id)) {
+				return id;
+			}
+			id++;
+		}
+	}
+}
