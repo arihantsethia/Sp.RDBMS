@@ -50,7 +50,13 @@ public class DatabaseManager {
 		}else if(splitCommand[0].equals("select")){
 			
 		}else if(splitCommand[0].equals("insert")){
-			
+			if(splitCommand[1].equals("into")){
+				if(systemCatalog.insertRecord(query)==true){
+					System.out.println("Table "+ splitCommand[2].trim() + " Successfully inserted") ;
+				}else{
+					System.out.println("Table "+ splitCommand[2].trim() + " can not insert") ;
+				}
+			}
 		}
 	}
 }

@@ -87,10 +87,9 @@ public class SystemCatalogManager {
 			}
 		}
 	}
-	
+
 	public void loadIndexCatalog() {
-		Relation indexRelation = new Relation("index_catalog",
-				INDEX_CATALOG_ID);
+		Relation indexRelation = new Relation("index_catalog", INDEX_CATALOG_ID);
 		indexRelation.setRecordSize(INDEX_RECORD_SIZE);
 		objectHolder.addObject(indexRelation);
 		Index tempIndex;
@@ -176,8 +175,8 @@ public class SystemCatalogManager {
 		long freePageNumber = bufferManager
 				.getFreePageNumber(ATTRIBUTE_CATALOG_ID);
 		int freeRecordOffset = bufferManager.getFreeRecordOffset(
-				ATTRIBUTE_CATALOG_ID, freePageNumber,
-				attributeRecordsPerPage, ATTRIBUTE_RECORD_SIZE);
+				ATTRIBUTE_CATALOG_ID, freePageNumber, attributeRecordsPerPage,
+				ATTRIBUTE_RECORD_SIZE);
 		bufferManager.write(ATTRIBUTE_CATALOG_ID, freePageNumber,
 				freeRecordOffset, newAttribute.serialize());
 		int recordNumber = (freeRecordOffset - (attributeRecordsPerPage + 7) / 8)
@@ -207,22 +206,97 @@ public class SystemCatalogManager {
 	public void close() {
 		bufferManager.flush();
 	}
-	
-	public boolean dropTable(String query){
-		return true ;
+
+	public boolean dropTable(String query) {
+		return true;
 	}
-	
-	public boolean removeRelationFromCatalog(String RelationName){
-		return true ;
+
+	public boolean removeRelationFromCatalog(String RelationName) {
+		return true;
 	}
-	
-	public boolean insertRecord(String query){
-		String relationName  = query.split(" ")[2].trim() ;
-		ObjectHolder objectHolder = ObjectHolder.getObjectHolder() ;
-		long relationId = objectHolder.getRelationIdByRelationName(relationName) ;
-		Relation relation = (Relation) objectHolder.getObject(relationId) ;
-		long blockCount = relation.getFileSize() / DiskSpaceManager.PAGE_SIZE - 1 ;
-		
-		return true ;
+
+	public boolean insertRecord(String query) {
+		String relationName = query.split(" ")[2].trim();
+		ObjectHolder objectHolder = ObjectHolder.getObjectHolder();
+		long relationId = objectHolder
+				.getRelationIdByRelationName(relationName);
+		if (relationId != -1) {
+			Relation relation = (Relation) objectHolder.getObject(relationId);
+			long freePageNumber = bufferManager.getFreePage();
+			int recordOffset = bufferManager.getFreeRecordOffset(relationId,
+					freePageNumber, (int) relation.getRecordsCount(),
+					(int) relation.getRecordSize());
+			ByteBuffer serializedBuffer = ByteBuffer.allocate((int) relation
+					.getRecordSize());
+			String[] columnList = query.substring(query.indexOf('('),
+					query.indexOf(')')).split(",");
+			String[] valueList = query.substring(query.lastIndexOf('('),
+					query.lastIndexOf(')')).split(",");
+			ArrayList<Attribute> attributes = relation.getAttributes();
+			ArrayList<Boolean> isChecked = new ArrayList<Boolean>(
+					attributes.size());
+
+			for (int i = 0; i < isChecked.size(); i++) {
+				isChecked.set(i, false);
+			}
+			System.out.println(columnList.length) ;
+			System.out.println(valueList.length) ;
+			System.out.println(attributes.size()) ;
+			if (columnList.length == valueList.length && columnList.length == attributes.size()) {
+				for (int i = 0; i < attributes.size(); i++) {
+					System.out.println(attributes.get(i)) ;
+					for (int j = 0; j < columnList.length; j++) {
+					
+						if (attributes.get(i).getAttributeName() == columnList[j]) {
+							if (isChecked.get(j) == false) {
+								isChecked.set(j, true);
+								if (attributes.get(i).getAttributeType() == Attribute.Type.Int) {
+									if (Utility.getUtility().isSameType("int",
+											valueList[j
+											          ])) {
+										serializedBuffer.putInt(Utility
+												.getUtility().stringToInt(
+														valueList[j]));
+									} else {
+										return false;
+									}
+								} else if (attributes.get(i).getAttributeType() == Attribute.Type.Char) {
+
+									if (Utility.getUtility().isSameType("char",
+											valueList[j])) {
+										serializedBuffer.putChar(Utility
+												.getUtility().stringToChar(
+														valueList[j]));
+									} else {
+										return false;
+									}
+								} else if (attributes.get(i).getAttributeType() == Attribute.Type.Float) {
+
+								} else {
+
+								}
+
+							} else {
+								return false;
+							}
+						}
+					}
+				}
+				System.out.println("hello") ;
+				bufferManager.write(relation.getRelationId(), freePageNumber,
+						recordOffset, serializedBuffer);
+				int recordNumber = (recordOffset - (relation.getRecordsPerPage() + 7) / 8)
+						/ relation.getRecordSize();
+				bufferManager.writeRecordBitmap(relation.getRelationId(),
+						freePageNumber, relation.getRecordsPerPage(), recordNumber,
+						true);
+
+			} else {
+				System.out.println("hello1") ;
+				return false;
+			}
+		}
+		System.out.println("hello") ;
+		return false;
 	}
 }

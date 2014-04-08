@@ -17,6 +17,7 @@ public class QueryManager {
 			if (!input.equals("exit")) {
     			databaseManager.parseCommand(input) ;
     		} else {
+    			databaseManager.close() ;
     			System.exit(1);
     		}
 		}

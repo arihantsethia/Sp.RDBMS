@@ -12,7 +12,7 @@ public class Attribute {
 	 * @author arihant
 	 * This is an enum of Type. This is used to define the data type of attribute. 
 	 */
-	public enum Type {
+	public static enum Type {
 		Int, Long, Boolean, Float, Double, Char, Undeclared;
 		public static Type toType(int value) {
 			return Type.values()[value];
@@ -229,4 +229,11 @@ public class Attribute {
 		return id;
 	}
 
+	public String getAttributeName() {
+		return attributeName;
+	}
+	
+	public Type getAttributeType(){
+		return type ;
+	}
 }

@@ -101,8 +101,8 @@ public class Relation {
 	 * 
 	 * @return
 	 */
-	public long getRecordsPerPage() {
-		long numberOfRecords = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * recordSize));
+	public int getRecordsPerPage() {
+		int numberOfRecords = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * recordSize));
 		return numberOfRecords;
 	}
 
@@ -127,7 +127,7 @@ public class Relation {
 		return creationDate;
 	}
 
-	public long getRecordSize() {
+	public int getRecordSize() {
 		return recordSize;
 	}
 
@@ -161,5 +161,9 @@ public class Relation {
 
 	public void setRecordSize(int _recordSize) {
 		recordSize = _recordSize;
+	}
+	
+	public long getRecordsCount(){
+		return recordsCount ;
 	}
 }

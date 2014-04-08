@@ -99,7 +99,7 @@ public class BufferManager {
 	 * 
 	 * @return logical address of a page that is free
 	 */
-	private long getFreePage() {
+	public long getFreePage() {
 		int logicalPageNumber = 0;
 		int distinctPinCount = 0;
 		while (true) {
