@@ -1,14 +1,12 @@
 /**
- * 	@author Arihant , Arun and Vishavdeep
- *  Class SystemCatalogManager.java
- *  This class access methods of class BufferManager. and it's methods will be accessed by DatabaseManager class. 
+ * @author Arihant , Arun and Vishavdeep
+ * Class SystemCatalogManager.java
+ * This class access methods of class BufferManager. and it's methods will be accessed by DatabaseManager class. 
  *   
  */
 
 package databaseManager;
 
-import java.util.ArrayList;
-import java.util.Map;
 import java.util.Vector;
 import java.nio.ByteBuffer;
 import java.util.StringTokenizer;
@@ -35,13 +33,11 @@ public class SystemCatalogManager {
     public static final long INDEX_CATALOG_ID = 2;
 
     private BufferManager bufferManager;
-    private ArrayList<Attribute> attributesList;
     private ObjectHolder objectHolder;
     public long totalAttributesCount;
     public long totalObjectsCount;
 
     public SystemCatalogManager() {
-	attributesList = new ArrayList<Attribute>();
 	bufferManager = BufferManager.getBufferManager();
 	objectHolder = ObjectHolder.getObjectHolder();
 	totalObjectsCount = 3;
@@ -164,7 +160,6 @@ public class SystemCatalogManager {
 	bufferManager.write(ATTRIBUTE_CATALOG_ID, freePageNumber, freeRecordOffset, newAttribute.serialize());
 	int recordNumber = (freeRecordOffset - (attributeRecordsPerPage + 7) / 8) / ATTRIBUTE_RECORD_SIZE;
 	bufferManager.writeRecordBitmap(ATTRIBUTE_CATALOG_ID, freePageNumber, attributeRecordsPerPage, recordNumber, true);
-	attributesList.add(newAttribute);
 	totalAttributesCount++;
     }
 

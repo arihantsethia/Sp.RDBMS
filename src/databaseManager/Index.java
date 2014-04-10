@@ -14,6 +14,8 @@ public class Index {
     private long id;
     private PhysicalAddress rootPage;
     private int rootOffset;
+    private long catalogPage;
+    private int catalogRecordNumber;
     private long pageCount;
     private long recordsCount;
     private int recordSize;
@@ -121,18 +123,24 @@ public class Index {
 	return duplicates;
     }
 
-    public long getPageNumber() {
-	// TODO Auto-generated method stub
-	return 0;
+    public void setAddress(long pageNumber, int _recordNumber) {
+	catalogPage = pageNumber;
+	catalogRecordNumber = _recordNumber;
     }
 
-    public int getRecordNumber() {
-	// TODO Auto-generated method stub
-	return 0;
+    public PhysicalAddress getRootPageAddress() {
+	return rootPage;
     }
-
-    public void setAddress(long freePageNumber, int recordNumber) {
-	// TODO Auto-generated method stub
-
+    
+    public int getRootOffset() {
+	return rootOffset;
+    }
+    
+    public long getPage() {
+   	return catalogPage;
+    }
+    
+    public int getRecord() {
+   	return catalogRecordNumber;
     }
 }

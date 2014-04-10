@@ -67,10 +67,13 @@ public class BPlusTree<Key extends Comparable<? super Key>> {
     }
 
     private void readHead() {
-
+	rootAddress = index.getRootPageAddress();
+	rootOffset = index.getRootOffset();
+	ByteBuffer serialData = bufferManager.read(rootAddress.id, rootAddress.offset);
+	rootNode = new Node(serialData, rootOffset);
     }
 
-    public Split insertKey(Node node, int position, Key key, PhysicalAddress value, int recordOffset) {
+    private Split insertKey(Node node, int position, Key key, PhysicalAddress value, int recordOffset) {
 	Split split = null;
 	Node tempNode = new Node();
 	int midKey = (node.num + 1) < M ? (node.num + 1) : M / 2;
@@ -139,7 +142,7 @@ public class BPlusTree<Key extends Comparable<? super Key>> {
 	return split;
     }
 
-    public Split insert(Node node, Key key, PhysicalAddress value, int recordOffset) {
+    private Split insert(Node node, Key key, PhysicalAddress value, int recordOffset) {
 	int i = node.getLocation(key);
 	boolean areEqual = key.equals(node.keys[i]);
 	Split split = null;
@@ -199,7 +202,7 @@ public class BPlusTree<Key extends Comparable<? super Key>> {
 	return split;
     }
 
-    public void insertToBucket(Bucket bucket, PhysicalAddress value, int recordOffset) {
+    private void insertToBucket(Bucket bucket, PhysicalAddress value, int recordOffset) {
 	for (int i = 0; i < 50; i++) {
 	    if (bucket.offset[i] == -1) {
 		bucket.pointers[i] = value;
@@ -236,6 +239,7 @@ public class BPlusTree<Key extends Comparable<? super Key>> {
 	}
 
 	public ByteBuffer serialize() {
+	    // TODO Auto-generated constructor stub
 	    return null;
 	}
 
@@ -273,11 +277,11 @@ public class BPlusTree<Key extends Comparable<? super Key>> {
 	}
 
 	public Bucket(ByteBuffer serializedData, int position) {
-	    pointers = new PhysicalAddress[51];
-	    offset = new int[51];
+	    // TODO Auto-generated constructor stub
 	}
 
 	public ByteBuffer serialize() {
+	    // TODO Auto-generated constructor stub
 	    return null;
 	}
     }
