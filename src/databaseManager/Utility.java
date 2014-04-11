@@ -53,6 +53,24 @@ public class Utility {
 	return false;
     }
 
+    public static boolean isCorrectkeywordType(String s,String size){
+	s = s.trim();
+	if(s.indexOf("char(")==0 && s.charAt(s.length()-1) == ')'){
+	    try {
+		      Integer.parseInt(s.substring(5,s.length()-1).trim());
+		      size = s.substring(5,s.length()-1).trim() ;
+	    	} catch (NumberFormatException e) {
+		     return false ;
+		}
+	    s = "char" ;
+	    return true ;
+	}else if(s.equals("int") || s.equals("float")){
+	    size = "-1" ;
+	    return true ;
+	}
+	return false ;
+    }
+    
     public static ByteBuffer serialize(String[] columnList, String[] valueList, Vector<Attribute> attributesList, int recordSize) {
 	ByteBuffer serializedBuffer = ByteBuffer.allocate(recordSize);
 	if ((columnList.length == valueList.length) && (columnList.length <= attributesList.size())) {

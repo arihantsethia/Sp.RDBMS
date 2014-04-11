@@ -43,7 +43,11 @@ public class DatabaseManager {
 		    System.out.println("Table " + splitCommand[2].trim() + " not Exist");
 		}
 	    } else if (splitCommand[1].equals("index")) {
-
+		if (systemCatalog.dropIndex(splitCommand[2].trim()) == true) {
+		    System.out.println("Index " + splitCommand[2].trim() + " Successfully Droped");
+		} else {
+		    System.out.println("Index " + splitCommand[2].trim() + " not Exist");
+		}
 	    }
 	} else if (splitCommand[0].equals("select")) {
 
@@ -54,6 +58,10 @@ public class DatabaseManager {
 		} else {
 		    System.out.println("Table " + splitCommand[2].trim() + " can not insert");
 		}
+	    }
+	} else if(splitCommand[0].equals("show")){
+	    if (splitCommand[1].equals("tables")) {
+		System.out.println("List of Tables.");
 	    }
 	}
     }

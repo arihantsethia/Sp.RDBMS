@@ -5,7 +5,7 @@ import java.util.Map;
 
 public class ObjectHolder {
 
-    private Map<Long, Object> objects;
+    public Map<Long, Object> objects;
     private static ObjectHolder self;
 
     private ObjectHolder() {

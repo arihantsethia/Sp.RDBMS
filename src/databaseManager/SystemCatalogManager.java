@@ -7,6 +7,7 @@
 
 package databaseManager;
 
+import java.util.Map;
 import java.util.Vector;
 import java.nio.ByteBuffer;
 import java.util.StringTokenizer;
@@ -206,7 +207,7 @@ public class SystemCatalogManager {
 	long newIndexId = objectHolder.getRelationIdByRelationName(indexName);
 	if (newIndexId != -1) {
 	    Index newIndex = (Index) objectHolder.getObject(newIndexId);
-	    bufferManager.writeRecordBitmap(newIndexId, newIndex.getPageNumber(), newIndex.getRecordsPerPage(), newIndex.getRecordNumber(), false);
+	    bufferManager.writeRecordBitmap(newIndexId, newIndex.getPage(), newIndex.getRecordsPerPage(), newIndex.getRecord(), false);
 	    bufferManager.closeFile(newIndexId);
 	    bufferManager.deleteFile(newIndex.getFileName());
 	    objectHolder.removeObject(newIndexId);
@@ -234,5 +235,15 @@ public class SystemCatalogManager {
 	    }
 	}
 	return false;
+    }
+    
+    public boolean showTables(){
+	ObjectHolder self = ObjectHolder.getObjectHolder() ;
+	for(Map.Entry<Long,Object> entry : self.objects.entrySet()){
+	    if( (entry.getValue() instanceof Relation) && entry.getKey() > 2 ) {
+		System.out.println( ((Relation)entry.getValue()).getRelationName()); 
+	    }
+	}
+	return true ; 
     }
 }
