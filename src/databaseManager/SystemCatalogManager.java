@@ -206,7 +206,7 @@ public class SystemCatalogManager {
 	long newIndexId = objectHolder.getRelationIdByRelationName(indexName);
 	if (newIndexId != -1) {
 	    Index newIndex = (Index) objectHolder.getObject(newIndexId);
-	    bufferManager.writeRecordBitmap(newIndexId, newIndex.getPageNumber(), newIndex.getRecordsPerPage(), newIndex.getRecordNumber(), false);
+	    bufferManager.writeRecordBitmap(newIndexId, newIndex.getPage(), newIndex.getRecordsPerPage(), newIndex.getRecord(), false);
 	    bufferManager.closeFile(newIndexId);
 	    bufferManager.deleteFile(newIndex.getFileName());
 	    objectHolder.removeObject(newIndexId);

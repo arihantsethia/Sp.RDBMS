@@ -129,7 +129,7 @@ public class Relation {
      * @return
      */
     public int getRecordsPerPage() {
-	int numberOfRecords = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * recordSize));
+	int numberOfRecords = (int)( (DiskSpaceManager.PAGE_SIZE * 8-7) / (1 + 8 * recordSize));
 	return numberOfRecords;
     }
 

@@ -369,8 +369,10 @@ public class BufferManager {
 		lookUpTable[i] = new PhysicalAddress(-1, -1);
 	    }
 	}
-	diskSpaceManager.closeFile(openFiles.get(indexId));
-	openFiles.remove(indexId);
+	if(openFiles.containsKey(indexId)){
+	    diskSpaceManager.closeFile(openFiles.get(indexId));
+	    openFiles.remove(indexId);
+	}
     }
 
     public boolean deleteFile(String fileName) {

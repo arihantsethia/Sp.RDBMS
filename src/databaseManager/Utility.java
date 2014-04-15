@@ -95,11 +95,9 @@ public class Utility {
 		    }
 		} else if (attributesList.get(i).isNullable()) {
 		    if (attributesList.get(i).getAttributeType() == Attribute.Type.Int) {
-			serializedBuffer.putInt((Integer) null);
+			serializedBuffer.position(serializedBuffer.position()+4);
 		    } else if (attributesList.get(i).getAttributeType() == Attribute.Type.Char) {
-			for (int j = 0; j < attributesList.get(i).getAttributeSize() / 2; j++) {
-			    serializedBuffer.putChar((Character) null);
-			}
+			serializedBuffer.position(serializedBuffer.position()+attributesList.get(i).getAttributeSize());
 		    }
 		} else {
 		    System.out.println( " value needed : "+attributesList.get(i).getAttributeName());
