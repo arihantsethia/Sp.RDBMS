@@ -354,7 +354,7 @@ public class BufferManager {
 	BitSet bitMapFreeRecords = BitSet.valueOf(byteFreeRecords);
 	for (int i = 0; i < recordsPerPage; i++) {
 	    if (bitMapFreeRecords.get(i) == false) {
-		return i * recordSize + (recordsPerPage + 7) / 8;
+		return i * recordSize + (recordsPerPage + 7) / 8;		
 	    }
 	}
 	return -1;
