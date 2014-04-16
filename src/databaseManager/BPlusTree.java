@@ -2,29 +2,37 @@ package databaseManager;
 
 import java.nio.ByteBuffer;
 
-public class BPlusTree<Key extends Comparable<? super Key>> {
+public class BPlusTree{
 
     /**
      * the maximum number of keys in inner node, the number of pointer is N+1, N
      * must be > 2
      */
 
-    private static final int M = 4;
-
+    private static int M;
+    private static int N;
+    private int recordSize;
     private Index index;
     private Node rootNode;
     private BufferManager bufferManager;
     private PhysicalAddress rootAddress;
     private int rootOffset;
+    private DynamicObject tempObject;
 
-    public BPlusTree() {
-
+    public BPlusTree(Index _index, DynamicObject _tempObject) {
+	index = _index;
+	M = index.getNumberOfKeys();
+	N = recordSize / 20 - 1;
+	recordSize = index.getRecordSize();
+	tempObject = _tempObject;
+	bufferManager = BufferManager.getBufferManager();
+	openIndex();
     }
 
-    public void openIndex(Index _index) {
-	index = _index;
+    public void openIndex() {
 	if (index.getFileSize() == 0) {
 	    rootNode = new Node();
+	    rootNode.isLeaf = true;
 	    updateIndexHead(rootNode);
 	} else {
 	    readHead();
@@ -35,7 +43,25 @@ public class BPlusTree<Key extends Comparable<? super Key>> {
 	bufferManager.openFile(index.getIndexId());
     }
 
-    public void insert(Key key, PhysicalAddress value, int recordOffset) {
+    public PhysicalAddress search(DynamicObject key) {
+	Node node = rootNode;
+	while (true) {
+	    if (node.isLeaf) {
+		break;
+	    }
+	    int pos = node.getLocation(key);
+	    ByteBuffer serializedBuffer = bufferManager.read(node.childrens[pos].id, node.childrens[pos].offset);
+	    node = new Node(serializedBuffer, node.offset[pos]);
+	}
+	return getFromBucket(node, key);
+    }
+
+    private PhysicalAddress getFromBucket(Node node, DynamicObject key) {
+	// TODO Auto-generated method stub
+	return null;
+    }
+
+    public void insert(DynamicObject key, PhysicalAddress value, int recordOffset) {
 	Split result = insert(rootNode, key, value, recordOffset);
 	if (result.hasSplit) {
 	    // The old root was splitted in two parts.
@@ -73,8 +99,8 @@ public class BPlusTree<Key extends Comparable<? super Key>> {
 	rootNode = new Node(serialData, rootOffset);
     }
 
-    private Split insertKey(Node node, int position, Key key, PhysicalAddress value, int recordOffset) {
-	Split split = null;
+    private Split insertKey(Node node, int position, DynamicObject key, PhysicalAddress value, int recordOffset) {
+	Split split = new Split();
 	Node tempNode = new Node();
 	int midKey = (node.num + 1) < M ? (node.num + 1) : M / 2;
 	for (int i = M / 2; i < position; i++) {
@@ -100,7 +126,7 @@ public class BPlusTree<Key extends Comparable<? super Key>> {
 	}
 	node.num = midKey;
 
-	int remaining = node.num - midKey + 1;
+	int remaining = node.num - midKey;
 
 	if (remaining > 0) {
 	    Node newNode = new Node();
@@ -139,13 +165,18 @@ public class BPlusTree<Key extends Comparable<? super Key>> {
 	    bufferManager.writeRecordBitmap(index.getIndexId(), freePageNumber, index.getRecordsPerPage(), recordNumber, true);
 	    updateIndexHead();
 	}
+	split.hasSplit = remaining>0;
+	split.key = key;
+	split.value = value;
+	split.recordOffset = recordOffset;
+
 	return split;
     }
 
-    private Split insert(Node node, Key key, PhysicalAddress value, int recordOffset) {
+    private Split insert(Node node, DynamicObject key, PhysicalAddress value, int recordOffset) {
 	int i = node.getLocation(key);
 	boolean areEqual = key.equals(node.keys[i]);
-	Split split = null;
+	Split split = new Split();
 	boolean isSplit = false;
 	if (!node.isLeaf) {
 	    ByteBuffer serialData = bufferManager.read(node.childrens[i].id, node.childrens[i].offset);
@@ -203,7 +234,7 @@ public class BPlusTree<Key extends Comparable<? super Key>> {
     }
 
     private void insertToBucket(Bucket bucket, PhysicalAddress value, int recordOffset) {
-	for (int i = 0; i < 50; i++) {
+	for (int i = 0; i < N; i++) {
 	    if (bucket.offset[i] == -1) {
 		bucket.pointers[i] = value;
 		bucket.offset[i] = recordOffset;
@@ -224,30 +255,61 @@ public class BPlusTree<Key extends Comparable<? super Key>> {
     class Node {
 	boolean isLeaf;
 	int num;
-	Key[] keys;
+	DynamicObject[] keys;
 	PhysicalAddress[] childrens;
 	int[] offset;
 
 	public Node() {
-	    keys = (Key[]) new Object[M];
+	    keys = new DynamicObject[M];
 	    childrens = new PhysicalAddress[M + 1];
 	    offset = new int[M + 1];
+	    for(int i=0; i <M;i++){
+		keys[i] = new DynamicObject(index.getNumberOfKeys());
+		childrens[i] = new PhysicalAddress(-1,-1);
+		offset[i] = -1;
+	    }
 	}
 
-	public Node(ByteBuffer serialData, int i) {
-	    // TODO Auto-generated constructor stub
+	public Node(ByteBuffer serialData, int pos) {
+	    serialData.position(pos);
+	    isLeaf = serialData.getInt() == 1;
+	    num = serialData.getInt();
+	    for (int i = 0; i < M; i++) {
+		byte[] serialBytes = new byte[index.getKeySize()];
+		serialData.get(serialBytes);
+		keys[i] = tempObject.deserialize(serialBytes);
+	    }
+	    for (int i = 0; i < M; i++) {
+		childrens[i].id = serialData.getLong();
+		childrens[i].offset = serialData.getLong();
+	    }
+	    for (int i = 0; i < M; i++) {
+		offset[i] = serialData.getInt();
+	    }
 	}
 
 	public ByteBuffer serialize() {
-	    // TODO Auto-generated constructor stub
-	    return null;
+	    ByteBuffer serialData = ByteBuffer.allocate(recordSize);
+	    serialData.putInt(isLeaf ? 1 : 0);
+	    serialData.putInt(num);
+	    for (int i = 0; i < M; i++) {
+		serialData.put(tempObject.serialize(keys[i]));
+	    }
+	    for (int i = 0; i < M; i++) {
+		serialData.putLong(childrens[i].id);
+		serialData.putLong(childrens[i].offset);
+	    }
+	    for (int i = 0; i < M; i++) {
+		serialData.putInt(offset[i]);
+	    }
+	    return serialData;
 	}
 
 	/**
 	 * Returns the position where 'key' should be inserted in a leaf node
 	 * that has the given keys.
 	 */
-	private int getLocation(Key key) {
+	private int getLocation(DynamicObject key) {
 	    for (int i = 0; i < num; i++) {
 		if (keys[i].compareTo(key) >= 0) {
 		    return i;
@@ -266,9 +328,9 @@ public class BPlusTree<Key extends Comparable<? super Key>> {
 	public int nextBucketOffset;
 
 	public Bucket() {
-	    pointers = new PhysicalAddress[51];
-	    offset = new int[51];
-	    for (int i = 0; i < 51; i++) {
+	    pointers = new PhysicalAddress[N];
+	    offset = new int[N];
+	    for (int i = 0; i < N; i++) {
 		pointers[i] = new PhysicalAddress(-1, -1);
 		offset[i] = -1;
 	    }
@@ -276,24 +338,51 @@ public class BPlusTree<Key extends Comparable<? super Key>> {
 	    nextBucketOffset = -1;
 	}
 
-	public Bucket(ByteBuffer serializedData, int position) {
-	    // TODO Auto-generated constructor stub
+	public Bucket(ByteBuffer serialData, int position) {
+	    serialData.position(position);
+	    for (int i = 0; i < M; i++) {
+		pointers[i].id = serialData.getLong();
+		pointers[i].offset = serialData.getLong();
+	    }
+	    for (int i = 0; i < M; i++) {
+		offset[i] = serialData.getInt();
+	    }
+	    nextBucket.id = serialData.getLong();
+	    nextBucket.offset = serialData.getLong();
+	    nextBucketOffset = serialData.getInt();	    
 	}
 
 	public ByteBuffer serialize() {
-	    // TODO Auto-generated constructor stub
-	    return null;
+	    ByteBuffer serialData = ByteBuffer.allocate(recordSize);
+	    for (int i = 0; i < M; i++) {
+		serialData.putLong(pointers[i].id);
+		serialData.putLong(pointers[i].offset);
+	    }
+	    for (int i = 0; i < M; i++) {
+		serialData.putInt(offset[i]);
+	    }
+	    serialData.putLong(nextBucket.id);
+	    serialData.putLong(nextBucket.offset);
+	    serialData.putInt(nextBucketOffset);
+	    return serialData;
 	}
     }
 
     class Split {
-	public Key key;
+	public DynamicObject key;
 	public PhysicalAddress value;
 	public int recordOffset;
 	public boolean hasSplit;
 	public int error;
+	
+	public Split() {
+	    recordOffset = -1;
+	    hasSplit = false;
+	    error = 0;
+	}
+	
 
-	public Split(Key k, PhysicalAddress l, int lOffset) {
+	public Split(DynamicObject k, PhysicalAddress l, int lOffset) {
 	    key = k;
 	    value = l;
 	    recordOffset = lOffset;

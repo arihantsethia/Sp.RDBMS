@@ -8,6 +8,8 @@ public class Index {
 
     public static final int INDEX_NAME_LENGTH = 50;
 
+
+    private int nKeys;
     private String indexName;
     private String fileName;
     private boolean duplicates;
@@ -19,10 +21,11 @@ public class Index {
     private long pageCount;
     private long recordsCount;
     private int recordSize;
+    private int keySize;
     private long creationDate;
     private long lastModified;
 
-    public Index(String _indexName, long _id, boolean _duplicates) {
+    public Index(String _indexName, long _id, boolean _duplicates, int _keySize) {
 	indexName = _indexName;
 	fileName = _indexName + ".index";
 	id = _id;
@@ -30,8 +33,17 @@ public class Index {
 	creationDate = (new Date()).getTime();
 	lastModified = (new Date()).getTime();
 	pageCount = 1;
-	recordSize = 0;
 	recordsCount = 0;
+	keySize = _keySize;
+	nKeys = 64;
+	while(true){
+	    if( (DiskSpaceManager.PAGE_SIZE*8-7) / ( 1 + 8*(nKeys*(20 + keySize) + 25) ) >= 1 || nKeys > 0){
+		break;
+	    }else{
+		nKeys--;
+	    }
+	}
+	recordSize = nKeys*(keySize+20) + 25;
     }
 
     public Index(ByteBuffer serializedBuffer) {
@@ -82,9 +94,18 @@ public class Index {
     public long getCreationDate() {
 	return creationDate;
     }
+    
+    public int getNumberOfKeys(){
+	return nKeys;
+    }
 
-    public int getRecordSize() {
+    public int getRecordSize() {	
 	return recordSize;
+    }
+    
+    public int recordsPerBlock(){
+	int numberOfRecords = (int)( (DiskSpaceManager.PAGE_SIZE * 8-7) / (1 + 8 * recordSize));
+	return numberOfRecords;
     }
 
     public ByteBuffer serialize() {
@@ -142,5 +163,9 @@ public class Index {
     
     public int getRecord() {
    	return catalogRecordNumber;
+    }
+
+    public int getKeySize() {
+	return keySize;
     }
 }
