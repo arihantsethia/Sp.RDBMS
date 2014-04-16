@@ -7,7 +7,33 @@ import databaseManager.Attribute;
 import databaseManager.Utility;
 
 public class QueryParser {
-    static Attribute attributeName ;
+    public static Attribute attributeName ;
+   
+    public static enum OperationType {
+	JOIN , SELECT , UPDATE ;
+	public static String toString(OperationType opType){
+	    if(opType==QueryParser.OperationType.JOIN){
+		return "JOIN" ;
+	    }else if(opType==QueryParser.OperationType.SELECT){
+		return "SELECT" ;
+	    }else{
+		return "UPDATE" ;
+	    }
+	}
+    } ;
+    
+    public static enum ConditionType {
+	OR , AND , SIMPLE ;
+	public static String toString(ConditionType cndType){
+	    if(cndType==QueryParser.ConditionType.OR){
+		return "OR" ;
+	    }else if(cndType==QueryParser.ConditionType.AND){
+		return "AND" ;
+	    }else{
+		return "SIMPLE" ;
+	    }
+	}
+    } ;
     
     public QueryParser(){
     }
@@ -57,5 +83,37 @@ public class QueryParser {
 		return true ;
 	}
 	return false ;	
+    }
+    
+    static Vector<String> getSelectTableList(String statement){
+	Vector<String> result  ;
+	statement = statement.trim() ;
+	String[] tableList = statement.split(",") ;
+	result = new Vector<String>(tableList.length) ;
+	for(int i=0 ; i < tableList.length ; i++){
+	    result.add(i,tableList[i].trim()) ;
+	}
+	return result ;	
+    }
+    
+    static Vector<String> statementParts(String statement, String opcode){
+	Vector<String> result = new Vector<String>() ;
+	statement = statement.toUpperCase() ;
+	int index = statement.indexOf(opcode) ;
+	statement = statement.substring(index+opcode.length()).trim() ;
+	index = statement.indexOf("FROM") ;
+	if(index != -1)	{
+	    result.addElement(statement.substring(0,index).trim()) ;
+	    String restPart = statement.substring(index+4) ;
+	    index = restPart.indexOf("WHERE") ;
+	    if(index != -1){
+		result.addElement(restPart.substring(0,index).trim()) ;
+		result.addElement(restPart.substring(index+5,restPart.length()).trim()) ;
+	    }else{
+		result.addElement(restPart.trim()) ;
+	    }	    
+	    return result ;
+	}
+	return null ;
     }
 }

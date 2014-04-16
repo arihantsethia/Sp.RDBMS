@@ -131,4 +131,14 @@ public class Utility {
 	serializedBuffer.position(0);
 	return serializedBuffer;
     }
+    
+    public static String getRelationName(String s){
+	s = s.toUpperCase() ;
+	return s.substring(0,s.indexOf("AS")).trim() ;
+    }
+    
+    public static String getNickName(String s){
+   	s = s.toUpperCase() ;
+   	return s.substring(s.indexOf("AS")+2).trim() ;
+    }
 }
