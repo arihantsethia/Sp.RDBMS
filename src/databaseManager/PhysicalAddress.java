@@ -7,7 +7,8 @@ public class PhysicalAddress {
     public long offset;
 
     public PhysicalAddress() {
-
+	id = -1;
+	offset = -1;
     }
 
     public PhysicalAddress(long _id, long _offset) {

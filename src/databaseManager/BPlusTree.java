@@ -2,7 +2,7 @@ package databaseManager;
 
 import java.nio.ByteBuffer;
 
-public class BPlusTree{
+public class BPlusTree {
 
     /**
      * the maximum number of keys in inner node, the number of pointer is N+1, N
@@ -18,6 +18,9 @@ public class BPlusTree{
     private PhysicalAddress rootAddress;
     private int rootOffset;
     private DynamicObject tempObject;
+    private int currentLocation;
+    private int currentBucketPtr;
+    private int bucketNumber;
 
     public BPlusTree(Index _index, DynamicObject _tempObject) {
 	index = _index;
@@ -40,39 +43,80 @@ public class BPlusTree{
     }
 
     public void closeIndex() {
-	bufferManager.openFile(index.getIndexId());
+	bufferManager.closeFile(index.getIndexId());
     }
 
     public PhysicalAddress search(DynamicObject key) {
+	System.out.println(rootAddress.offset + " " + rootOffset);
 	Node node = rootNode;
 	while (true) {
+	    currentLocation = node.getLocation(key);
+	    System.out.println("Expected Location : " + currentLocation);
 	    if (node.isLeaf) {
+		System.out.println("Yeah Found a Leaf Node");
 		break;
 	    }
-	    int pos = node.getLocation(key);
-	    ByteBuffer serializedBuffer = bufferManager.read(node.childrens[pos].id, node.childrens[pos].offset);
-	    node = new Node(serializedBuffer, node.offset[pos]);
+	    ByteBuffer serializedBuffer = bufferManager.read(node.childrens[currentLocation].id, node.childrens[currentLocation].offset);
+	    node = new Node(serializedBuffer, node.offset[currentLocation]);
 	}
+	if (currentLocation == 0) {
+	    return null;
+	}
+	currentBucketPtr = 0;
 	return getFromBucket(node, key);
     }
 
     private PhysicalAddress getFromBucket(Node node, DynamicObject key) {
-	// TODO Auto-generated method stub
-	return null;
+	PhysicalAddress returnAddress = new PhysicalAddress();
+	PhysicalAddress nextEntry = new PhysicalAddress();
+	if (index.containsDuplicates()) {
+	    Bucket bucket = new Bucket();
+	    PhysicalAddress nextAddress = node.childrens[currentLocation];
+	    int offset = node.offset[currentLocation];
+	    for (int i = 0; i < bucketNumber; i++) {
+		ByteBuffer serialData = bufferManager.read(nextAddress.id, nextAddress.offset);
+		bucket = new Bucket(serialData, offset);
+		nextAddress = bucket.nextBucket;
+		offset = bucket.nextBucketOffset;
+	    }
+	    if (bucket.pointers.length == currentBucketPtr) {
+		bucketNumber++;
+		ByteBuffer serialData = bufferManager.read(nextAddress.id, nextAddress.offset);
+		bucket = new Bucket(serialData, offset);
+		nextAddress = bucket.nextBucket;
+		offset = bucket.nextBucketOffset;
+		currentBucketPtr = 0;
+	    }
+	    returnAddress = bucket.pointers[currentBucketPtr++];
+	    nextEntry = bucket.pointers[currentBucketPtr];
+	}
+
+	if (!index.containsDuplicates() || nextEntry.id == -1) {
+	    bucketNumber = 0;
+	    currentBucketPtr = 0;
+	    currentLocation++;
+	    if (currentLocation > node.num) {
+		currentLocation = 0;
+	    }
+	}
+	return returnAddress;
     }
 
     public void insert(DynamicObject key, PhysicalAddress value, int recordOffset) {
-	Split result = insert(rootNode, key, value, recordOffset);
+	Split result = insert(rootAddress,rootOffset, key, value, recordOffset);
 	if (result.hasSplit) {
 	    // The old root was splitted in two parts.
 	    // We have to create a new root pointing to them
 	    Node _root = new Node();
-	    _root.isLeaf = true;
+	    _root.isLeaf = false;
 	    _root.num = 1;
 	    _root.keys[0] = result.key;
 	    _root.childrens[1] = result.value;
-	    _root.childrens[1] = new PhysicalAddress(index.getIndexId(), result.recordOffset);
+	    _root.offset[1] = result.recordOffset;
+	    System.out.println(result.value.id + " " + result.value.offset + " " + result.recordOffset + " " + rootAddress.id + " " + rootAddress.offset + " " + rootOffset);
 	    _root.childrens[0] = rootAddress;
+	    _root.offset[0] = rootOffset;
+	    System.out.println("Root Changed From  : " + rootAddress.offset + " " + rootOffset);
 	    updateIndexHead(_root);
 	}
     }
@@ -90,6 +134,7 @@ public class BPlusTree{
 	bufferManager.writeRecordBitmap(index.getIndexId(), freePageNumber, index.getRecordsPerPage(), recordNumber, true);
 	index.setRoot(rootAddress, rootOffset);
 	rootNode = _root;
+	System.out.println("Root Changed To  : " + rootAddress.offset + " " + rootOffset);
     }
 
     private void readHead() {
@@ -103,6 +148,7 @@ public class BPlusTree{
 	Split split = new Split();
 	Node tempNode = new Node();
 	int midKey = (node.num + 1) < M ? (node.num + 1) : M / 2;
+	int remaining = node.num - midKey + 1;
 	for (int i = M / 2; i < position; i++) {
 	    tempNode.keys[i] = node.keys[i];
 	    tempNode.childrens[i + 1] = node.childrens[i];
@@ -112,11 +158,11 @@ public class BPlusTree{
 	tempNode.keys[position] = key;
 	tempNode.childrens[position + 1] = value;
 	tempNode.offset[position + 1] = recordOffset;
-
+	System.out.println("Step 2 : Insert Key at " + position);
 	for (int i = position; i < node.num; i++) {
 	    tempNode.keys[i + 1] = node.keys[i];
-	    tempNode.childrens[i + 2] = node.childrens[i];
-	    tempNode.offset[i + 2] = node.offset[i];
+	    tempNode.childrens[i + 2] = node.childrens[i + 1];
+	    tempNode.offset[i + 2] = node.offset[i + 1];
 	}
 
 	for (int i = position; i < midKey; i++) {
@@ -125,10 +171,9 @@ public class BPlusTree{
 	    node.offset[i + 1] = tempNode.offset[i + 1];
 	}
 	node.num = midKey;
-
-	int remaining = node.num - midKey;
-
+	System.out.println("Step 3 : Update node.num " + node.num);
 	if (remaining > 0) {
+	    System.out.println("Step 3a : Shift the remaining nodes " + remaining);
 	    Node newNode = new Node();
 	    newNode.isLeaf = node.isLeaf;
 	    int copyPosition = M / 2;
@@ -148,10 +193,13 @@ public class BPlusTree{
 	    newNode.offset[remaining] = tempNode.offset[copyPosition];
 
 	    newNode.num = remaining;
-
 	    long freePageNumber = bufferManager.getFreePageNumber(index.getIndexId());
 	    int offset = bufferManager.getFreeRecordOffset(index.getIndexId(), freePageNumber, index.getRecordsPerPage(), index.getRecordSize());
 
+	    key = tempNode.keys[M / 2];
+	    value = new PhysicalAddress(index.getIndexId(),freePageNumber);
+	    recordOffset = offset;
+	   
 	    if (newNode.isLeaf) {
 		newNode.childrens[0] = node.childrens[0];
 		newNode.offset[0] = node.offset[0];
@@ -163,32 +211,36 @@ public class BPlusTree{
 	    bufferManager.write(index.getIndexId(), freePageNumber, offset, newNode.serialize());
 	    int recordNumber = (offset - (index.getRecordsPerPage() + 7) / 8) / index.getRecordSize();
 	    bufferManager.writeRecordBitmap(index.getIndexId(), freePageNumber, index.getRecordsPerPage(), recordNumber, true);
-	    updateIndexHead();
+	    // updateIndexHead();
 	}
-	split.hasSplit = remaining>0;
+	split.hasSplit = remaining > 0;
 	split.key = key;
 	split.value = value;
 	split.recordOffset = recordOffset;
-
+	 
+	System.out.println("Fuck" + split.value.id+" "+ split.value.offset + " "+split.recordOffset);
 	return split;
     }
 
-    private Split insert(Node node, DynamicObject key, PhysicalAddress value, int recordOffset) {
+    private Split insert(PhysicalAddress nodeAddress, int nodeOffset, DynamicObject key, PhysicalAddress value, int recordOffset) {
+	ByteBuffer serialData = bufferManager.read(nodeAddress.id, nodeAddress.offset);
+	Node node = new Node(serialData,nodeOffset);
+	
 	int i = node.getLocation(key);
+	System.out.println("Step 1 : Location " + i);
 	boolean areEqual = key.equals(node.keys[i]);
 	Split split = new Split();
 	boolean isSplit = false;
 	if (!node.isLeaf) {
-	    ByteBuffer serialData = bufferManager.read(node.childrens[i].id, node.childrens[i].offset);
-	    Node tempNode = new Node(serialData, node.offset[i]);
-	    Split tempSplit = insert(tempNode, key, value, recordOffset);
+	    System.out.println("Node is not Leaf");
+	    Split tempSplit = insert(node.childrens[i], node.offset[i], key, value, recordOffset);
 	    isSplit = tempSplit.hasSplit;
 	    key = tempSplit.key;
 	    value = tempSplit.value;
 	    recordOffset = tempSplit.recordOffset;
 	}
 
-	if ((isSplit || node.isLeaf) && !areEqual) {
+	if (isSplit || node.isLeaf && !areEqual) {
 	    if (node.isLeaf && index.containsDuplicates()) {
 		Bucket _bucket = new Bucket();
 		insertToBucket(_bucket, value, recordOffset);
@@ -206,16 +258,15 @@ public class BPlusTree{
 	    isSplit = tempSplit.hasSplit;
 	    key = tempSplit.key;
 	    value = tempSplit.value;
-
 	    long freePageNumber = bufferManager.getFreePageNumber(index.getIndexId());
 	    int offset = bufferManager.getFreeRecordOffset(index.getIndexId(), freePageNumber, index.getRecordsPerPage(), index.getRecordSize());
 	    bufferManager.write(index.getIndexId(), freePageNumber, offset, node.serialize());
 	    int recordNumber = (offset - (index.getRecordsPerPage() + 7) / 8) / index.getRecordSize();
 	    bufferManager.writeRecordBitmap(index.getIndexId(), freePageNumber, index.getRecordsPerPage(), recordNumber, true);
-
+	    System.out.println("Step 4 : Record Stored at " + freePageNumber + " " + offset + " Split needed : " + isSplit);
 	} else if (node.isLeaf && index.containsDuplicates()) {
-	    ByteBuffer serialData = bufferManager.read(node.childrens[i].id, node.childrens[i].offset);
-	    Bucket bucket = new Bucket(serialData, node.offset[i]);
+	    ByteBuffer serialBuffer = bufferManager.read(node.childrens[i].id, node.childrens[i].offset);
+	    Bucket bucket = new Bucket(serialBuffer, node.offset[i]);
 	    insertToBucket(bucket, value, recordOffset);
 	    long freePageNumber = bufferManager.getFreePageNumber(index.getIndexId());
 	    int offset = bufferManager.getFreeRecordOffset(index.getIndexId(), freePageNumber, index.getRecordsPerPage(), index.getRecordSize());
@@ -263,9 +314,9 @@ public class BPlusTree{
 	    keys = new DynamicObject[M];
 	    childrens = new PhysicalAddress[M + 1];
 	    offset = new int[M + 1];
-	    for(int i=0; i <M;i++){
+	    for (int i = 0; i < M; i++) {
 		keys[i] = new DynamicObject(index.getNumberOfKeys());
-		childrens[i] = new PhysicalAddress(-1,-1);
+		childrens[i] = new PhysicalAddress(-1, -1);
 		offset[i] = -1;
 	    }
 	}
@@ -349,7 +400,7 @@ public class BPlusTree{
 	    }
 	    nextBucket.id = serialData.getLong();
 	    nextBucket.offset = serialData.getLong();
-	    nextBucketOffset = serialData.getInt();	    
+	    nextBucketOffset = serialData.getInt();
 	}
 
 	public ByteBuffer serialize() {
@@ -374,13 +425,12 @@ public class BPlusTree{
 	public int recordOffset;
 	public boolean hasSplit;
 	public int error;
-	
+
 	public Split() {
 	    recordOffset = -1;
 	    hasSplit = false;
 	    error = 0;
 	}
-	
 
 	public Split(DynamicObject k, PhysicalAddress l, int lOffset) {
 	    key = k;
