@@ -25,7 +25,7 @@ public abstract class Operation {
 	condition = cond ;
     }
     
-    public boolean ExecuteOperation(){
+    public boolean executeOperation(){
 	return false ;
     }
 }

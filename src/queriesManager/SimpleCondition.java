@@ -67,11 +67,13 @@ public class SimpleCondition extends Condition {
 	void getLeftOperandData(Vector<DynamicObject> recordObjects, Vector<String> tableList) {
 		if (leftOperand.contains(".")) {
 			leftNickName = Utility.getRelationName(leftOperand).trim();
-			for (int i = 0; i < recordObjects.size(); i++) {
-				if (recordObjects.get(i).name.equals(leftNickName)) {
-					objectIndexLeft = i;
+			
+			for(int i=0 ; i<tableList.size();i++){
+				if(Utility.getNickName(tableList.get(i)).equals(leftNickName)){
+					objectIndexLeft = i ;
 				}
 			}
+			
 			for (int i = 0; i < recordObjects.get(objectIndexLeft).attributes.size(); i++) {
 				if (recordObjects.get(objectIndexLeft).attributes.get(i).getAttributeName().equals(Utility.getNickName(leftOperand).trim())) {
 					attributeIndexLeft = i;
@@ -100,11 +102,13 @@ public class SimpleCondition extends Condition {
 	void getRightOperandData(Vector<DynamicObject> recordObjects, Vector<String> tableList) {
 		if (rightOperand.contains(".")) {
 			rightNickName = Utility.getRelationName(rightOperand).trim();
-			for (int i = 0; i < recordObjects.size(); i++) {
-				if (recordObjects.get(i).name.equals(rightNickName)) {
-					objectIndexRight = i;
+			
+			for(int i=0 ; i<tableList.size();i++){
+				if(Utility.getNickName(tableList.get(i)).equals(rightNickName)){
+					objectIndexRight = i ;
 				}
 			}
+			
 			for (int i = 0; i < recordObjects.get(objectIndexRight).attributes.size(); i++) {
 				if (recordObjects.get(objectIndexRight).attributes.get(i).getAttributeName().equals(Utility.getNickName(rightOperand))) {
 					attributeIndexRight = i;

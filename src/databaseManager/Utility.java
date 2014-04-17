@@ -143,6 +143,6 @@ public class Utility {
 		if (s.contains("as"))
 			return s.substring(s.indexOf("as") + 2).trim();
 		else
-			return s.substring(s.indexOf("as") + 1).trim();
+			return s.substring(s.indexOf(".") + 1).trim();
 	}
 }
