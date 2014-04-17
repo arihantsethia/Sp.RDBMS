@@ -43,6 +43,11 @@ public class Iterator {
 	// TODO close the Iterator.
 	return true;
     }
+    
+    public void Initialize(){
+	currentPage = 0;
+	nextRecord = 0;
+    }
 
     public ByteBuffer getNext() {
 	long relationFileSize = relation.getFileSize();

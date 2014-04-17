@@ -222,7 +222,7 @@ public class SystemCatalogManager {
 	long relationId = objectHolder.getRelationIdByRelationName(relationName);
 	if (relationId != -1) {
 	    Relation relation = (Relation) objectHolder.getObject(relationId);
-	    long freePageNumber = bufferManager.getFreePage();
+	    long freePageNumber = bufferManager.getFreePageNumber(relationId);
 	    int recordOffset = bufferManager.getFreeRecordOffset(relationId, freePageNumber, relation.getRecordsPerPage(), relation.getRecordSize());
 	    String[] columnList = query.substring(query.indexOf('(') + 1, query.indexOf(')')).split(",");
 	    String[] valueList = query.substring(query.lastIndexOf('(') + 1, query.lastIndexOf(')')).split(",");
