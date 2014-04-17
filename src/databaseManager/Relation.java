@@ -216,5 +216,11 @@ public class Relation {
     public Map<String, Integer> getAttributesNames() {
 	return attributesNames;
     }
+    
+    public Attribute.Type attributeType(String field){
+    	int attrPos = attributesNames.get(field);
+    	Attribute attr = attributes.elementAt(attrPos);
+    	return attr.getAttributeType();
+    }
 
 }
