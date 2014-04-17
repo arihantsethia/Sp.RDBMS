@@ -20,10 +20,10 @@ public class SelectOperation extends Operation {
 	protected Relation relation;
 	protected long relationId;
 
-	public SelectOperation(String Statement) {
+	public SelectOperation(String statement) {
 
 		setType(QueryParser.OperationType.SELECT);
-		Vector<String> stmtParts = QueryParser.statementParts(Statement, "SELECT");
+		Vector<String> stmtParts = QueryParser.statementParts(statement, "SELECT");
 		tableList = QueryParser.getSelectTableList(stmtParts.elementAt(1));
 		tableCount = tableList.size();
 

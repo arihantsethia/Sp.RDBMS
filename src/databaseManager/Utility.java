@@ -27,7 +27,9 @@ public class Utility {
 				return false;
 			}
 		} else if (type1.equals("char")) {
-			if (Type2.length() == 3 && Type2.charAt(0) == '\'' && Type2.charAt(2) == '\'') {
+			if (Type2.startsWith("'") && Type2.endsWith("'")) {
+				return true;
+			}else if (Type2.startsWith("\"") && Type2.endsWith("\"")) {
 				return true;
 			}
 		} else if (type1.equals("float")) {

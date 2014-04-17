@@ -150,7 +150,7 @@ public class QueryParser {
 		int lp, rp, i;
 		if (condition == null)
 			return ConditionType.NULL;
-		condition = condition.trim().substring(1, condition.length() - 1).trim();
+		condition = condition.trim().substring(1, condition.trim().length() - 1).trim();
 		if (condition.charAt(0) == '(') {
 			lp = 1;
 			rp = 0;

@@ -18,6 +18,7 @@ public class SimpleCondition extends Condition {
 	private String leftValue, rightValue;
 
 	public SimpleCondition(String statement) {
+		statement = statement.trim().substring(1,statement.trim().length()-1).trim() ;
 		operator = QueryParser.getOperatorType(statement);
 		leftOperand = QueryParser.getLeftOperand(statement, operator);
 		rightOperand = QueryParser.getRightOperand(statement, operator);
