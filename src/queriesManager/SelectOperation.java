@@ -21,16 +21,15 @@ public class SelectOperation extends Operation {
 	protected long relationId;
 
 	public SelectOperation(String statement) {
-
 		setType(QueryParser.OperationType.SELECT);
 		Vector<String> stmtParts = QueryParser.statementParts(statement, "SELECT");
 		tableList = QueryParser.getSelectTableList(stmtParts.elementAt(1));
 		tableCount = tableList.size();
 
 		if (stmtParts.size() == 3) {
-			setCondition(Condition.makeCondition(stmtParts.elementAt(2)));
+			setCondition(Condition.makeCondition(stmtParts.elementAt(1)));
 		} else {
-			setCondition(Condition.makeCondition(null));
+			setCondition(null);
 		}
 
 		recordCountList = new Vector<Integer>();
@@ -108,7 +107,7 @@ public class SelectOperation extends Operation {
 		}
 
 	}
-
+	
 	void print() {
 		String s = "";
 		for (int i = 0; i < tableList.size(); i++) {

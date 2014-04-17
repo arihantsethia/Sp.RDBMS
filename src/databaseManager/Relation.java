@@ -217,6 +217,12 @@ public class Relation {
 		return attributesNames;
 	}
 
+	public Attribute.Type attributeType(String field){
+    	int attrPos = attributesNames.get(field);
+    	Attribute attr = attributes.elementAt(attrPos);
+    	return attr.getAttributeType();
+    }
+    
 	public long updateRecordsCount(int i) {
 		recordsCount = recordsCount + i;
 		return recordsCount;

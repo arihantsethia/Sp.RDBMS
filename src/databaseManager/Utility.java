@@ -4,6 +4,7 @@ import java.nio.ByteBuffer;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
+import queriesManager.QueryParser;
 
 import databaseManager.Attribute.Type;
 
@@ -55,6 +56,14 @@ public class Utility {
 			return false;
 		}
 		return false;
+	}
+
+	public static boolean isString(String s) {
+		if (s.charAt(0) == '\'' && s.charAt(s.length() - 1) == '\'') {
+			return true;
+		} else {
+			return false;
+		}
 	}
 
 	public static boolean isCorrectkeywordType(String s, String size) {
@@ -146,5 +155,119 @@ public class Utility {
 			return s.substring(s.indexOf("as") + 2).trim();
 		else
 			return s.substring(s.indexOf(".") + 1).trim();
+	}
+
+	public static String getAlias(String s) {
+		s = s.toUpperCase();
+		return s.substring(0, s.indexOf(".")).trim();
+	}
+
+	public static String getFieldName(String s) {
+		s = s.toUpperCase();
+		return s.substring(s.indexOf(".") + 1).trim();
+	}
+
+	public static boolean checkType(String s1, String s2) {
+		String field1 = "", field2 = "";
+		String key1 = "", key2 = "";
+		String relationName1 = "", relationName2 = "";
+
+		key1 = getAlias(s1);
+		key2 = getAlias(s2);
+		field1 = getFieldName(s1);
+		field2 = getFieldName(s2);
+		relationName1 = QueryParser.tableMap.get(key1);
+		relationName2 = QueryParser.tableMap.get(key2);
+
+		long newRelationId1 = ObjectHolder.getObjectHolder().getRelationIdByRelationName(relationName1);
+		long newRelationId2 = ObjectHolder.getObjectHolder().getRelationIdByRelationName(relationName2);
+
+		if (newRelationId1 != -1 && newRelationId2 != -1) {
+			Relation newRelation1 = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId1);
+			Relation newRelation2 = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId2);
+
+			if (newRelation1.attributeType(field1).equals(newRelation2.attributeType(field2))) {
+				return true;
+			} else {
+				return false;
+			}
+		} else {
+			return false;
+		}
+	}
+
+	public static boolean getDataType(String s) {
+		String field = "";
+		String key = "";
+		String relationName = "";
+
+		// String key1 = getAlias(s1);
+		// String key2 = getAlias(s2);
+		// String field1 = getFieldName(s1);
+		// String field2 = getFieldName(s2);
+		// String relationName1 = QueryParser.tableMap.get(key1);
+		// String relationName2 = QueryParser.tableMap.get(key2);
+		//
+		// long newRelationId1 =
+		// ObjectHolder.getObjectHolder().getRelationIdByRelationName(relationName1);
+		// long newRelationId2 =
+		// ObjectHolder.getObjectHolder().getRelationIdByRelationName(relationName2);
+		//
+		// if (newRelationId1 != -1 && newRelationId2 != -1) {
+		// Relation newRelation1 = (Relation)
+		// ObjectHolder.getObjectHolder().getObject(newRelationId1);
+		// Relation newRelation2 = (Relation)
+		// ObjectHolder.getObjectHolder().getObject(newRelationId2);
+		//
+		// if(newRelation1.attributeType(field1).equals(newRelation2.attributeType(field2))){
+		// return true;
+		// }
+		// else{
+		// return false;
+		// }
+		// }
+		// else{
+		// return false;
+		// }
+
+		return false;
+	}
+
+	public static boolean isNum(String s) {
+		try {
+			int num = Integer.parseInt(s);
+		} catch (NumberFormatException nfe) {
+			return false;
+		}
+		return true;
+	}
+
+	public static boolean isVariable(String s) {
+		int dotIndex = s.indexOf(".");
+		if (dotIndex != -1) {
+			String key = "", field = "";
+			String relationName = "";
+
+			key = getAlias(s);
+			if (QueryParser.tableMap.containsKey(key)) {
+				field = getFieldName(s);
+				relationName = QueryParser.tableMap.get(key);
+				long newRelationId = ObjectHolder.getObjectHolder().getRelationIdByRelationName(relationName);
+				if (newRelationId != -1) {
+					Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
+					Vector<Attribute> attributes = newRelation.getAttributes();
+					if (!attributes.contains(field)) {
+						return false;
+					}
+				} else {
+					return false;
+				}
+			} else {
+				return false;
+			}
+			return true;
+		} else {
+			return false;
+		}
 	}
 }
