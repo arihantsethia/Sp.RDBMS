@@ -241,6 +241,7 @@ public class SystemCatalogManager {
 				bufferManager.write(relation.getRelationId(), freePageNumber, recordOffset, serializedBuffer);
 				int recordNumber = (recordOffset - (relation.getRecordsPerPage() + 7) / 8) / relation.getRecordSize();
 				bufferManager.writeRecordBitmap(relation.getRelationId(), freePageNumber, relation.getRecordsPerPage(), recordNumber, true);
+				relation.updateRecordsCount(1);
 				updateRelationCatalog(relation);
 				return true;
 			}

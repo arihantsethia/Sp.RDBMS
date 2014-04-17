@@ -54,7 +54,7 @@ public class DatabaseManager {
 			}
 		} else if (splitCommand[0].equals("select")) {
 			Operation operation = Operation.makeOperation(query.trim());
-			operation.ExecuteOperation();
+			operation.executeOperation();
 		} else if (splitCommand[0].equals("insert")) {
 			if (splitCommand[1].equals("into")) {
 				if (systemCatalog.insertRecord(query) == true) {

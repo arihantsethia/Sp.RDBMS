@@ -10,8 +10,6 @@ public class DynamicObject implements Comparable {
 	public Vector<Attribute> attributes;
 	public int size;
 
-	public String name;
-
 	public DynamicObject() {
 
 	}
@@ -41,7 +39,7 @@ public class DynamicObject implements Comparable {
 		// TODO Auto-generated method stub
 		ByteBuffer serializedBuffer = ByteBuffer.wrap(serialBytes);
 		serializedBuffer.position(0);
-		DynamicObject temp = new DynamicObject(attributes.size());
+		DynamicObject temp = new DynamicObject(attributes);
 		for (int i = 0; i < attributes.size(); i++) {
 			if (attributes.get(i).getAttributeType() == Attribute.Type.Char) {
 				String str = "";

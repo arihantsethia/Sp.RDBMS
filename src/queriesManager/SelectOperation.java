@@ -38,59 +38,76 @@ public class SelectOperation extends Operation {
 		recordObjects = new Vector<DynamicObject>();
 	}
 
-	public boolean ExecuteOperation() {
+	public boolean executeOperation() {
 
 		long count = 1;
 
 		for (int i = 0; i < tableList.size(); i++) {
 			relationId = ObjectHolder.getObjectHolder().getRelationIdByRelationName(Utility.getRelationName(tableList.elementAt(i)));
 			relation = (Relation) ObjectHolder.getObjectHolder().getObject(relationId);
-			recordCountList.addElement(3);
+			recordCountList.addElement((int) relation.getRecordsCount());
 			recordCounterList.addElement(1);
 			count = count * recordCountList.get(i);
 			iteratorList.addElement(new Iterator(relation));
 			recordObjects.addElement(new DynamicObject(relation.getAttributes()));
-			recordObjects.get(i).name = Utility.getNickName(tableList.elementAt(i));
 		}
 
 		if (count != 0) {
 			for (int i = 0; i < tableList.size(); i++) {
 				if (iteratorList.get(i).hasNext()) {
 					ByteBuffer a = iteratorList.get(i).getNext();
-					recordObjects.get(i).deserialize(a.array());
+					if (a != null) {
+						recordObjects.set(i, recordObjects.get(i).deserialize(a.array()));
+					} else {
+						i--;
+					}
 				}
 			}
 
-			if (condition == null || condition.compare(recordObjects, tableList))
+			if (condition == null || condition.compare(recordObjects, tableList)) {
 				print();
-
+			}
 			count--;
 		}
 
 		while (count > 0) {
-			IncrementCounter();
-
-			if (condition == null || condition.compare(recordObjects, tableList))
+			incrementCounter();
+			if (condition == null || condition.compare(recordObjects, tableList)){
 				print();
-
+			}
 			count--;
 		}
 		return true;
 	}
 
-	void IncrementCounter() {
+	void incrementCounter() {
 		int i = tableList.size() - 1;
-		while (recordCounterList.get(i) == recordCountList.get(i)) {
+		ByteBuffer buffer = null;
+		while ((i >= 0) && (recordCounterList.get(i) == recordCountList.get(i))) {
 			iteratorList.get(i).initialize();
-			recordObjects.get(i).deserialize((iteratorList.get(i).getNext().array()));
-			recordCounterList.add(i, 1);
+			while (iteratorList.get(i).hasNext()) {
+				buffer = iteratorList.get(i).getNext();
+				if (buffer != null) {
+					break;
+				}
+			}
+			recordObjects.set(i, recordObjects.get(i).deserialize(buffer.array()));
+			recordCounterList.set(i, 1);
 			i--;
 		}
-		recordObjects.get(i).deserialize((iteratorList.get(i).getNext().array()));
-		recordCounterList.add(i, recordCounterList.get(i) + 1);
+		if (i >= 0) {
+			while (iteratorList.get(i).hasNext()) {
+				buffer = iteratorList.get(i).getNext();
+				if (buffer != null) {
+					break;
+				}
+			}
+			recordObjects.set(i, recordObjects.get(i).deserialize(buffer.array()));
+			recordCounterList.set(i, recordCounterList.get(i) + 1);
+		}
 
 	}
-
+	
 	void print() {
 		String s = "";
 		for (int i = 0; i < tableList.size(); i++) {
