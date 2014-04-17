@@ -139,4 +139,14 @@ public class Utility {
    	s = s.toUpperCase() ;
    	return s.substring(s.indexOf("AS")+2).trim() ;
     }
+    
+    public static String getAlias(String s){
+    	s = s.toUpperCase();
+    	return s.substring(0,s.indexOf(".")).trim();
+    }
+    
+    public static String getFieldName(String s){
+    	s = s.toUpperCase();
+    	return s.substring(s.indexOf(".")+1).trim();
+    }
 }

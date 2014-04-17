@@ -1,9 +1,12 @@
 package queriesManager;
 
 import java.util.Vector;
+import java.util.TreeMap;
 import java.io.File;
 
 import databaseManager.Attribute;
+import databaseManager.ObjectHolder;
+import databaseManager.Relation;
 import databaseManager.Utility;
 
 public class QueryParser {
@@ -115,5 +118,90 @@ public class QueryParser {
 	    return result ;
 	}
 	return null ;
+    }
+    
+    public boolean isSelectStatementQuery(String statement){
+		String stmtUpperCase = statement.toUpperCase().trim();
+		int selectIndex = stmtUpperCase.indexOf("SELECT");
+		int fromIndex = stmtUpperCase.indexOf("FROM");
+		
+		if(selectIndex == 0 && fromIndex != -1){
+			String selectPart = "",fromPart = "";
+			selectPart = stmtUpperCase.substring(selectIndex + 6, fromIndex).trim();
+			int whereIndex = stmtUpperCase.indexOf("WHERE");
+			
+			TreeMap<String,String> tableMap = new TreeMap<String,String>(String.CASE_INSENSITIVE_ORDER);	
+			String [] selectPartSplit = selectPart.split(",");
+			String key = "",field = "";
+			String relationName = "";
+			
+			
+			if(whereIndex != -1){
+				String wherePart = "";
+				fromPart = stmtUpperCase.substring(fromIndex + 4, whereIndex).trim() ;
+				wherePart = stmtUpperCase.substring(whereIndex + 5).trim();
+				String [] fromPartSplit = fromPart.split(",");
+				
+				for(int i=0;i<fromPartSplit.length;i++){
+					tableMap.put(Utility.getNickName(fromPartSplit[i]),Utility.getRelationName(fromPartSplit[i]));
+				}
+				
+				for(int j=0;j<selectPartSplit.length;j++){
+					key = Utility.getAlias(selectPartSplit[j]);
+					if(tableMap.containsKey(key)){
+						field = Utility.getFieldName(selectPartSplit[j]);
+						relationName = tableMap.get(key);
+						long newRelationId = ObjectHolder.getObjectHolder().getRelationIdByRelationName(relationName);
+						if (newRelationId != -1) {
+						    Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
+						    Vector<Attribute> attributes = newRelation.getAttributes();
+						    if(!attributes.contains(field)){
+						    	return false;
+						    }
+						}
+						else{
+							return false ;
+						}
+					}
+					else{
+						return false;
+					}
+				}
+			}
+			else{
+				fromPart = stmtUpperCase.substring(fromIndex + 4).trim();
+				String [] fromPartSplit = fromPart.split(",");
+				
+				for(int i=0;i<fromPartSplit.length;i++){
+					tableMap.put(Utility.getNickName(fromPartSplit[i]),Utility.getRelationName(fromPartSplit[i]));
+				}
+				
+				for(int j=0;j<selectPartSplit.length;j++){
+					key = Utility.getAlias(selectPartSplit[j]);
+					if(tableMap.containsKey(key)){
+						field = Utility.getFieldName(selectPartSplit[j]);
+						relationName = tableMap.get(key);
+						long newRelationId = ObjectHolder.getObjectHolder().getRelationIdByRelationName(relationName);
+						if (newRelationId != -1) {
+						    Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
+						    Vector<Attribute> attributes = newRelation.getAttributes();
+						    if(!attributes.contains(field)){
+						    	return false ;
+						    }
+						}
+						else{
+							return false ;
+						}
+					}
+					else{
+						return false;
+					}
+				}
+			}
+		}
+		else{
+			return false;
+		}
+    	return true ;
     }
 }
