@@ -79,18 +79,20 @@ public class SelectOperation extends Operation {
 		return true;
 	}
 
+
 	void IncrementCounter() {
 		int i = tableList.size() - 1;
 		while (recordCounterList.get(i) == recordCountList.get(i)) {
-			iteratorList.get(i).Initialize();
+			iteratorList.get(i).initialize();
 			recordObjects.get(i).deserialize((iteratorList.get(i).getNext().array()));
 			recordCounterList.add(i, 1);
 			i--;
 		}
 		recordObjects.get(i).deserialize((iteratorList.get(i).getNext().array()));
 		recordCounterList.add(i, recordCounterList.get(i) + 1);
-	}
 
+    }
+    
 	void print() {
 		String s = "";
 		for (int i = 0; i < tableList.size(); i++) {

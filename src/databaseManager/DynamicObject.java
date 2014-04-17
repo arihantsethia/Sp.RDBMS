@@ -9,6 +9,7 @@ public class DynamicObject implements Comparable {
 	public Object[] obj;
 	public Vector<Attribute> attributes;
 	public int size;
+
 	public String name;
 
 	public DynamicObject() {
@@ -17,6 +18,9 @@ public class DynamicObject implements Comparable {
 
 	public DynamicObject(int n) {
 		obj = new Object[n];
+		for (int i = 0; i < n; i++) {
+			obj[i] = null;
+		}
 	}
 
 	public DynamicObject(Vector<Attribute> _attribtues) {
@@ -37,34 +41,22 @@ public class DynamicObject implements Comparable {
 		// TODO Auto-generated method stub
 		ByteBuffer serializedBuffer = ByteBuffer.wrap(serialBytes);
 		serializedBuffer.position(0);
-		DynamicObject temp = this;
+		DynamicObject temp = new DynamicObject(attributes.size());
 		for (int i = 0; i < attributes.size(); i++) {
 			if (attributes.get(i).getAttributeType() == Attribute.Type.Char) {
-				String s = "";
+				String str = "";
 				for (int j = 0; j < attributes.get(i).getAttributeSize() / 2; j++) {
 					char tempChar = serializedBuffer.getChar();
 					if (tempChar != '\0') {
-						s += tempChar;
+						str += tempChar;
 					}
 				}
-				temp.obj[i] = s;
+				temp.obj[i] = str;
 			} else {
 				temp.obj[i] = serializedBuffer.getInt();
 			}
 		}
 		return temp;
-	}
-
-	public String printRecords() {
-		String s = "";
-		for (int i = 0; i < attributes.size(); i++) {
-			if (attributes.get(i).getAttributeType() == Attribute.Type.Char) {
-				s = (String) obj[i] + " , " + s;
-			} else {
-				s = ((Integer) obj[i]).toString() + " , " + s;
-			}
-		}
-		return s;
 	}
 
 	public ByteBuffer serialize(DynamicObject temp) {
@@ -87,6 +79,7 @@ public class DynamicObject implements Comparable {
 				}
 			}
 		}
+		serializedBuffer.position(0);
 		return serializedBuffer;
 	}
 
@@ -98,6 +91,18 @@ public class DynamicObject implements Comparable {
 				obj[i] = (Integer) values[i];
 			}
 		}
+	}
+
+	public String printRecords() {
+		String s = "";
+		for (int i = 0; i < attributes.size(); i++) {
+			if (attributes.get(i).getAttributeType() == Attribute.Type.Char) {
+				s = (String) obj[i] + " , " + s;
+			} else {
+				s = ((Integer) obj[i]).toString() + " , " + s;
+			}
+		}
+		return s;
 	}
 
 	@Override
@@ -120,5 +125,4 @@ public class DynamicObject implements Comparable {
 		}
 		return 0;
 	}
-
 }

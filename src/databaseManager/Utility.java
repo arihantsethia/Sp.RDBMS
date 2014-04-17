@@ -145,5 +145,4 @@ public class Utility {
 		else
 			return s.substring(s.indexOf("as") + 1).trim();
 	}
-
 }
