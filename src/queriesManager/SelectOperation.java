@@ -77,7 +77,7 @@ public class SelectOperation extends Operation {
     void IncrementCounter(){
 	int i = tableList.size() - 1 ;
 	while(recordCounterList.get(i)==recordCountList.get(i)){
-	    iteratorList.get(i).Initialize() ;
+	    iteratorList.get(i).initialize() ;
 	    recordObjects.get(i).deserialize((iteratorList.get(i).getNext().array())) ;
 	    recordCounterList.add(i,1) ;
 	    i-- ;
