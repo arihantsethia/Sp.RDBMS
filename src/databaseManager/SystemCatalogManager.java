@@ -151,6 +151,8 @@ public class SystemCatalogManager {
 			}
 			objectHolder.addObject(newRelation);
 			addRelationToCatalog(newRelation);
+			System.out.println("Table " + relationName + " created successfully!");
+			return true;
 		}
 		System.out.println("Table " + relationName + " already exists!");
 		return false;

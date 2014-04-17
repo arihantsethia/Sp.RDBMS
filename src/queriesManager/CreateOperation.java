@@ -1,9 +1,6 @@
 package queriesManager;
 
-import java.io.IOException;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -18,6 +15,7 @@ public class CreateOperation extends Operation {
 	
 	CreateOperation(String statement) {
 		setType(QueryParser.OperationType.CREATE);
+		parsedData = new Vector<Vector<String>>();
 		statement = statement.substring(statement.toUpperCase().indexOf("CREATE") + 6).trim();
 		if (statement.toUpperCase().indexOf("TABLE") == 0) {
 			queryType = parseCreateTableQuery(statement)?0:-1;
@@ -32,14 +30,14 @@ public class CreateOperation extends Operation {
 		StringTokenizer tokens = new StringTokenizer(statement.substring(statement.indexOf("(") + 1, statement.lastIndexOf(")")), ",");
 		Vector<String> parsedToken;
 		while (tokens.hasMoreTokens()) {
-			parsedToken = new Vector<String>(5);
+			parsedToken = new Vector<String>();
 			StringTokenizer attributeTokens = new StringTokenizer(tokens.nextToken().trim(), " ");
 			if (attributeTokens.countTokens() < 2) {
 				System.out.println("Name and type of attribute needs to be specified!");
 				return false;
 			}
-			parsedToken.set(0,attributeTokens.nextToken().trim());
-			parsedToken.set(1,attributeTokens.nextToken().trim());
+			parsedToken.add(attributeTokens.nextToken().trim());
+			parsedToken.add(attributeTokens.nextToken().trim());
 			if(Attribute.stringToType(parsedToken.get(1))==Attribute.Type.Undeclared){
 				System.out.println("Not a valid data type!");
 				return false;
@@ -47,8 +45,9 @@ public class CreateOperation extends Operation {
 				int size = 2;
 				if(parsedToken.get(1).indexOf("(")!=-1 && parsedToken.get(1).indexOf(")")!=-1){
 					try{
-						size = size * Integer.parseInt(parsedToken.get(1).substring(parsedToken.get(1).indexOf("(") + 1, parsedToken.get(1).indexOf(")")).trim());
-						parsedToken.set(2,String.valueOf(size));
+						String temp = parsedToken.get(1).substring(parsedToken.get(1).indexOf("(") + 1, parsedToken.get(1).indexOf(")")).trim();
+						size = size * Integer.parseInt(temp);
+						parsedToken.add(String.valueOf(size));
 					}catch (NumberFormatException e){
 						System.out.println("Integer length needs to be specified for char data type as \"(length)\" !");
 						return false;
@@ -58,7 +57,7 @@ public class CreateOperation extends Operation {
 					return false;
 				}
 			}else{
-				parsedToken.set(2,"4");
+				parsedToken.add("4");
 			}
 			if (attributeTokens.countTokens() < 3) {
 				Boolean[] properties = new Boolean[2];
@@ -73,12 +72,13 @@ public class CreateOperation extends Operation {
 						return false;
 					}
 				}
-				parsedToken.set(3,properties[0].toString());
-				parsedToken.set(4,properties[0].toString());				
+				parsedToken.add(properties[0].toString());
+				parsedToken.add(properties[0].toString());		
 			} else {
 				System.out.println("Only 4 properties per attribute i.e name , type , null/not_null , unique are allowed");
 				return false;
 			}
+			parsedData.add(parsedToken);
 		}
 		return true;
 	}
@@ -88,11 +88,12 @@ public class CreateOperation extends Operation {
 		return false;
 	}
 	
-	public void executeOperation() {
+	public boolean executeOperation() {
 		if(queryType==0){
-			
+			return DatabaseManager.getSystemCatalog().createTable(relationName, parsedData);
 		}else if(queryType==1){
-			
+			return DatabaseManager.getSystemCatalog().createIndex(relationName, parsedData);
 		}
+		return false;
 	}
 }
