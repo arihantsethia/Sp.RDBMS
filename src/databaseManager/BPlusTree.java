@@ -119,10 +119,6 @@ public class BPlusTree {
 		}
 	}
 
-	private void updateIndexHead() {
-		bufferManager.write(index.getIndexId(), rootAddress.offset, rootOffset, rootNode.serialize());
-	}
-
 	private void updateIndexHead(Node _root) {
 		long freePageNumber = bufferManager.getFreePageNumber(index.getIndexId());
 		rootOffset = bufferManager.getFreeRecordOffset(index.getIndexId(), freePageNumber, index.getRecordsPerPage(), index.getRecordSize());

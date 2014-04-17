@@ -17,8 +17,8 @@ public class Relation {
 	private String fileName;
 	private Vector<Attribute> attributes;
 	private Map<String, Integer> attributesNames;
-	private Map<String, String> indexFiles;
-	private Set<String> indexed;
+	private Set<Long> indices;
+	private Map< Long, Vector<Long> > indexed;
 	private long id;
 	private long pageCount;
 	private long recordsCount;
@@ -34,8 +34,8 @@ public class Relation {
 		id = _id;
 		attributes = new Vector<Attribute>();
 		attributesNames = new HashMap<String, Integer>();
-		indexFiles = new HashMap<String, String>();
-		indexed = new HashSet<String>();
+		indices = new HashSet<Long>();
+		indexed = new HashMap<Long,Vector<Long>>();
 		creationDate = (new Date()).getTime();
 		lastModified = (new Date()).getTime();
 		pageCount = 1;
@@ -63,8 +63,8 @@ public class Relation {
 		fileName = relationName + ".db";
 		attributes = new Vector<Attribute>(attributesCount);
 		attributesNames = new HashMap<String, Integer>();
-		indexFiles = new HashMap<String, String>();
-		indexed = new HashSet<String>();
+		indices = new HashSet<Long>();
+		indexed = new HashMap<Long,Vector<Long>>();
 	}
 
 	public boolean addAttribute(String attributeName, Attribute.Type type, long _id) {
@@ -107,11 +107,21 @@ public class Relation {
 		return false;
 	}
 
-	public boolean addIndex(String indexName) {
-		if (indexFiles.containsKey(indexName)) {
+	public boolean addIndex(Index index) {
+		if (indices.contains(index.getIndexId())) {
 			return false;
 		} else {
-			indexFiles.put(indexName, relationName + "_" + indexName + ".index");
+			indices.add(index.getIndexId());
+			Vector<Attribute> indexAttributes = index.getAttributes();
+			for(int i=0; i<indexAttributes.size();i++){
+				if(indexed.containsKey(indexAttributes.get(i).getId())){
+					indexed.get(indexAttributes.get(i).getId()).add(index.getIndexId());
+				}else{
+					Vector<Long> temp = new Vector<Long>();
+					temp.add(index.getIndexId());
+					indexed.put(indexAttributes.get(i).getId(), temp);
+				}
+			}
 			lastModified = (new Date()).getTime();
 			return true;
 		}

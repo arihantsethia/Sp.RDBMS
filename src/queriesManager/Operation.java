@@ -17,6 +17,12 @@ public abstract class Operation {
 			return new UpdateOperation(statement);
 		} else if (statement.toUpperCase().contains("INSERT")) {
 			return new InsertOperation(statement);
+		} else if (statement.toUpperCase().contains("CREATE")) {
+			return new CreateOperation(statement);
+		} else if (statement.toUpperCase().contains("DROP")) {
+			return new DropOperation(statement);
+		}	else if (statement.toUpperCase().contains("ALTER")) {
+			return new AlterOperation(statement);
 		}
 		return null;
 	}

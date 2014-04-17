@@ -46,10 +46,8 @@ public class ObjectHolder {
 			relation.addAttribute(aObject, addToSize);
 		} else if (object instanceof Index) {
 			Index iObject = (Index) object;
-			if (getRelationIdByRelationName(iObject.getIndexName()) != -1) {
-				return false;
-			}
-			objects.put(iObject.getIndexId(), iObject);
+			Relation relation = (Relation) objects.get(iObject.getParentId());
+			relation.addIndex(iObject);
 		}
 
 		return true;

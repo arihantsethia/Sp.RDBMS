@@ -29,15 +29,8 @@ public class DatabaseManager {
 	public void parseCommand(String query) {
 		String[] splitCommand = query.split(" ");
 		if (splitCommand[0].equals("create")) {
-			if (splitCommand[1].equals("table")) {
-				if (systemCatalog.createTable(query) == true) {
-					System.out.println("Table " + splitCommand[2].trim() + " Successfully Created");
-				} else {
-					System.out.println("Table " + splitCommand[2].trim() + " Already Exist");
-				}
-			} else if (splitCommand[1].equals("index")) {
-
-			}
+			Operation operation = Operation.makeOperation(query.trim());
+			operation.executeOperation();
 		} else if (splitCommand[0].equals("drop")) {
 			if (splitCommand[1].equals("table")) {
 				if (systemCatalog.dropTable(splitCommand[2].trim()) == true) {
@@ -58,9 +51,9 @@ public class DatabaseManager {
 		} else if (splitCommand[0].equals("insert")) {
 			if (splitCommand[1].equals("into")) {
 				if (systemCatalog.insertRecord(query) == true) {
-					System.out.println("Table " + splitCommand[2].trim() + " Successfully inserted");
+					System.out.println(" Successfully inserted into Table :" + splitCommand[2].trim());
 				} else {
-					System.out.println("Table " + splitCommand[2].trim() + " can not insert");
+					System.out.println("Can not insert Table :" + splitCommand[2].trim());
 				}
 			}
 		} else if (splitCommand[0].equals("show")) {

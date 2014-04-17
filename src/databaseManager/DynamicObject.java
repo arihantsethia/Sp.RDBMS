@@ -3,9 +3,7 @@ package databaseManager;
 import java.nio.ByteBuffer;
 import java.util.Vector;
 
-import databaseManager.Attribute.Type;
-
-public class DynamicObject implements Comparable {
+public class DynamicObject implements Comparable<Object> {
 	public Object[] obj;
 	public Vector<Attribute> attributes;
 	public int size;
@@ -36,7 +34,6 @@ public class DynamicObject implements Comparable {
 	}
 
 	public DynamicObject deserialize(byte[] serialBytes) {
-		// TODO Auto-generated method stub
 		ByteBuffer serializedBuffer = ByteBuffer.wrap(serialBytes);
 		serializedBuffer.position(0);
 		DynamicObject temp = new DynamicObject(attributes);

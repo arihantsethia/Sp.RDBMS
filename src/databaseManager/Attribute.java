@@ -128,7 +128,7 @@ public class Attribute {
 	 * @param _nullable
 	 *            : This defines if an attribute can take null values or not.
 	 */
-	public Attribute(String _attributeName, Type _type, long _id, long _parentId, int _size, boolean _nullable) {
+	public Attribute(String _attributeName, Type _type, long _id, long _parentId, int _size, boolean _nullable, boolean _distinct) {
 		attributeName = _attributeName;
 		type = _type;
 		id = _id;
@@ -136,7 +136,7 @@ public class Attribute {
 		nullable = _nullable;
 		size = _size;
 		position = -1;
-		distinctEntries = false;
+		distinctEntries = _distinct;
 	}
 
 	/**

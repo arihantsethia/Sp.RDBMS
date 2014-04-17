@@ -26,25 +26,30 @@ public class SystemCatalogManager {
 	public static final String RELATION_CATALOG = "relation_catalog.db";
 	public static final String ATTRIBUTE_CATALOG = "attribute_catalog.db";
 	public static final String INDEX_CATALOG = "index_catalog.db";
+	public static final String INDEX_ATTRIBUTE_CATALOG = "index_attribute_catalog.db";
 	public static final int RELATION_RECORD_SIZE = 160;
 	public static final long RELATION_CATALOG_ID = 0;
 	public static final int ATTRIBUTE_RECORD_SIZE = 142;
 	public static final long ATTRIBUTE_CATALOG_ID = 1;
-	public static final int INDEX_RECORD_SIZE = 144;
+	public static final int INDEX_RECORD_SIZE = 192;
 	public static final long INDEX_CATALOG_ID = 2;
+	public static final int INDEX_ATTRIBUTE_RECORD_SIZE = 142;
+	public static final long INDEX_ATTRIBUTE_CATALOG_ID = 3;
 
 	private BufferManager bufferManager;
 	private ObjectHolder objectHolder;
 	public long totalAttributesCount;
+	public long totalIndexAttributesCount;
 	public long totalObjectsCount;
 
 	public SystemCatalogManager() {
 		bufferManager = BufferManager.getBufferManager();
 		objectHolder = ObjectHolder.getObjectHolder();
-		totalObjectsCount = 3;
+		totalObjectsCount = 4;
 		loadRelationCatalog();
 		loadAttributeCatalog();
 		loadIndexCatalog();
+		loadIndexAttributeCatalog();
 	}
 
 	public void loadRelationCatalog() {
@@ -99,53 +104,83 @@ public class SystemCatalogManager {
 				if (totalObjectsCount < tempIndex.getIndexId()) {
 					totalObjectsCount = tempIndex.getIndexId() + 1;
 				}
+				objectHolder.addObjectToRelation(tempIndex, false);
 				objectHolder.addObject(tempIndex);
 			}
 		}
 	}
 
-	public boolean createTable(String relationStmt) {
-		relationStmt = relationStmt.substring(relationStmt.toLowerCase().indexOf("table") + 5).trim();
-		String relationName = relationStmt.substring(0, relationStmt.indexOf("(")).trim();
-		Relation newRelation = new Relation(relationName, totalObjectsCount);
+	public void loadIndexAttributeCatalog() {
+		Relation attributeRelation = new Relation("index_attribute_catalog", INDEX_ATTRIBUTE_CATALOG_ID);
+		attributeRelation.setRecordSize(INDEX_ATTRIBUTE_RECORD_SIZE);
+		objectHolder.addObject(attributeRelation);
+		Attribute tempAttribute;
+		Iterator attributeIterator = new Iterator(attributeRelation);
+		while (attributeIterator.hasNext()) {
+			ByteBuffer attributeRecord = attributeIterator.getNext();
+			if (attributeRecord != null) {
+				attributeRecord.position(0);
+				tempAttribute = new Attribute(attributeRecord);
+				if (totalIndexAttributesCount <= tempAttribute.getId()) {
+					totalIndexAttributesCount = tempAttribute.getId() + 1;
+				}
+				objectHolder.addObjectToRelation(tempAttribute, false);
+			}
+		}
+	}
+
+	public boolean createTable(String relationName, Vector<Vector<String>> parsedData) {
 		if (objectHolder.getRelationIdByRelationName(relationName) == -1) {
-			StringTokenizer tokens = new StringTokenizer(relationStmt.substring(relationStmt.indexOf("(") + 1, relationStmt.lastIndexOf(")")), ",");
-			while (tokens.hasMoreTokens()) {
-				StringTokenizer attributeTokens = new StringTokenizer(tokens.nextToken().trim(), " ");
-				if (attributeTokens.countTokens() < 2) {
-					System.out.println("Name and type of attribute needs to be specified");
-					return false;
+			Relation newRelation = new Relation(relationName, totalObjectsCount);
+			String attributeName;
+			Attribute.Type attributeType;
+			boolean nullable, distinct;
+			int size;
+			for (int i = 0; i < parsedData.size(); i++) {
+				attributeName = parsedData.get(i).get(0);
+				attributeType = Attribute.stringToType(parsedData.get(i).get(1));
+				size = Integer.parseInt(parsedData.get(i).get(2));
+				if (size == -1) {
+					size = Attribute.Type.getSize(attributeType);
 				}
-				String attributeName = attributeTokens.nextToken().trim();
-				String _attributeType = attributeTokens.nextToken().trim();
-				Attribute.Type attributeType = Attribute.stringToType(_attributeType);
-				boolean nullable = true;
-				int size = Attribute.Type.getSize(attributeType);
-				if (attributeType == Attribute.Type.Char) {
-					size = size * Integer.parseInt(_attributeType.substring(_attributeType.indexOf("(") + 1, _attributeType.indexOf(")")).trim());
-				}
-				if (attributeTokens.countTokens() > 1) {
-					System.out.println("Only 3 properties per attribute i.e name , type , null/not_null are allowed");
-					return false;
-				} else if (attributeTokens.countTokens() == 1) {
-					if (attributeTokens.nextToken().trim().equalsIgnoreCase("not_null")) {
-						nullable = false;
-					} else {
-						System.out.println("Only 3 properties per attribute i.e name , type , null/not_null are allowed");
-						return false;
-					}
-				}
-				Attribute newAttribute = new Attribute(attributeName, attributeType, totalAttributesCount, newRelation.getRelationId(), size, nullable);
+				nullable = Boolean.valueOf(parsedData.get(i).get(3));
+				distinct = Boolean.valueOf(parsedData.get(i).get(4));
+				Attribute newAttribute = new Attribute(attributeName, attributeType, totalAttributesCount, newRelation.getRelationId(), size, nullable, distinct);
 				newRelation.addAttribute(newAttribute, true);
 				addAttributeToCatalog(newAttribute);
 			}
 			objectHolder.addObject(newRelation);
 			addRelationToCatalog(newRelation);
-			System.out.println("Created new table " + relationName + " :-)");
-		} else {
-			System.out.println("Table " + relationName + " already exists!");
 		}
-		return true;
+		System.out.println("Table " + relationName + " already exists!");
+		return false;
+	}
+	
+	public boolean createIndex(String relationName, Vector<Vector<String>> parsedData) {
+		if (objectHolder.getRelationIdByRelationName(relationName) == -1) {
+			Relation newRelation = new Relation(relationName, totalObjectsCount);
+			String attributeName;
+			Attribute.Type attributeType;
+			boolean nullable, distinct;
+			int size;
+			for (int i = 0; i < parsedData.size(); i++) {
+				attributeName = parsedData.get(i).get(0);
+				attributeType = Attribute.stringToType(parsedData.get(i).get(1));
+				size = Integer.parseInt(parsedData.get(i).get(2));
+				if (size == -1) {
+					size = Attribute.Type.getSize(attributeType);
+				}
+				nullable = Boolean.valueOf(parsedData.get(i).get(3));
+				distinct = Boolean.valueOf(parsedData.get(i).get(4));
+				Attribute newAttribute = new Attribute(attributeName, attributeType, totalAttributesCount, newRelation.getRelationId(), size, nullable, distinct);
+				newRelation.addAttribute(newAttribute, true);
+				addAttributeToCatalog(newAttribute);
+			}
+			objectHolder.addObject(newRelation);
+			addRelationToCatalog(newRelation);
+		}
+		System.out.println("Table " + relationName + " already exists!");
+		return false;
 	}
 
 	public void addAttributeToCatalog(Attribute newAttribute) {
@@ -168,6 +203,17 @@ public class SystemCatalogManager {
 		bufferManager.write(RELATION_CATALOG_ID, freePageNumber, freeRecordOffset, newRelation.serialize());
 		bufferManager.writeRecordBitmap(RELATION_CATALOG_ID, freePageNumber, relationRecordsPerPage, recordNumber, true);
 		totalObjectsCount++;
+	}
+
+	public void addIndexAttributeToCatalog(Attribute newAttribute) {
+		int attributeRecordsPerPage = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * INDEX_ATTRIBUTE_RECORD_SIZE));
+		long freePageNumber = bufferManager.getFreePageNumber(INDEX_ATTRIBUTE_CATALOG_ID);
+		int freeRecordOffset = bufferManager.getFreeRecordOffset(INDEX_ATTRIBUTE_CATALOG_ID, freePageNumber, attributeRecordsPerPage, INDEX_ATTRIBUTE_RECORD_SIZE);
+		newAttribute.setAddress(freePageNumber, freeRecordOffset);
+		bufferManager.write(INDEX_ATTRIBUTE_CATALOG_ID, freePageNumber, freeRecordOffset, newAttribute.serialize());
+		int recordNumber = (freeRecordOffset - (attributeRecordsPerPage + 7) / 8) / INDEX_ATTRIBUTE_RECORD_SIZE;
+		bufferManager.writeRecordBitmap(INDEX_ATTRIBUTE_CATALOG_ID, freePageNumber, attributeRecordsPerPage, recordNumber, true);
+		totalIndexAttributesCount++;
 	}
 
 	public void addIndexToCatalog(Index newIndex) {
@@ -250,8 +296,8 @@ public class SystemCatalogManager {
 	}
 
 	public boolean showTables() {
-		ObjectHolder self = ObjectHolder.getObjectHolder();
-		for (Map.Entry<Long, Object> entry : self.objects.entrySet()) {
+		System.out.println("here");
+		for (Map.Entry<Long, Object> entry : objectHolder.objects.entrySet()) {
 			if ((entry.getValue() instanceof Relation) && entry.getKey() > 2) {
 				System.out.println(((Relation) entry.getValue()).getRelationName());
 			}

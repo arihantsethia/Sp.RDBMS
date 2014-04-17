@@ -107,7 +107,7 @@ public class SelectOperation extends Operation {
 		}
 
 	}
-	
+
 	void print() {
 		String s = "";
 		for (int i = 0; i < tableList.size(); i++) {

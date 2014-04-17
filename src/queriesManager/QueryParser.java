@@ -13,16 +13,22 @@ import databaseManager.Attribute.Type;
 public class QueryParser {
 	public static Attribute attributeName;
 	public static TreeMap<String,String> tableMap;
-	
+
 	public static enum OperationType {
-		JOIN, SELECT, UPDATE;
+		JOIN, SELECT, UPDATE, CREATE, DROP;
 		public static String toString(OperationType opType) {
 			if (opType == QueryParser.OperationType.JOIN) {
 				return "JOIN";
 			} else if (opType == QueryParser.OperationType.SELECT) {
 				return "SELECT";
-			} else {
+			} else if (opType == QueryParser.OperationType.UPDATE) {
 				return "UPDATE";
+			} else if (opType == QueryParser.OperationType.CREATE) {
+				return "CREATE";
+			} else if (opType == QueryParser.OperationType.DROP) {
+				return "DROP";
+			} else {
+				return "ALTER";
 			}
 		}
 	};
@@ -72,7 +78,6 @@ public class QueryParser {
 	public QueryParser() {
 		tableMap = new TreeMap<String,String>(String.CASE_INSENSITIVE_ORDER);
 	}
-	
 
 	public boolean isCreateTableQuery(String statement) {
 		statement = statement.trim();
@@ -393,4 +398,3 @@ public class QueryParser {
 		return statement.substring(index + operator.length()).trim();
 	}
 }
-
