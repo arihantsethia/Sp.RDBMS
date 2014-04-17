@@ -49,7 +49,6 @@ public class SelectOperation extends Operation {
 	    relationId = ObjectHolder.getObjectHolder().getRelationIdByRelationName(Utility.getRelationName(tableList.elementAt(i))) ;
  	    relation   = (Relation) ObjectHolder.getObjectHolder().getObject(relationId) ;    
  	    recordCountList.addElement(2) ;
- 	    //recordCountList.addElement((int) relation.getRecordsCount()) ;
  	    recordCounterList.addElement(1) ;
  	    count = count * recordCountList.get(i) ;
  	    iteratorList.addElement(new Iterator(relation)) ;

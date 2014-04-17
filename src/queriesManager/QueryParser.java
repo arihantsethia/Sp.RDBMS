@@ -23,7 +23,7 @@ public class QueryParser {
     } ;
     
     public static enum ConditionType {
-	OR , AND , SIMPLE ;
+	OR , AND , SIMPLE , NULL ;
 	public static String toString(ConditionType cndType){
 	    if(cndType==QueryParser.ConditionType.OR){
 		return "OR" ;
@@ -116,4 +116,32 @@ public class QueryParser {
 	}
 	return null ;
     }
-}
+    
+    static ConditionType getConditionType(String condition){
+	int lp , rp , i ;
+	if(condition==null)
+	    return ConditionType.NULL ;
+	condition = condition.trim().substring(1,condition.length()-1).trim() ;
+	if(condition.charAt(0)=='('){
+	    lp = 1 ; rp = 0 ;
+	    for(i=1;i<condition.length()-1;i++){
+		if(condition.charAt(i)==')'){
+		    rp++ ;
+		}else if(condition.charAt(i)=='('){
+		    lp++ ;
+		}
+		if(lp==rp){
+		    break ;
+		}
+	    }
+	    if(condition.substring(i+1,i+1+condition.substring(i+1).indexOf('(')).trim().toUpperCase().equals("AND"))
+	    {
+		return ConditionType.AND ;
+	    }else{
+		return ConditionType.OR ;
+	    }
+	}else{
+	    return ConditionType.SIMPLE ;
+	} 
+    }
+ }

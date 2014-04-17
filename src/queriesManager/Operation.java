@@ -11,12 +11,11 @@ public abstract class Operation {
     }
     
     public static Operation makeOperation(String statement){
-	statement = statement.toUpperCase() ;
-	if(statement.contains("SELECT")){
+	if(statement.toUpperCase().contains("SELECT")){
 	   return new  SelectOperation(statement) ;
-	}else if(statement.contains("UPDATE")){
+	}else if(statement.toUpperCase().contains("UPDATE")){
 	   return new  UpdateOperation(statement) ;
-	}else if(statement.contains("INSERT")){
+	}else if(statement.toUpperCase().contains("INSERT")){
 	   return new  InsertOperation(statement) ;	   
 	}
 	return null;
