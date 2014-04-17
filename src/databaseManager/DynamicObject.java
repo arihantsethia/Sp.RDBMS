@@ -10,11 +10,11 @@ public class DynamicObject implements Comparable {
     public Vector<Attribute> attributes;
     public int size;
 
-    DynamicObject() {
+    public DynamicObject() {
 
     }
 
-    DynamicObject(int n) {
+    public DynamicObject(int n) {
 	obj = new Object[n];
     }
 
@@ -39,13 +39,14 @@ public class DynamicObject implements Comparable {
 	DynamicObject temp = this;
 	for (int i = 0; i < attributes.size(); i++) {
 	    if (attributes.get(i).getAttributeType() == Attribute.Type.Char) {
-		String str = "";
+		String s = "";
 		for (int j = 0; j < attributes.get(i).getAttributeSize() / 2; j++) {
-		    if (serializedBuffer.getChar(2 * i) != '\0') {
-			str += serializedBuffer.getChar(2 * i);
+		    char tempChar = serializedBuffer.getChar();
+		    if (tempChar != '\0') {
+			s += tempChar;
 		    }
 		}
-		temp.obj[i] = str;
+		temp.obj[i] = s ;
 	    } else {
 		temp.obj[i] = serializedBuffer.getInt();
 	    }
@@ -53,6 +54,18 @@ public class DynamicObject implements Comparable {
 	return temp;
     }
 
+    public String printRecords(){
+	String s = "" ;
+	for (int i = 0; i < attributes.size(); i++) {
+	    if(attributes.get(i).getAttributeType() == Attribute.Type.Char){
+		s = (String)obj[i] + " , " + s ;
+	    }else{
+		s = ((Integer)obj[i]).toString() + " , " + s;
+	    }	   
+	}
+	return s ;
+    }
+    
     public ByteBuffer serialize(DynamicObject temp) {
 	ByteBuffer serializedBuffer = ByteBuffer.allocate(size);
 	serializedBuffer.position(0);

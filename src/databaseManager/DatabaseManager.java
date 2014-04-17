@@ -7,10 +7,13 @@
 
 package databaseManager;
 
+import queriesManager.Operation;
+import queriesManager.SelectOperation;
+
 public class DatabaseManager {
 
     private static SystemCatalogManager systemCatalog;
-
+    
     public DatabaseManager() {
 	systemCatalog = new SystemCatalogManager();
     }
@@ -50,7 +53,8 @@ public class DatabaseManager {
 		}
 	    }
 	} else if (splitCommand[0].equals("select")) {
-
+	    SelectOperation operation = (SelectOperation) Operation.makeOperation(query.trim()) ;
+	    operation.ExecuteOperation() ;
 	} else if (splitCommand[0].equals("insert")) {
 	    if (splitCommand[1].equals("into")) {
 		if (systemCatalog.insertRecord(query) == true) {
@@ -62,6 +66,7 @@ public class DatabaseManager {
 	} else if(splitCommand[0].equals("show")){
 	    if (splitCommand[1].equals("tables")) {
 		System.out.println("List of Tables.");
+		systemCatalog.showTables() ;
 	    }
 	}
     }
