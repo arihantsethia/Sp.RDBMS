@@ -24,4 +24,8 @@ public abstract class Operation {
     void setCondition(Condition cond){
 	condition = cond ;
     }
+    
+    public boolean ExecuteOperation(){
+	return false ;
+    }
 }
