@@ -24,13 +24,13 @@ public class ObjectHolder {
 	public boolean addObject(Object object) {
 		if (object instanceof Relation) {
 			Relation rObject = (Relation) object;
-			if (getRelationIdByRelationName(rObject.getRelationName()) != -1) {
+			if (getRelationId(rObject.getRelationName()) != -1) {
 				return false;
 			}
 			objects.put(rObject.getRelationId(), rObject);
 		} else if (object instanceof Index) {
 			Index iObject = (Index) object;
-			if (getRelationIdByRelationName(iObject.getIndexName()) != -1) {
+			if (getRelationId(iObject.getIndexName()) != -1) {
 				return false;
 			}
 			objects.put(iObject.getIndexId(), iObject);
@@ -77,7 +77,7 @@ public class ObjectHolder {
 		}
 	}
 
-	public long getRelationIdByRelationName(String name) {
+	public long getRelationId(String name) {
 		for (Map.Entry<Long, Object> entry : objects.entrySet()) {
 			Object objectEntry = entry.getValue();
 			if (objectEntry instanceof Relation) {
@@ -85,10 +85,24 @@ public class ObjectHolder {
 				if (relationEntry.getRelationName().equalsIgnoreCase(name)) {
 					return relationEntry.getRelationId();
 				}
-			} else if (objectEntry instanceof Index) {
-				Index indexEntry = (Index) objectEntry;
-				if (indexEntry.getIndexName().equalsIgnoreCase(name)) {
-					return indexEntry.getIndexId();
+			}
+		}
+		return -1;
+	}
+	
+
+	public long getIndexId(String relationName, String indexName) {
+		long relationId = getRelationId(relationName);
+		if(relationId!=-1){
+			for (Map.Entry<Long, Object> entry : objects.entrySet()) {
+				Object objectEntry = entry.getValue();
+				if (objectEntry instanceof Index) {
+					Index indexEntry = (Index) objectEntry;
+					if (indexEntry.getIndexName().equalsIgnoreCase(indexName)) {
+						if(indexEntry.getParentId()==relationId){
+							return indexEntry.getIndexId();
+						}
+					}
 				}
 			}
 		}

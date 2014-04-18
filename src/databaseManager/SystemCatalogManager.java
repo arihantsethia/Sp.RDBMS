@@ -106,7 +106,6 @@ public class SystemCatalogManager {
 				if (totalObjectsCount < tempIndex.getIndexId()) {
 					totalObjectsCount = tempIndex.getIndexId() + 1;
 				}
-				//objectHolder.addObjectToRelation(tempIndex, false);
 				objectHolder.addObject(tempIndex);
 			}
 		}
@@ -138,9 +137,8 @@ public class SystemCatalogManager {
 	}
 
 	public boolean createTable(String relationName, Vector<Vector<String>> parsedData) {
-		if (objectHolder.getRelationIdByRelationName(relationName) == -1) {
+		if (objectHolder.getRelationId(relationName) == -1) {
 			Relation newRelation = new Relation(relationName, totalObjectsCount);
-			Vector<Attribute> attributes = new Vector<Attribute>();
 			String attributeName;
 			Attribute.Type attributeType;
 			boolean nullable, distinct;
@@ -160,9 +158,9 @@ public class SystemCatalogManager {
 					return false;
 				}
 			}
-			for (int i = 0; i < attributes.size(); i++) {
-				attributes.get(i).setId(totalAttributesCount);
-				addIndexAttributeToCatalog(attributes.get(i));					
+			for (int i = 0; i < newRelation.getAttributesCount(); i++) {
+				newRelation.getAttributes().get(i).setId(totalAttributesCount);
+				addAttributeToCatalog(newRelation.getAttributes().get(i));					
 			}			
 			objectHolder.addObject(newRelation);
 			addRelationToCatalog(newRelation);
@@ -174,8 +172,8 @@ public class SystemCatalogManager {
 	}
 
 	public boolean createIndex(String indexName, String relationName, Vector<Vector<String>> parsedData) {
-		if (objectHolder.getRelationIdByRelationName(indexName) == -1) {
-			long relationId = objectHolder.getRelationIdByRelationName(relationName);
+		if (objectHolder.getIndexId(relationName,indexName) == -1) {
+			long relationId = objectHolder.getRelationId(relationName);
 			if (relationId != -1) {
 				Relation relation = (Relation) objectHolder.getObject(relationId);
 				Vector<Attribute> attributes = new Vector<Attribute>();
@@ -256,43 +254,55 @@ public class SystemCatalogManager {
 	public void updateRelationCatalog(Relation relation) {
 		bufferManager.write(RELATION_CATALOG_ID, relation.getPageNumber(), relation.getRecordOffset(), relation.serialize());
 	}
+	
+	public void updateIndexCatalog(Index index) {
+		bufferManager.write(INDEX_CATALOG_ID, index.getPage(), index.getRecordOffset(), index.serialize());
+	}
 
 	public void close() {
 		bufferManager.flush();
 	}
 
 	public boolean dropTable(String relationName) {
-		long newRelationId = objectHolder.getRelationIdByRelationName(relationName);
+		long relationId = objectHolder.getRelationId(relationName);
 		int recordsPerPage, recordNumber;
-		if (newRelationId != -1) {
-			Relation newRelation = (Relation) objectHolder.getObject(newRelationId);
+		if (relationId != -1) {
+			Relation relation = (Relation) objectHolder.getObject(relationId);
 			recordsPerPage = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * ATTRIBUTE_RECORD_SIZE));
-			Vector<Attribute> attributes = newRelation.getAttributes();
+			Vector<Attribute> attributes = relation.getAttributes();
 			for (int i = 0; i < attributes.size(); i++) {
 				recordNumber = (attributes.get(i).getRecordOffset() - (recordsPerPage + 7) / 8) / ATTRIBUTE_RECORD_SIZE;
 				bufferManager.writeRecordBitmap(ATTRIBUTE_CATALOG_ID, attributes.get(i).getPageNumber(), recordsPerPage, recordNumber, false);
 			}
+			java.util.Iterator<Long> indexIds = relation.getIndices().iterator();
+			while (indexIds.hasNext()) {
+				Index index = (Index) objectHolder.getObject(indexIds.next());
+				dropIndex(index.getIndexName(),relationName);
+			}
 			recordsPerPage = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * RELATION_RECORD_SIZE));
-			recordNumber = (newRelation.getRecordOffset() - (recordsPerPage + 7) / 8) / RELATION_RECORD_SIZE;
-			bufferManager.writeRecordBitmap(RELATION_CATALOG_ID, newRelation.getPageNumber(), recordsPerPage, recordNumber, false);
-			bufferManager.closeFile(newRelationId);
-			bufferManager.deleteFile(newRelation.getFileName());
-			objectHolder.removeObject(newRelationId);
+			recordNumber = (relation.getRecordOffset() - (recordsPerPage + 7) / 8) / RELATION_RECORD_SIZE;
+			bufferManager.writeRecordBitmap(RELATION_CATALOG_ID, relation.getPageNumber(), recordsPerPage, recordNumber, false);
+			bufferManager.closeFile(relationId);
+			bufferManager.deleteFile(relation.getFileName());
+			objectHolder.removeObject(relationId);
 			return true;
 		}
 		return false;
 	}
 
 	public boolean dropIndex(String indexName, String relationName) {
-		long newIndexId = objectHolder.getRelationIdByRelationName(indexName);
+		long indexId = objectHolder.getIndexId(relationName,indexName);
 		int indexRecordsPerPage = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * INDEX_RECORD_SIZE));
-		if (newIndexId != -1) {
-			Index newIndex = (Index) objectHolder.getObject(newIndexId);
-			int recordNumber = (newIndex.getRecordOffset() - (indexRecordsPerPage + 7) / 8) / RELATION_RECORD_SIZE;
-			bufferManager.writeRecordBitmap(INDEX_CATALOG_ID, newIndex.getPage(), newIndex.getRecordsPerPage(), recordNumber, false);
-			bufferManager.closeFile(newIndexId);
-			bufferManager.deleteFile(newIndex.getFileName());
-			objectHolder.removeObject(newIndexId);
+		if (indexId != -1) {
+			long relationId =  objectHolder.getRelationId(relationName);
+			Relation relation = (Relation) objectHolder.getObject(relationId);
+			Index index = (Index) objectHolder.getObject(indexId);
+			relation.removeIndex(indexId);
+			int recordNumber = (index.getRecordOffset() - (indexRecordsPerPage + 7) / 8) / RELATION_RECORD_SIZE;
+			bufferManager.writeRecordBitmap(INDEX_CATALOG_ID, index.getPage(), index.getRecordsPerPage(), recordNumber, false);
+			bufferManager.closeFile(indexId);
+			bufferManager.deleteFile(index.getFileName());
+			objectHolder.removeObject(indexId);
 			return true;
 		}
 		return false;
@@ -301,7 +311,7 @@ public class SystemCatalogManager {
 	public boolean insertRecord(String query) {
 		String relationName = query.split(" ")[2].trim();
 		ObjectHolder objectHolder = ObjectHolder.getObjectHolder();
-		long relationId = objectHolder.getRelationIdByRelationName(relationName);
+		long relationId = objectHolder.getRelationId(relationName);
 		if (relationId != -1) {
 			Relation relation = (Relation) objectHolder.getObject(relationId);
 			long freePageNumber = bufferManager.getFreePageNumber(relationId);
@@ -314,6 +324,16 @@ public class SystemCatalogManager {
 				int recordNumber = (recordOffset - (relation.getRecordsPerPage() + 7) / 8) / relation.getRecordSize();
 				bufferManager.writeRecordBitmap(relation.getRelationId(), freePageNumber, relation.getRecordsPerPage(), recordNumber, true);
 				relation.updateRecordsCount(1);
+				java.util.Iterator<Long> indices = relation.getIndices().iterator();
+				PhysicalAddress insertAddress = new PhysicalAddress(relationId,freePageNumber); 
+				while(indices.hasNext()){
+					Index currIndex = ((Index)objectHolder.getObject(indices.next()));
+					if(currIndex.setTree()){
+						updateIndexCatalog(currIndex);
+					}
+					DynamicObject entryObject = Utility.toDynamicObject(columnList, valueList, currIndex.getAttributes());
+					currIndex.insert(entryObject, insertAddress , recordOffset);
+				}
 				updateRelationCatalog(relation);
 				return true;
 			}
@@ -322,7 +342,6 @@ public class SystemCatalogManager {
 	}
 
 	public boolean showTables() {
-		System.out.println("here");
 		for (Map.Entry<Long, Object> entry : objectHolder.objects.entrySet()) {
 			if ((entry.getValue() instanceof Relation) && entry.getKey() > 2) {
 				System.out.println(((Relation) entry.getValue()).getRelationName());

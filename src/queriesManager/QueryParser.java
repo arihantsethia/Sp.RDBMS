@@ -205,7 +205,7 @@ public class QueryParser {
 					if(tableMap.containsKey(key)){
 						field = Utility.getFieldName(selectPartSplit[j]);
 						relationName = tableMap.get(key);
-						long newRelationId = ObjectHolder.getObjectHolder().getRelationIdByRelationName(relationName);
+						long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
 						if (newRelationId != -1) {
 						    Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
 						    Vector<Attribute> attributes = newRelation.getAttributes();
@@ -244,7 +244,7 @@ public class QueryParser {
 					if(tableMap.containsKey(key)){
 						field = Utility.getFieldName(selectPartSplit[j]);
 						relationName = tableMap.get(key);
-						long newRelationId = ObjectHolder.getObjectHolder().getRelationIdByRelationName(relationName);
+						long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
 						if (newRelationId != -1) {
 						    Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
 						    Vector<Attribute> attributes = newRelation.getAttributes();

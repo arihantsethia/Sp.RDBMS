@@ -83,6 +83,26 @@ public class Utility {
 		}
 		return false;
 	}
+	
+	public static DynamicObject toDynamicObject(String[] columnList, String[] valueList, Vector<Attribute> attributes) {
+		Map<String, Integer> columnMap = new HashMap<String, Integer>();
+		DynamicObject dObject = new DynamicObject(attributes);
+		for (int i = 0; i < columnList.length; i++) {
+			columnMap.put(columnList[i].trim(), i);
+			valueList[i] = valueList[i].trim();
+		}
+		for (int i = 0; i < attributes.size(); i++) {
+			if (columnMap.containsKey(attributes.get(i).getAttributeName())) {
+				int pos = columnMap.get(attributes.get(i).getAttributeName());
+				if (attributes.get(i).getAttributeType() == Attribute.Type.Int) {
+					dObject.obj[i] = Integer.parseInt(valueList[pos]);
+				}else if (attributes.get(i).getAttributeType() == Attribute.Type.Char) {
+					dObject.obj[i] = (String)valueList[pos].substring(1, valueList[pos].length()-1);
+				}
+			}
+		}
+		return dObject;
+	}
 
 	public static ByteBuffer serialize(String[] columnList, String[] valueList, Vector<Attribute> attributesList, int recordSize) {
 		ByteBuffer serializedBuffer = ByteBuffer.allocate(recordSize);
@@ -179,8 +199,8 @@ public class Utility {
 		relationName1 = QueryParser.tableMap.get(key1);
 		relationName2 = QueryParser.tableMap.get(key2);
 
-		long newRelationId1 = ObjectHolder.getObjectHolder().getRelationIdByRelationName(relationName1);
-		long newRelationId2 = ObjectHolder.getObjectHolder().getRelationIdByRelationName(relationName2);
+		long newRelationId1 = ObjectHolder.getObjectHolder().getRelationId(relationName1);
+		long newRelationId2 = ObjectHolder.getObjectHolder().getRelationId(relationName2);
 
 		if (newRelationId1 != -1 && newRelationId2 != -1) {
 			Relation newRelation1 = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId1);
@@ -252,7 +272,7 @@ public class Utility {
 			if (QueryParser.tableMap.containsKey(key)) {
 				field = getFieldName(s);
 				relationName = QueryParser.tableMap.get(key);
-				long newRelationId = ObjectHolder.getObjectHolder().getRelationIdByRelationName(relationName);
+				long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
 				if (newRelationId != -1) {
 					Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
 					Vector<Attribute> attributes = newRelation.getAttributes();

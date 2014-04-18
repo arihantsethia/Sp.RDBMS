@@ -26,10 +26,13 @@ public class Index {
 	private long creationDate;
 	private long lastModified;
 	private Vector<Attribute> attributes;
-	
+
+	private DynamicObject dObject;
+	private BPlusTree bTree;
+
 	public Index(String _indexName, long _id, long _parentId, boolean _duplicates, Vector<Attribute> _attributes) {
 		indexName = _indexName;
-		fileName = _indexName + ".index";
+		fileName = _indexName + _id + ".index";
 		id = _id;
 		parentId = _parentId;
 		duplicates = _duplicates;
@@ -39,7 +42,7 @@ public class Index {
 		recordsCount = 0;
 		attributes = _attributes;
 		keySize = 0;
-		for(int i=0; i <attributes.size();i++){
+		for (int i = 0; i < attributes.size(); i++) {
 			keySize += attributes.get(i).getAttributeSize();
 		}
 		nKeys = 64;
@@ -78,10 +81,10 @@ public class Index {
 		recordsCount = serializedBuffer.getLong();
 		creationDate = serializedBuffer.getLong();
 		lastModified = serializedBuffer.getLong();
-		fileName = indexName + ".index";
+		fileName = indexName + id + ".index";
 		attributes = new Vector<Attribute>();
 	}
-	
+
 	public void addAttribute(Attribute attr, boolean addToSize) {
 		attributes.add(attr);
 	}
@@ -131,7 +134,7 @@ public class Index {
 		return numberOfRecords;
 	}
 
-	public ByteBuffer serialize() {		
+	public ByteBuffer serialize() {
 		ByteBuffer serializedBuffer = ByteBuffer.allocate((int) SystemCatalogManager.INDEX_RECORD_SIZE);
 		for (int i = 0; i < INDEX_NAME_LENGTH; i++) {
 			if (i < indexName.length()) {
@@ -204,7 +207,24 @@ public class Index {
 		return attributes;
 	}
 
-	public Object getParentId() {
+	public long getParentId() {
 		return parentId;
+	}
+
+	public boolean setTree() {
+		if (dObject == null) {
+			dObject = new DynamicObject(attributes);
+			bTree = new BPlusTree(this, dObject);
+			return true;
+		}
+		return false;
+	}
+
+	public boolean insert(DynamicObject object, PhysicalAddress value, int recordOffset) {
+		if (dObject != null) {
+			bTree.insert(object, value, recordOffset);
+			return true;
+		}
+		return false;
 	}
 }

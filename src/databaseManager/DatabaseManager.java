@@ -32,19 +32,8 @@ public class DatabaseManager {
 			Operation operation = Operation.makeOperation(query.trim());
 			operation.executeOperation();
 		} else if (splitCommand[0].equals("drop")) {
-			if (splitCommand[1].equals("table")) {
-				if (systemCatalog.dropTable(splitCommand[2].trim()) == true) {
-					System.out.println("Table " + splitCommand[2].trim() + " Successfully Droped");
-				} else {
-					System.out.println("Table " + splitCommand[2].trim() + " not Exist");
-				}
-			} else if (splitCommand[1].equals("index")) {
-				if (systemCatalog.dropIndex(splitCommand[2].trim()) == true) {
-					System.out.println("Index " + splitCommand[2].trim() + " Successfully Droped");
-				} else {
-					System.out.println("Index " + splitCommand[2].trim() + " not Exist");
-				}
-			}
+			Operation operation = Operation.makeOperation(query.trim());
+			operation.executeOperation();
 		} else if (splitCommand[0].equals("select")) {
 			Operation operation = Operation.makeOperation(query.trim());
 			operation.executeOperation();

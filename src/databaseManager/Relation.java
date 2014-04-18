@@ -244,4 +244,15 @@ public class Relation {
 		return recordsCount;
 	}
 
+	public Set<Long> getIndices() {
+		return indices;
+	}
+	
+	public void removeIndex(long indexId) {
+		indices.remove(indexId);
+		for (Map.Entry<Long, Vector<Long>> entry : indexed.entrySet()) {
+			entry.getValue().remove(indexId);
+		}
+	}
+
 }
