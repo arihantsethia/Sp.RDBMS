@@ -186,7 +186,7 @@ public class Utility {
 			Relation newRelation1 = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId1);
 			Relation newRelation2 = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId2);
 
-			if (newRelation1.attributeType(field1).equals(newRelation2.attributeType(field2))) {
+			if (newRelation1.getAttributeType(field1).equals(newRelation2.getAttributeType(field2))) {
 				return true;
 			} else {
 				return false;

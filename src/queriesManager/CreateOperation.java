@@ -7,20 +7,20 @@ import java.util.Vector;
 import databaseManager.*;
 
 public class CreateOperation extends Operation {
-	
+
 	protected String indexName;
 	protected String relationName;
 	protected Vector<Vector<String>> parsedData;
 	protected int queryType;
-	
+
 	CreateOperation(String statement) {
 		setType(QueryParser.OperationType.CREATE);
 		parsedData = new Vector<Vector<String>>();
 		statement = statement.substring(statement.toUpperCase().indexOf("CREATE") + 6).trim();
 		if (statement.toUpperCase().indexOf("TABLE") == 0) {
-			queryType = parseCreateTableQuery(statement)?0:-1;
+			queryType = parseCreateTableQuery(statement) ? 0 : -1;
 		} else if (statement.toUpperCase().indexOf("INDEX") == 0) {
-			queryType = parseCreateIndexQuery(statement)?1:-1;
+			queryType = parseCreateIndexQuery(statement) ? 1 : -1;
 		}
 	}
 
@@ -38,42 +38,42 @@ public class CreateOperation extends Operation {
 			}
 			parsedToken.add(attributeTokens.nextToken().trim());
 			parsedToken.add(attributeTokens.nextToken().trim());
-			if(Attribute.stringToType(parsedToken.get(1))==Attribute.Type.Undeclared){
+			if (Attribute.stringToType(parsedToken.get(1)) == Attribute.Type.Undeclared) {
 				System.out.println("Not a valid data type!");
 				return false;
-			}else if(Attribute.stringToType(parsedToken.get(1))==Attribute.Type.Char){
+			} else if (Attribute.stringToType(parsedToken.get(1)) == Attribute.Type.Char) {
 				int size = 2;
-				if(parsedToken.get(1).indexOf("(")!=-1 && parsedToken.get(1).indexOf(")")!=-1){
-					try{
+				if (parsedToken.get(1).indexOf("(") != -1 && parsedToken.get(1).indexOf(")") != -1) {
+					try {
 						String temp = parsedToken.get(1).substring(parsedToken.get(1).indexOf("(") + 1, parsedToken.get(1).indexOf(")")).trim();
 						size = size * Integer.parseInt(temp);
 						parsedToken.add(String.valueOf(size));
-					}catch (NumberFormatException e){
+					} catch (NumberFormatException e) {
 						System.out.println("Integer length needs to be specified for char data type as \"(length)\" !");
 						return false;
 					}
-				}else{
+				} else {
 					System.out.println("Length needs to be specified for char data type as \"(length)\" !");
 					return false;
 				}
-			}else{
+			} else {
 				parsedToken.add("4");
 			}
 			if (attributeTokens.countTokens() < 3) {
 				Boolean[] properties = new Boolean[2];
 				Arrays.fill(properties, Boolean.FALSE);
-				while(attributeTokens.hasMoreTokens()){
-					if(attributeTokens.nextToken().equals("notnull") && !properties[0]){
+				while (attributeTokens.hasMoreTokens()) {
+					if (attributeTokens.nextToken().equals("notnull") && !properties[0]) {
 						properties[0] = true;
-					}else if(attributeTokens.nextToken().equals("notnull") && !properties[1]){
+					} else if (attributeTokens.nextToken().equals("notnull") && !properties[1]) {
 						properties[1] = true;
-					}else{
+					} else {
 						System.out.println("Improper Syntax!");
 						return false;
 					}
 				}
 				parsedToken.add(properties[0].toString());
-				parsedToken.add(properties[0].toString());		
+				parsedToken.add(properties[0].toString());
 			} else {
 				System.out.println("Only 4 properties per attribute i.e name , type , null/not_null , unique are allowed");
 				return false;
@@ -84,15 +84,67 @@ public class CreateOperation extends Operation {
 	}
 
 	private boolean parseCreateIndexQuery(String statement) {
-		// TODO Auto-generated method stub
-		return false;
+		statement = statement.substring(statement.toUpperCase().indexOf("INDEX") + 5).trim();
+		Vector<String> parsedToken;
+		String attribtueName;
+		if (statement.contains(" ")) {
+			indexName = statement.substring(0, statement.indexOf(" ")).trim();
+			statement = statement.substring(statement.indexOf(" ")).trim();
+			if(statement.toUpperCase().indexOf("ON") == 0){
+				statement = statement.substring(statement.toUpperCase().indexOf("ON") + 2).trim();
+				if (statement.toUpperCase().indexOf("TABLE") == 0) {
+					statement = statement.substring(statement.toUpperCase().indexOf("TABLE") + 5).trim();
+					if(statement.indexOf("(")!=-1){
+						relationName = statement.substring(0, statement.indexOf("(")).trim();
+						parsedToken = new Vector<String>();
+						StringTokenizer attribtueNames = new StringTokenizer(statement.substring(statement.indexOf("(") + 1, statement.lastIndexOf(")")), ",");
+						if(attribtueNames.countTokens() > 0){
+							while(attribtueNames.hasMoreTokens()){
+								attribtueName = attribtueNames.nextToken().trim();
+								if(attribtueName.indexOf(" ")==-1){
+									parsedToken.add(attribtueName);
+								}else{
+									System.out.println("All attributes must be seperated by ','. Error near : "+attribtueName);
+									return false;
+								}
+							}
+							parsedData.add(parsedToken);
+							parsedToken = new Vector<String>();
+							statement = statement.substring(statement.lastIndexOf(")")+1).trim();
+							if(statement.equalsIgnoreCase("UNIQUE")){
+								parsedToken.add("true");
+							}else if(statement.length()==0){
+								parsedToken.add("false");
+							}else{
+								System.out.println("Improper syntax. Error near : "+statement);
+								return false;
+							}
+							parsedData.add(parsedToken);
+						}else{
+							System.out.println("Atleat one attribute should be specified. Error near : "+statement);
+							return false;
+						}
+					}
+				}else{
+					System.out.println("Error near syntax \"" + statement + "\"");
+					return false;
+				}
+			} else {
+				System.out.println("Error near syntax \"" + statement + "\"");
+				return false;
+			}
+		} else {
+			System.out.println("Error near syntax \"" + statement + "\"");
+			return false;
+		}
+		return true;
 	}
-	
+
 	public boolean executeOperation() {
-		if(queryType==0){
+		if (queryType == 0) {
 			return DatabaseManager.getSystemCatalog().createTable(relationName, parsedData);
-		}else if(queryType==1){
-			return DatabaseManager.getSystemCatalog().createIndex(relationName, parsedData);
+		} else if (queryType == 1) {
+			return DatabaseManager.getSystemCatalog().createIndex(indexName, relationName, parsedData);
 		}
 		return false;
 	}

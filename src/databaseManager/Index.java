@@ -51,6 +51,8 @@ public class Index {
 			}
 		}
 		recordSize = nKeys * (keySize + 20) + 25;
+		rootPage = new PhysicalAddress();
+		rootOffset = -1;
 	}
 
 	public Index(ByteBuffer serializedBuffer) {
@@ -77,6 +79,11 @@ public class Index {
 		creationDate = serializedBuffer.getLong();
 		lastModified = serializedBuffer.getLong();
 		fileName = indexName + ".index";
+		attributes = new Vector<Attribute>();
+	}
+	
+	public void addAttribute(Attribute attr, boolean addToSize) {
+		attributes.add(attr);
 	}
 
 	/**
@@ -124,9 +131,8 @@ public class Index {
 		return numberOfRecords;
 	}
 
-	public ByteBuffer serialize() {	
-		
-		ByteBuffer serializedBuffer = ByteBuffer.allocate((int) SystemCatalogManager.RELATION_RECORD_SIZE);
+	public ByteBuffer serialize() {		
+		ByteBuffer serializedBuffer = ByteBuffer.allocate((int) SystemCatalogManager.INDEX_RECORD_SIZE);
 		for (int i = 0; i < INDEX_NAME_LENGTH; i++) {
 			if (i < indexName.length()) {
 				serializedBuffer.putChar(indexName.charAt(i));

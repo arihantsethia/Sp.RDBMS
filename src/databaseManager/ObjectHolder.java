@@ -42,8 +42,15 @@ public class ObjectHolder {
 	public boolean addObjectToRelation(Object object, boolean addToSize) {
 		if (object instanceof Attribute) {
 			Attribute aObject = (Attribute) object;
-			Relation relation = (Relation) objects.get(aObject.getParentId());
-			relation.addAttribute(aObject, addToSize);
+			Object toObject = objects.get(aObject.getParentId());
+			if (toObject instanceof Relation) {
+				Relation relation = (Relation) toObject;
+				relation.addAttribute(aObject, addToSize);
+			} else if (toObject instanceof Index) {
+				Index index = (Index) toObject;
+				index.addAttribute(aObject,addToSize);
+			}
+
 		} else if (object instanceof Index) {
 			Index iObject = (Index) object;
 			Relation relation = (Relation) objects.get(iObject.getParentId());

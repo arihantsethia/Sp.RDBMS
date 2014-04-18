@@ -203,6 +203,13 @@ public class Attribute {
 	public void setPosition(int _position) {
 		position = _position;
 	}
+	public void setId(long _newId) {
+		id = _newId;
+	}
+	
+	public void setParentId(long _newId) {
+		parentId = _newId;
+	}
 
 	public String toString() {
 		String str = attributeName + " " + type;

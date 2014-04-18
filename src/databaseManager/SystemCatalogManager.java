@@ -7,7 +7,9 @@
 
 package databaseManager;
 
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 import java.util.Vector;
 import java.nio.ByteBuffer;
 import java.util.StringTokenizer;
@@ -104,7 +106,7 @@ public class SystemCatalogManager {
 				if (totalObjectsCount < tempIndex.getIndexId()) {
 					totalObjectsCount = tempIndex.getIndexId() + 1;
 				}
-				objectHolder.addObjectToRelation(tempIndex, false);
+				//objectHolder.addObjectToRelation(tempIndex, false);
 				objectHolder.addObject(tempIndex);
 			}
 		}
@@ -114,6 +116,7 @@ public class SystemCatalogManager {
 		Relation attributeRelation = new Relation("index_attribute_catalog", INDEX_ATTRIBUTE_CATALOG_ID);
 		attributeRelation.setRecordSize(INDEX_ATTRIBUTE_RECORD_SIZE);
 		objectHolder.addObject(attributeRelation);
+		Set<Long> indexIds = new HashSet<Long>();
 		Attribute tempAttribute;
 		Iterator attributeIterator = new Iterator(attributeRelation);
 		while (attributeIterator.hasNext()) {
@@ -124,14 +127,20 @@ public class SystemCatalogManager {
 				if (totalIndexAttributesCount <= tempAttribute.getId()) {
 					totalIndexAttributesCount = tempAttribute.getId() + 1;
 				}
+				indexIds.add(tempAttribute.getParentId());
 				objectHolder.addObjectToRelation(tempAttribute, false);
 			}
+		}
+		java.util.Iterator<Long> iterator = indexIds.iterator();
+		while(iterator.hasNext()){
+			objectHolder.addObjectToRelation((Index)objectHolder.getObject(iterator.next()), false);
 		}
 	}
 
 	public boolean createTable(String relationName, Vector<Vector<String>> parsedData) {
 		if (objectHolder.getRelationIdByRelationName(relationName) == -1) {
 			Relation newRelation = new Relation(relationName, totalObjectsCount);
+			Vector<Attribute> attributes = new Vector<Attribute>();
 			String attributeName;
 			Attribute.Type attributeType;
 			boolean nullable, distinct;
@@ -145,43 +154,58 @@ public class SystemCatalogManager {
 				}
 				nullable = Boolean.valueOf(parsedData.get(i).get(3));
 				distinct = Boolean.valueOf(parsedData.get(i).get(4));
-				Attribute newAttribute = new Attribute(attributeName, attributeType, totalAttributesCount, newRelation.getRelationId(), size, nullable, distinct);
-				newRelation.addAttribute(newAttribute, true);
-				addAttributeToCatalog(newAttribute);
+				Attribute newAttribute = new Attribute(attributeName, attributeType, -1 , newRelation.getRelationId(), size, nullable, distinct);
+				if(!newRelation.addAttribute(newAttribute, true)){
+					System.out.println("Table already contains " + attributeName + "! Duplicate entries not allowed.");
+					return false;
+				}
 			}
+			for (int i = 0; i < attributes.size(); i++) {
+				attributes.get(i).setId(totalAttributesCount);
+				addIndexAttributeToCatalog(attributes.get(i));					
+			}			
 			objectHolder.addObject(newRelation);
 			addRelationToCatalog(newRelation);
-			System.out.println("Table " + relationName + " created successfully!");
+			System.out.println("Table " + relationName + " successfully created!");
 			return true;
 		}
 		System.out.println("Table " + relationName + " already exists!");
 		return false;
 	}
-	
-	public boolean createIndex(String relationName, Vector<Vector<String>> parsedData) {
-		if (objectHolder.getRelationIdByRelationName(relationName) == -1) {
-			Relation newRelation = new Relation(relationName, totalObjectsCount);
-			String attributeName;
-			Attribute.Type attributeType;
-			boolean nullable, distinct;
-			int size;
-			for (int i = 0; i < parsedData.size(); i++) {
-				attributeName = parsedData.get(i).get(0);
-				attributeType = Attribute.stringToType(parsedData.get(i).get(1));
-				size = Integer.parseInt(parsedData.get(i).get(2));
-				if (size == -1) {
-					size = Attribute.Type.getSize(attributeType);
+
+	public boolean createIndex(String indexName, String relationName, Vector<Vector<String>> parsedData) {
+		if (objectHolder.getRelationIdByRelationName(indexName) == -1) {
+			long relationId = objectHolder.getRelationIdByRelationName(relationName);
+			if (relationId != -1) {
+				Relation relation = (Relation) objectHolder.getObject(relationId);
+				Vector<Attribute> attributes = new Vector<Attribute>();
+				for (int i = 0; i < parsedData.get(0).size(); i++) {
+					Attribute attribute = relation.getAttributeByName(parsedData.get(0).get(i));
+					if(attribute!=null){
+						attributes.add(relation.getAttributeByName(parsedData.get(0).get(i)));
+					}else{
+						System.out.println("Attribute : " + parsedData.get(0).get(i) + " doesn't exists!");
+						return false;
+					}
+					
 				}
-				nullable = Boolean.valueOf(parsedData.get(i).get(3));
-				distinct = Boolean.valueOf(parsedData.get(i).get(4));
-				Attribute newAttribute = new Attribute(attributeName, attributeType, totalAttributesCount, newRelation.getRelationId(), size, nullable, distinct);
-				newRelation.addAttribute(newAttribute, true);
-				addAttributeToCatalog(newAttribute);
+				boolean distinct = Boolean.valueOf(parsedData.get(1).get(0));
+				Index index = new Index(indexName,totalObjectsCount,relationId,distinct,attributes);
+				for (int i = 0; i < attributes.size(); i++) {
+					attributes.get(i).setParentId(totalObjectsCount);
+					attributes.get(i).setId(totalIndexAttributesCount);
+					addIndexAttributeToCatalog(attributes.get(i));					
+				}
+				objectHolder.addObjectToRelation(index,false);
+				addIndexToCatalog(index);
+				System.out.println("Index : " + indexName + " created successfully!");
+				return true;
+			} else {
+				System.out.println("Relation : " + relationName + " doesn't exists!");
+				return false;
 			}
-			objectHolder.addObject(newRelation);
-			addRelationToCatalog(newRelation);
 		}
-		System.out.println("Table " + relationName + " already exists!");
+		System.out.println("Index name already " + relationName + " already exists!");
 		return false;
 	}
 
@@ -259,7 +283,7 @@ public class SystemCatalogManager {
 		return false;
 	}
 
-	public boolean dropIndex(String indexName) {
+	public boolean dropIndex(String indexName, String relationName) {
 		long newIndexId = objectHolder.getRelationIdByRelationName(indexName);
 		int indexRecordsPerPage = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * INDEX_RECORD_SIZE));
 		if (newIndexId != -1) {
