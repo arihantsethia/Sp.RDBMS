@@ -292,11 +292,11 @@ public class Attribute {
 		return position;
 	}
 
-	public String getAttributeName() {
+	public String getName() {
 		return attributeName;
 	}
 
-	public Type getAttributeType() {
+	public Type getType() {
 		return type;
 	}
 

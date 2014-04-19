@@ -92,12 +92,12 @@ public class Relation {
 	}
 
 	public boolean addAttribute(Attribute attribute, boolean addToSize) {
-		if (!attributesNames.containsKey(attribute.getAttributeName())) {
+		if (!attributesNames.containsKey(attribute.getName())) {
 			if (attribute.getPosition() == -1) {
 				attribute.setPosition(attributes.size());
 			}
 			attributes.add(attribute.getPosition(), attribute);
-			attributesNames.put(attribute.getAttributeName(), attribute.getPosition());
+			attributesNames.put(attribute.getName(), attribute.getPosition());
 			if (addToSize) {
 
 				recordSize = recordSize + attribute.getAttributeSize();
@@ -108,17 +108,17 @@ public class Relation {
 	}
 
 	public boolean addIndex(Index index) {
-		if (indices.contains(index.getIndexId())) {
+		if (indices.contains(index.getId())) {
 			return false;
 		} else {
-			indices.add(index.getIndexId());
+			indices.add(index.getId());
 			Vector<Attribute> indexAttributes = index.getAttributes();
 			for(int i=0; i<indexAttributes.size();i++){
 				if(indexed.containsKey(indexAttributes.get(i).getId())){
-					indexed.get(indexAttributes.get(i).getId()).add(index.getIndexId());
+					indexed.get(indexAttributes.get(i).getId()).add(index.getId());
 				}else{
 					Vector<Long> temp = new Vector<Long>();
-					temp.add(index.getIndexId());
+					temp.add(index.getId());
 					indexed.put(indexAttributes.get(i).getId(), temp);
 				}
 			}
@@ -143,7 +143,7 @@ public class Relation {
 		return numberOfRecords;
 	}
 
-	public long getRelationId() {
+	public long getId() {
 		return id;
 	}
 
@@ -151,7 +151,7 @@ public class Relation {
 		return attributes.size();
 	}
 
-	public String getRelationName() {
+	public String getName() {
 		return relationName;
 	}
 
@@ -205,7 +205,7 @@ public class Relation {
 		return serializedBuffer;
 	}
 
-	public void setRelationname(String _relationName) {
+	public void setName(String _relationName) {
 		relationName = _relationName;
 		lastModified = (new Date()).getTime();
 	}
@@ -232,11 +232,18 @@ public class Relation {
     	Attribute attr = attributes.elementAt(attrPos);
     	return attr;
     }
+	
+	public int getAttributePosition(String attrName){
+		if(attributesNames.containsKey(attrName)){
+			return attributesNames.get(attrName);
+		}
+		return -1;
+	}
 
 	public Attribute.Type getAttributeType(String field){
     	int attrPos = attributesNames.get(field);
     	Attribute attr = attributes.elementAt(attrPos);
-    	return attr.getAttributeType();
+    	return attr.getType();
     }
     
 	public long updateRecordsCount(int i) {

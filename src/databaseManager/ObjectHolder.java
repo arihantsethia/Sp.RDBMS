@@ -24,16 +24,16 @@ public class ObjectHolder {
 	public boolean addObject(Object object) {
 		if (object instanceof Relation) {
 			Relation rObject = (Relation) object;
-			if (getRelationId(rObject.getRelationName()) != -1) {
+			if (getRelationId(rObject.getName()) != -1) {
 				return false;
 			}
-			objects.put(rObject.getRelationId(), rObject);
+			objects.put(rObject.getId(), rObject);
 		} else if (object instanceof Index) {
 			Index iObject = (Index) object;
-			if (getRelationId(iObject.getIndexName()) != -1) {
+			if (getRelationId(iObject.getName()) != -1) {
 				return false;
 			}
-			objects.put(iObject.getIndexId(), iObject);
+			objects.put(iObject.getId(), iObject);
 		}
 
 		return true;
@@ -82,8 +82,8 @@ public class ObjectHolder {
 			Object objectEntry = entry.getValue();
 			if (objectEntry instanceof Relation) {
 				Relation relationEntry = (Relation) objectEntry;
-				if (relationEntry.getRelationName().equalsIgnoreCase(name)) {
-					return relationEntry.getRelationId();
+				if (relationEntry.getName().equalsIgnoreCase(name)) {
+					return relationEntry.getId();
 				}
 			}
 		}
@@ -98,9 +98,9 @@ public class ObjectHolder {
 				Object objectEntry = entry.getValue();
 				if (objectEntry instanceof Index) {
 					Index indexEntry = (Index) objectEntry;
-					if (indexEntry.getIndexName().equalsIgnoreCase(indexName)) {
+					if (indexEntry.getName().equalsIgnoreCase(indexName)) {
 						if(indexEntry.getParentId()==relationId){
-							return indexEntry.getIndexId();
+							return indexEntry.getId();
 						}
 					}
 				}

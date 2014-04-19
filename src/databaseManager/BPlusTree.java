@@ -43,7 +43,7 @@ public class BPlusTree {
 	}
 
 	public void closeIndex() {
-		bufferManager.closeFile(index.getIndexId());
+		bufferManager.closeFile(index.getId());
 	}
 
 	public Split search(DynamicObject key) {
@@ -120,12 +120,13 @@ public class BPlusTree {
 	}
 
 	private void updateIndexHead(Node _root) {
-		long freePageNumber = bufferManager.getFreePageNumber(index.getIndexId());
-		rootOffset = bufferManager.getFreeRecordOffset(index.getIndexId(), freePageNumber, index.getRecordsPerPage(), index.getRecordSize());
-		rootAddress = new PhysicalAddress(index.getIndexId(), freePageNumber);
-		bufferManager.write(index.getIndexId(), freePageNumber, rootOffset, _root.serialize());
+
+		long freePageNumber = bufferManager.getFreePageNumber(index.getId());
+		rootOffset = bufferManager.getFreeRecordOffset(index.getId(), freePageNumber, index.getRecordsPerPage(), index.getRecordSize());
+		rootAddress = new PhysicalAddress(index.getId(), freePageNumber);
+		bufferManager.write(index.getId(), freePageNumber, rootOffset, _root.serialize());
 		int recordNumber = (rootOffset - (index.getRecordsPerPage() + 7) / 8) / index.getRecordSize();
-		bufferManager.writeRecordBitmap(index.getIndexId(), freePageNumber, index.getRecordsPerPage(), recordNumber, true);
+		bufferManager.writeRecordBitmap(index.getId(), freePageNumber, index.getRecordsPerPage(), recordNumber, true);
 		index.setRoot(rootAddress, rootOffset);
 		rootNode = _root;
 	}
@@ -185,24 +186,24 @@ public class BPlusTree {
 			newNode.offset[remaining] = tempNode.offset[copyPosition];
 
 			newNode.num = remaining;
-			long freePageNumber = bufferManager.getFreePageNumber(index.getIndexId());
-			int offset = bufferManager.getFreeRecordOffset(index.getIndexId(), freePageNumber, index.getRecordsPerPage(), index.getRecordSize());
+			long freePageNumber = bufferManager.getFreePageNumber(index.getId());
+			int offset = bufferManager.getFreeRecordOffset(index.getId(), freePageNumber, index.getRecordsPerPage(), index.getRecordSize());
 
 			key = tempNode.keys[M / 2];
-			value = new PhysicalAddress(index.getIndexId(), freePageNumber);
+			value = new PhysicalAddress(index.getId(), freePageNumber);
 			recordOffset = offset;
 
 			if (newNode.isLeaf) {
 				newNode.childrens[0] = node.childrens[0];
 				newNode.offset[0] = node.offset[0];
 
-				node.childrens[0] = new PhysicalAddress(index.getIndexId(), freePageNumber);
+				node.childrens[0] = new PhysicalAddress(index.getId(), freePageNumber);
 				node.offset[0] = offset;
 			}
 
-			bufferManager.write(index.getIndexId(), freePageNumber, offset, newNode.serialize());
+			bufferManager.write(index.getId(), freePageNumber, offset, newNode.serialize());
 			int recordNumber = (offset - (index.getRecordsPerPage() + 7) / 8) / index.getRecordSize();
-			bufferManager.writeRecordBitmap(index.getIndexId(), freePageNumber, index.getRecordsPerPage(), recordNumber, true);
+			bufferManager.writeRecordBitmap(index.getId(), freePageNumber, index.getRecordsPerPage(), recordNumber, true);
 			// updateIndexHead();
 		}
 		split.hasSplit = remaining > 0;
@@ -233,12 +234,12 @@ public class BPlusTree {
 			if (node.isLeaf && index.containsDuplicates()) {
 				Bucket _bucket = new Bucket();
 				insertToBucket(_bucket, value, recordOffset);
-				long freePageNumber = bufferManager.getFreePageNumber(index.getIndexId());
-				int offset = bufferManager.getFreeRecordOffset(index.getIndexId(), freePageNumber, index.getRecordsPerPage(), index.getRecordSize());
-				bufferManager.write(index.getIndexId(), freePageNumber, offset, _bucket.serialize());
+				long freePageNumber = bufferManager.getFreePageNumber(index.getId());
+				int offset = bufferManager.getFreeRecordOffset(index.getId(), freePageNumber, index.getRecordsPerPage(), index.getRecordSize());
+				bufferManager.write(index.getId(), freePageNumber, offset, _bucket.serialize());
 				int recordNumber = (offset - (index.getRecordsPerPage() + 7) / 8) / index.getRecordSize();
-				bufferManager.writeRecordBitmap(index.getIndexId(), freePageNumber, index.getRecordsPerPage(), recordNumber, true);
-				value.id = index.getIndexId();
+				bufferManager.writeRecordBitmap(index.getId(), freePageNumber, index.getRecordsPerPage(), recordNumber, true);
+				value.id = index.getId();
 				value.offset = freePageNumber;
 				recordOffset = offset;
 				// updateIndexHead();
@@ -249,16 +250,16 @@ public class BPlusTree {
 			key = tempSplit.key;
 			value = tempSplit.value;
 			recordOffset = tempSplit.recordOffset;
-			bufferManager.write(index.getIndexId(), nodeAddress.offset, nodeOffset, node.serialize());
+			bufferManager.write(index.getId(), nodeAddress.offset, nodeOffset, node.serialize());
 			int recordNumber = (nodeOffset - (index.getRecordsPerPage() + 7) / 8) / index.getRecordSize();
-			bufferManager.writeRecordBitmap(index.getIndexId(), nodeAddress.offset, index.getRecordsPerPage(), recordNumber, true);
+			bufferManager.writeRecordBitmap(index.getId(), nodeAddress.offset, index.getRecordsPerPage(), recordNumber, true);
 		} else if (node.isLeaf && index.containsDuplicates()) {
 			ByteBuffer serialBuffer = bufferManager.read(node.childrens[i].id, node.childrens[i].offset);
 			Bucket bucket = new Bucket(serialBuffer, node.offset[i]);
 			insertToBucket(bucket, value, recordOffset);
 			bufferManager.write(node.childrens[i].id, node.childrens[i].offset, node.offset[i], bucket.serialize());
 			int recordNumber = (node.offset[i] - (index.getRecordsPerPage() + 7) / 8) / index.getRecordSize();
-			bufferManager.writeRecordBitmap(index.getIndexId(), node.childrens[i].offset, index.getRecordsPerPage(), recordNumber, true);
+			bufferManager.writeRecordBitmap(index.getId(), node.childrens[i].offset, index.getRecordsPerPage(), recordNumber, true);
 		} else {
 			split.error = 1;
 		}
@@ -294,12 +295,12 @@ public class BPlusTree {
 		}
 		Bucket _bucket = new Bucket();
 		insertToBucket(_bucket, value, recordOffset);
-		long freePageNumber = bufferManager.getFreePageNumber(index.getIndexId());
-		int offset = bufferManager.getFreeRecordOffset(index.getIndexId(), freePageNumber, index.getRecordsPerPage(), index.getRecordSize());
-		bufferManager.write(index.getIndexId(), freePageNumber, offset, _bucket.serialize());
+		long freePageNumber = bufferManager.getFreePageNumber(index.getId());
+		int offset = bufferManager.getFreeRecordOffset(index.getId(), freePageNumber, index.getRecordsPerPage(), index.getRecordSize());
+		bufferManager.write(index.getId(), freePageNumber, offset, _bucket.serialize());
 		int recordNumber = (offset - (index.getRecordsPerPage() + 7) / 8) / index.getRecordSize();
-		bufferManager.writeRecordBitmap(index.getIndexId(), freePageNumber, index.getRecordsPerPage(), recordNumber, true);
-		bucket.nextBucket = new PhysicalAddress(index.getIndexId(), freePageNumber);
+		bufferManager.writeRecordBitmap(index.getId(), freePageNumber, index.getRecordsPerPage(), recordNumber, true);
+		bucket.nextBucket = new PhysicalAddress(index.getId(), freePageNumber);
 		bucket.nextBucketOffset = offset;
 	}
 

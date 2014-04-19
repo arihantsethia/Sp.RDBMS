@@ -65,8 +65,8 @@ public class SystemCatalogManager {
 			if (relationRecord != null) {
 				relationRecord.position(0);
 				tempRelation = new Relation(relationRecord);
-				if (totalObjectsCount <= tempRelation.getRelationId()) {
-					totalObjectsCount = tempRelation.getRelationId() + 1;
+				if (totalObjectsCount <= tempRelation.getId()) {
+					totalObjectsCount = tempRelation.getId() + 1;
 				}
 				objectHolder.addObject(tempRelation);
 			}
@@ -103,8 +103,8 @@ public class SystemCatalogManager {
 			if (indexRecord != null) {
 				indexRecord.position(0);
 				tempIndex = new Index(indexRecord);
-				if (totalObjectsCount < tempIndex.getIndexId()) {
-					totalObjectsCount = tempIndex.getIndexId() + 1;
+				if (totalObjectsCount < tempIndex.getId()) {
+					totalObjectsCount = tempIndex.getId() + 1;
 				}
 				objectHolder.addObject(tempIndex);
 			}
@@ -132,7 +132,11 @@ public class SystemCatalogManager {
 		}
 		java.util.Iterator<Long> iterator = indexIds.iterator();
 		while(iterator.hasNext()){
-			objectHolder.addObjectToRelation((Index)objectHolder.getObject(iterator.next()), false);
+			Index currIndex = (Index)objectHolder.getObject(iterator.next());
+			if(currIndex.setTree()){
+				updateIndexCatalog(currIndex);
+			}
+			objectHolder.addObjectToRelation(currIndex, false);
 		}
 	}
 
@@ -152,7 +156,7 @@ public class SystemCatalogManager {
 				}
 				nullable = Boolean.valueOf(parsedData.get(i).get(3));
 				distinct = Boolean.valueOf(parsedData.get(i).get(4));
-				Attribute newAttribute = new Attribute(attributeName, attributeType, -1 , newRelation.getRelationId(), size, nullable, distinct);
+				Attribute newAttribute = new Attribute(attributeName, attributeType, -1 , newRelation.getId(), size, nullable, distinct);
 				if(!newRelation.addAttribute(newAttribute, true)){
 					System.out.println("Table already contains " + attributeName + "! Duplicate entries not allowed.");
 					return false;
@@ -194,9 +198,30 @@ public class SystemCatalogManager {
 					attributes.get(i).setId(totalIndexAttributesCount);
 					addIndexAttributeToCatalog(attributes.get(i));					
 				}
+				objectHolder.addObject(index);
+				index.setTree();
 				objectHolder.addObjectToRelation(index,false);
 				addIndexToCatalog(index);
-				System.out.println("Index : " + indexName + " created successfully!");
+				System.out.println("Index : " + indexName + " created successfully!");				
+				//Add all records to index
+				DynamicObject recordObject = new DynamicObject(relation.getAttributes());
+				DynamicObject iteratorKey = new DynamicObject(attributes);
+				PhysicalAddress recordAddress = new PhysicalAddress();
+				recordAddress.id = relation.getId();
+				Iterator iterator = new Iterator(relation);
+				while (iterator.hasNext()) {
+					ByteBuffer record = iterator.getNext();
+					if (record != null) {
+						record.position(0);
+						recordObject =  recordObject.deserialize(record.array());
+						for(int i=0;i<attributes.size();i++){
+							iteratorKey.obj[i] = recordObject.obj[relation.getAttributePosition(attributes.get(i).getName())];
+						}
+						recordAddress.offset = iterator.currentPage;
+						index.insert(iteratorKey, recordAddress, iterator.position - relation.getRecordSize());
+					}
+				}
+				//Added all records to index				
 				return true;
 			} else {
 				System.out.println("Relation : " + relationName + " doesn't exists!");
@@ -256,7 +281,7 @@ public class SystemCatalogManager {
 	}
 	
 	public void updateIndexCatalog(Index index) {
-		bufferManager.write(INDEX_CATALOG_ID, index.getPage(), index.getRecordOffset(), index.serialize());
+		bufferManager.write(INDEX_CATALOG_ID, index.getPageNumber(), index.getRecordOffset(), index.serialize());
 	}
 
 	public void close() {
@@ -277,7 +302,7 @@ public class SystemCatalogManager {
 			java.util.Iterator<Long> indexIds = relation.getIndices().iterator();
 			while (indexIds.hasNext()) {
 				Index index = (Index) objectHolder.getObject(indexIds.next());
-				dropIndex(index.getIndexName(),relationName);
+				dropIndex(index.getName(),relationName);
 			}
 			recordsPerPage = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * RELATION_RECORD_SIZE));
 			recordNumber = (relation.getRecordOffset() - (recordsPerPage + 7) / 8) / RELATION_RECORD_SIZE;
@@ -299,7 +324,7 @@ public class SystemCatalogManager {
 			Index index = (Index) objectHolder.getObject(indexId);
 			relation.removeIndex(indexId);
 			int recordNumber = (index.getRecordOffset() - (indexRecordsPerPage + 7) / 8) / RELATION_RECORD_SIZE;
-			bufferManager.writeRecordBitmap(INDEX_CATALOG_ID, index.getPage(), index.getRecordsPerPage(), recordNumber, false);
+			bufferManager.writeRecordBitmap(INDEX_CATALOG_ID, index.getPageNumber(), index.getRecordsPerPage(), recordNumber, false);
 			bufferManager.closeFile(indexId);
 			bufferManager.deleteFile(index.getFileName());
 			objectHolder.removeObject(indexId);
@@ -320,9 +345,9 @@ public class SystemCatalogManager {
 			String[] valueList = query.substring(query.lastIndexOf('(') + 1, query.lastIndexOf(')')).split(",");
 			ByteBuffer serializedBuffer = Utility.serialize(columnList, valueList, relation.getAttributes(), relation.getRecordSize());
 			if (serializedBuffer != null) {
-				bufferManager.write(relation.getRelationId(), freePageNumber, recordOffset, serializedBuffer);
+				bufferManager.write(relation.getId(), freePageNumber, recordOffset, serializedBuffer);
 				int recordNumber = (recordOffset - (relation.getRecordsPerPage() + 7) / 8) / relation.getRecordSize();
-				bufferManager.writeRecordBitmap(relation.getRelationId(), freePageNumber, relation.getRecordsPerPage(), recordNumber, true);
+				bufferManager.writeRecordBitmap(relation.getId(), freePageNumber, relation.getRecordsPerPage(), recordNumber, true);
 				relation.updateRecordsCount(1);
 				java.util.Iterator<Long> indices = relation.getIndices().iterator();
 				PhysicalAddress insertAddress = new PhysicalAddress(relationId,freePageNumber); 
@@ -344,7 +369,7 @@ public class SystemCatalogManager {
 	public boolean showTables() {
 		for (Map.Entry<Long, Object> entry : objectHolder.objects.entrySet()) {
 			if ((entry.getValue() instanceof Relation) && entry.getKey() > 2) {
-				System.out.println(((Relation) entry.getValue()).getRelationName());
+				System.out.println(((Relation) entry.getValue()).getName());
 			}
 		}
 		return true;

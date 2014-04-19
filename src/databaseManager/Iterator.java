@@ -5,8 +5,8 @@ import java.util.BitSet;
 
 public class Iterator {
 	private Relation relation;
-	private int position;
-	private long currentPage;
+	public int position;
+	public long currentPage;
 	private long nextRecord;
 	private byte[] bitMapBytes;
 	private byte[] recordEntry;
@@ -56,7 +56,7 @@ public class Iterator {
 				currentPage++;
 			}
 			if (nextRecord == 0) {
-				currentBuffer = bufferManager.read(relation.getRelationId(), currentPage);
+				currentBuffer = bufferManager.read(relation.getId(), currentPage);
 				currentBuffer.get(bitMapBytes);
 				position = currentBuffer.position();
 				bitMapRecords = BitSet.valueOf(bitMapBytes);
@@ -100,7 +100,7 @@ public class Iterator {
 	}
 
 	public PhysicalAddress getAddress() {
-		return BufferManager.getPhysicalAddress(relation.getRelationId(), currentPage);
+		return BufferManager.getPhysicalAddress(relation.getId(), currentPage);
 	}
 
 }

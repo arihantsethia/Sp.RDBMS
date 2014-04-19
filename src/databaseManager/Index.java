@@ -100,11 +100,11 @@ public class Index {
 		return numberOfRecords;
 	}
 
-	public long getIndexId() {
+	public long getId() {
 		return id;
 	}
 
-	public String getIndexName() {
+	public String getName() {
 		return indexName;
 	}
 
@@ -127,11 +127,6 @@ public class Index {
 
 	public int getRecordSize() {
 		return recordSize;
-	}
-
-	public int recordsPerBlock() {
-		int numberOfRecords = (int) ((DiskSpaceManager.PAGE_SIZE * 8 - 7) / (1 + 8 * recordSize));
-		return numberOfRecords;
 	}
 
 	public ByteBuffer serialize() {
@@ -160,7 +155,7 @@ public class Index {
 		return serializedBuffer;
 	}
 
-	public void setIndexname(String _indexName) {
+	public void setName(String _indexName) {
 		indexName = _indexName;
 		lastModified = (new Date()).getTime();
 	}
@@ -191,7 +186,7 @@ public class Index {
 		return rootOffset;
 	}
 
-	public long getPage() {
+	public long getPageNumber() {
 		return catalogPage;
 	}
 

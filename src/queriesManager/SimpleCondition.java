@@ -76,15 +76,15 @@ public class SimpleCondition extends Condition {
 			}
 			
 			for (int i = 0; i < recordObjects.get(objectIndexLeft).attributes.size(); i++) {
-				if (recordObjects.get(objectIndexLeft).attributes.get(i).getAttributeName().equals(Utility.getNickName(leftOperand).trim())) {
+				if (recordObjects.get(objectIndexLeft).attributes.get(i).getName().equals(Utility.getNickName(leftOperand).trim())) {
 					attributeIndexLeft = i;
 				}
 			}
 
-			if (recordObjects.get(objectIndexLeft).attributes.get(attributeIndexLeft).getAttributeType() == Attribute.Type.Char) {
+			if (recordObjects.get(objectIndexLeft).attributes.get(attributeIndexLeft).getType() == Attribute.Type.Char) {
 				leftData = QueryParser.DataType.Char;
 				leftValue = (String) recordObjects.get(objectIndexLeft).obj[attributeIndexLeft] ;
-			} else if (recordObjects.get(objectIndexLeft).attributes.get(attributeIndexLeft).getAttributeType() == Attribute.Type.Int) {
+			} else if (recordObjects.get(objectIndexLeft).attributes.get(attributeIndexLeft).getType() == Attribute.Type.Int) {
 				leftData = QueryParser.DataType.Int;
 				leftValue = ((Integer) recordObjects.get(objectIndexLeft).obj[attributeIndexLeft]).toString();
 			}
@@ -111,15 +111,15 @@ public class SimpleCondition extends Condition {
 			}
 			
 			for (int i = 0; i < recordObjects.get(objectIndexRight).attributes.size(); i++) {
-				if (recordObjects.get(objectIndexRight).attributes.get(i).getAttributeName().equals(Utility.getNickName(rightOperand))) {
+				if (recordObjects.get(objectIndexRight).attributes.get(i).getName().equals(Utility.getNickName(rightOperand))) {
 					attributeIndexRight = i;
 				}
 			}
 
-			if (recordObjects.get(objectIndexRight).attributes.get(attributeIndexRight).getAttributeType() == Attribute.Type.Char) {
+			if (recordObjects.get(objectIndexRight).attributes.get(attributeIndexRight).getType() == Attribute.Type.Char) {
 				rightData = QueryParser.DataType.Char;
 				rightValue = (String) recordObjects.get(objectIndexRight).obj[attributeIndexRight];
-			} else if (recordObjects.get(objectIndexRight).attributes.get(attributeIndexRight).getAttributeType() == Attribute.Type.Int) {
+			} else if (recordObjects.get(objectIndexRight).attributes.get(attributeIndexRight).getType() == Attribute.Type.Int) {
 				rightData = QueryParser.DataType.Int;
 				rightValue = ((Integer) recordObjects.get(objectIndexRight).obj[attributeIndexRight]).toString();
 			}
