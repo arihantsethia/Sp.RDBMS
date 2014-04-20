@@ -1,6 +1,7 @@
 package databaseManager;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Vector;
 
 public class DynamicObject implements Comparable<Object> {
@@ -89,15 +90,15 @@ public class DynamicObject implements Comparable<Object> {
 	}
 
 	public String printRecords() {
-		String s = "";
+		String result="";
 		for (int i = 0; i < attributes.size(); i++) {
 			if (attributes.get(i).getType() == Attribute.Type.Char) {
-				s = (String) obj[i] + " , " + s;
+				result = (String) obj[i] + " , " + result;
 			} else {
-				s = ((Integer) obj[i]).toString() + " , " + s;
+				result = ((Integer) obj[i]).toString() + " , " + result;
 			}
 		}
-		return s;
+		return result;
 	}
 
 	@Override

@@ -212,11 +212,7 @@ public class Attribute {
 	}
 
 	public String toString() {
-		String str = attributeName + " " + type;
-		if (type == Type.Char) {
-			str += "(" + size + ")";
-		}
-		return str;
+		return attributeName;
 	}
 
 	/**
