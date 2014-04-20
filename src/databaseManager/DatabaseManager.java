@@ -68,6 +68,9 @@ public class DatabaseManager {
 				System.out.println("List of Tables.");
 				systemCatalog.showTables();
 			}
+		}else if(splitCommand[0].equals("update")){
+			Operation operation = Operation.makeOperation(query.trim());
+			operation.executeOperation();
 		}
 	}
 }

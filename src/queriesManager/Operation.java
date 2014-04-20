@@ -5,6 +5,7 @@ import queriesManager.QueryParser.OperationType;
 public abstract class Operation {
 	protected OperationType operationType;
 	protected Condition condition;
+	protected Projection projection;
 
 	void setType(OperationType opType) {
 		operationType = opType;

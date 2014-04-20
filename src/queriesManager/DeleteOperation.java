@@ -9,7 +9,7 @@ import databaseManager.ObjectHolder;
 import databaseManager.Relation;
 import databaseManager.Utility;
 
-public class UpdateOperation extends Operation {
+public class DeleteOperation extends Operation {
 	
 	protected int tableCount;
 	protected String setTuple ;
@@ -21,30 +21,27 @@ public class UpdateOperation extends Operation {
 	protected Relation relation;
 	protected long relationId;
 	
-	
-	UpdateOperation(String statement){
-    	setType(QueryParser.OperationType.UPDATE);
+	DeleteOperation(String statement){
+    	setType(QueryParser.OperationType.DELETE);
     	recordCountList = new Vector<Integer>();
 		recordCounterList = new Vector<Integer>();
 		iteratorList = new Vector<Iterator>();
 		recordObjects = new Vector<DynamicObject>();
-		setCondition(Condition.makeCondition(updateStatementParts(statement))) ;
+		setCondition(Condition.makeCondition(deleteStatementParts(statement))) ;
     }
 	
-	String updateStatementParts(String statement){
-		int index = statement.indexOf("update") ;
-		statement = statement.substring(index + 6).trim();
-		index = statement.indexOf("set");
-		tableList = QueryParser.getSelectTableList(statement.substring(0,index)) ;
-		tableCount = tableList.size();
-		statement = statement.substring(index+3) ;
-		index = statement.indexOf("where");
-		if(index!=-1)
-		{
-			setTuple = statement.substring(0,index) ;
+	String deleteStatementParts(String statement){
+		int index = statement.indexOf("from");
+		statement = statement.substring(index + 4).trim();
+		index = statement.indexOf("where") ;
+		if(index != -1){
+			tableList = QueryParser.getSelectTableList(statement.substring(0,index)) ;
+			tableCount = tableList.size();
 			return statement.substring(index+5) ;
 		}
-		return null;
+		tableList = QueryParser.getSelectTableList(statement) ;
+		tableCount = tableList.size();
+		return null ;
 	}
 	
 	public boolean executeOperation() {
@@ -66,7 +63,7 @@ public class UpdateOperation extends Operation {
 					recordObjects.set(i, recordObjects.get(i).deserialize(a.array()));
 					if (condition == null || condition.compare(recordObjects, tableList)){
 						/*
-							in this part record has to update.
+							in this part record has to be delete.
 						*/
 					}
 					

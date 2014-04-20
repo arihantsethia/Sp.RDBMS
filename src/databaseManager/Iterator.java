@@ -4,14 +4,14 @@ import java.nio.ByteBuffer;
 import java.util.BitSet;
 
 public class Iterator {
-	private Relation relation;
-	private int position;
-	private long currentPage;
-	private long nextRecord;
-	private byte[] bitMapBytes;
-	private byte[] recordEntry;
-	private BitSet bitMapRecords;
-	private ByteBuffer currentBuffer;
+	public Relation relation;
+	public int position;
+	public long currentPage;
+	public long nextRecord;
+	public byte[] bitMapBytes;
+	public byte[] recordEntry;
+	public BitSet bitMapRecords;
+	public ByteBuffer currentBuffer;
 	BufferManager bufferManager;
 
 	public Iterator() {

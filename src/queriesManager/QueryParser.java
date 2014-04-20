@@ -15,13 +15,15 @@ public class QueryParser {
 	public static TreeMap<String,String> tableMap;
 	
 	public static enum OperationType {
-		JOIN, SELECT, UPDATE;
+		JOIN, SELECT, UPDATE, DELETE;
 		public static String toString(OperationType opType) {
 			if (opType == QueryParser.OperationType.JOIN) {
 				return "JOIN";
 			} else if (opType == QueryParser.OperationType.SELECT) {
 				return "SELECT";
-			} else {
+			} else if (opType == QueryParser.OperationType.DELETE) {
+				return "DELETE";
+			}else {
 				return "UPDATE";
 			}
 		}
@@ -152,7 +154,7 @@ public class QueryParser {
 		return null;
 	}
 
-    public boolean isUpdateStatementQuery(String statement){
+    public static boolean isUpdateStatementQuery(String statement){
     	String stmtUpperCase = statement.toUpperCase().trim();
     	int updateIndex = stmtUpperCase.indexOf("UPDATE");
     	int setIndex = stmtUpperCase.indexOf("SET");
@@ -268,7 +270,7 @@ public class QueryParser {
 		if(condition==null){
 			return ConditionType.NULL ;
 		}
-		condition = condition.trim().substring(1,condition.length()-1).trim() ;
+		condition = condition.trim().substring(1,condition.trim().length()-1).trim() ;
 		if(condition.charAt(0)=='('){
 		    lp = 1 ; rp = 0 ;
 		    for(i=1;i<condition.length()-1;i++){
@@ -392,5 +394,6 @@ public class QueryParser {
 		int index = statement.indexOf(operator);
 		return statement.substring(index + operator.length()).trim();
 	}
+	
 }
 

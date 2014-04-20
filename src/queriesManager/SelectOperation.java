@@ -27,7 +27,7 @@ public class SelectOperation extends Operation {
 		tableCount = tableList.size();
 
 		if (stmtParts.size() == 3) {
-			setCondition(Condition.makeCondition(stmtParts.elementAt(1)));
+			setCondition(Condition.makeCondition(stmtParts.elementAt(2)));
 		} else {
 			setCondition(null);
 		}
