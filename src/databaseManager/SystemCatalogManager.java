@@ -12,7 +12,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
 import java.nio.ByteBuffer;
-import java.util.StringTokenizer;
 
 /**
  * @param ATTRIBUTE_CATALOG
@@ -131,105 +130,13 @@ public class SystemCatalogManager {
 			}
 		}
 		java.util.Iterator<Long> iterator = indexIds.iterator();
-		while(iterator.hasNext()){
-			Index currIndex = (Index)objectHolder.getObject(iterator.next());
-			if(currIndex.setTree()){
+		while (iterator.hasNext()) {
+			Index currIndex = (Index) objectHolder.getObject(iterator.next());
+			if (currIndex.setTree()) {
 				updateIndexCatalog(currIndex);
 			}
 			objectHolder.addObjectToRelation(currIndex, false);
 		}
-	}
-
-	public boolean createTable(String relationName, Vector<Vector<String>> parsedData) {
-		if (objectHolder.getRelationId(relationName) == -1) {
-			Relation newRelation = new Relation(relationName, totalObjectsCount);
-			String attributeName;
-			Attribute.Type attributeType;
-			boolean nullable, distinct;
-			int size;
-			for (int i = 0; i < parsedData.size(); i++) {
-				attributeName = parsedData.get(i).get(0);
-				attributeType = Attribute.stringToType(parsedData.get(i).get(1));
-				size = Integer.parseInt(parsedData.get(i).get(2));
-				if (size == -1) {
-					size = Attribute.Type.getSize(attributeType);
-				}
-				nullable = Boolean.valueOf(parsedData.get(i).get(3));
-				distinct = Boolean.valueOf(parsedData.get(i).get(4));
-				Attribute newAttribute = new Attribute(attributeName, attributeType, -1 , newRelation.getId(), size, nullable, distinct);
-				if(!newRelation.addAttribute(newAttribute, true)){
-					System.out.println("Table already contains " + attributeName + "! Duplicate entries not allowed.");
-					return false;
-				}
-			}
-			for (int i = 0; i < newRelation.getAttributesCount(); i++) {
-				newRelation.getAttributes().get(i).setId(totalAttributesCount);
-				addAttributeToCatalog(newRelation.getAttributes().get(i));					
-			}			
-			objectHolder.addObject(newRelation);
-			addRelationToCatalog(newRelation);
-			System.out.println("Table " + relationName + " successfully created!");
-			return true;
-		}
-		System.out.println("Table " + relationName + " already exists!");
-		return false;
-	}
-
-	public boolean createIndex(String indexName, String relationName, Vector<Vector<String>> parsedData) {
-		if (objectHolder.getIndexId(relationName,indexName) == -1) {
-			long relationId = objectHolder.getRelationId(relationName);
-			if (relationId != -1) {
-				Relation relation = (Relation) objectHolder.getObject(relationId);
-				Vector<Attribute> attributes = new Vector<Attribute>();
-				for (int i = 0; i < parsedData.get(0).size(); i++) {
-					Attribute attribute = relation.getAttributeByName(parsedData.get(0).get(i));
-					if(attribute!=null){
-						attributes.add(relation.getAttributeByName(parsedData.get(0).get(i)));
-					}else{
-						System.out.println("Attribute : " + parsedData.get(0).get(i) + " doesn't exists!");
-						return false;
-					}
-					
-				}
-				boolean distinct = Boolean.valueOf(parsedData.get(1).get(0));
-				Index index = new Index(indexName,totalObjectsCount,relationId,distinct,attributes);
-				for (int i = 0; i < attributes.size(); i++) {
-					attributes.get(i).setParentId(totalObjectsCount);
-					attributes.get(i).setId(totalIndexAttributesCount);
-					addIndexAttributeToCatalog(attributes.get(i));					
-				}
-				objectHolder.addObject(index);
-				index.setTree();
-				objectHolder.addObjectToRelation(index,false);
-				addIndexToCatalog(index);
-				System.out.println("Index : " + indexName + " created successfully!");				
-				//Add all records to index
-				DynamicObject recordObject = new DynamicObject(relation.getAttributes());
-				DynamicObject iteratorKey = new DynamicObject(attributes);
-				PhysicalAddress recordAddress = new PhysicalAddress();
-				recordAddress.id = relation.getId();
-				Iterator iterator = new Iterator(relation);
-				while (iterator.hasNext()) {
-					ByteBuffer record = iterator.getNext();
-					if (record != null) {
-						record.position(0);
-						recordObject =  recordObject.deserialize(record.array());
-						for(int i=0;i<attributes.size();i++){
-							iteratorKey.obj[i] = recordObject.obj[relation.getAttributePosition(attributes.get(i).getName())];
-						}
-						recordAddress.offset = iterator.currentPage;
-						index.insert(iteratorKey, recordAddress, iterator.position - relation.getRecordSize());
-					}
-				}
-				//Added all records to index				
-				return true;
-			} else {
-				System.out.println("Relation : " + relationName + " doesn't exists!");
-				return false;
-			}
-		}
-		System.out.println("Index name already " + relationName + " already exists!");
-		return false;
 	}
 
 	public void addAttributeToCatalog(Attribute newAttribute) {
@@ -276,16 +183,96 @@ public class SystemCatalogManager {
 		totalObjectsCount++;
 	}
 
-	public void updateRelationCatalog(Relation relation) {
-		bufferManager.write(RELATION_CATALOG_ID, relation.getPageNumber(), relation.getRecordOffset(), relation.serialize());
-	}
-	
-	public void updateIndexCatalog(Index index) {
-		bufferManager.write(INDEX_CATALOG_ID, index.getPageNumber(), index.getRecordOffset(), index.serialize());
+	public boolean createTable(String relationName, Vector<Vector<String>> parsedData) {
+		if (objectHolder.getRelationId(relationName) == -1) {
+			Relation newRelation = new Relation(relationName, totalObjectsCount);
+			String attributeName;
+			Attribute.Type attributeType;
+			boolean nullable, distinct;
+			int size;
+			for (int i = 0; i < parsedData.size(); i++) {
+				attributeName = parsedData.get(i).get(0);
+				attributeType = Attribute.stringToType(parsedData.get(i).get(1));
+				size = Integer.parseInt(parsedData.get(i).get(2));
+				if (size == -1) {
+					size = Attribute.Type.getSize(attributeType);
+				}
+				nullable = Boolean.valueOf(parsedData.get(i).get(3));
+				distinct = Boolean.valueOf(parsedData.get(i).get(4));
+				Attribute newAttribute = new Attribute(attributeName, attributeType, -1, newRelation.getId(), size, nullable, distinct);
+				if (!newRelation.addAttribute(newAttribute, true)) {
+					System.out.println("Table already contains " + attributeName + "! Duplicate entries not allowed.");
+					return false;
+				}
+			}
+			for (int i = 0; i < newRelation.getAttributesCount(); i++) {
+				newRelation.getAttributes().get(i).setId(totalAttributesCount);
+				addAttributeToCatalog(newRelation.getAttributes().get(i));
+			}
+			objectHolder.addObject(newRelation);
+			addRelationToCatalog(newRelation);
+			System.out.println("Table " + relationName + " successfully created!");
+			return true;
+		}
+		System.out.println("Table " + relationName + " already exists!");
+		return false;
 	}
 
-	public void close() {
-		bufferManager.flush();
+	public boolean createIndex(String indexName, String relationName, Vector<Vector<String>> parsedData) {
+		if (objectHolder.getIndexId(relationName, indexName) == -1) {
+			long relationId = objectHolder.getRelationId(relationName);
+			if (relationId != -1) {
+				Relation relation = (Relation) objectHolder.getObject(relationId);
+				Vector<Attribute> attributes = new Vector<Attribute>();
+				for (int i = 0; i < parsedData.get(0).size(); i++) {
+					Attribute attribute = relation.getAttributeByName(parsedData.get(0).get(i));
+					if (attribute != null) {
+						attributes.add(relation.getAttributeByName(parsedData.get(0).get(i)));
+					} else {
+						System.out.println("Attribute : " + parsedData.get(0).get(i) + " doesn't exists!");
+						return false;
+					}
+
+				}
+				boolean distinct = Boolean.valueOf(parsedData.get(1).get(0));
+				Index index = new Index(indexName, totalObjectsCount, relationId, distinct, attributes);
+				for (int i = 0; i < attributes.size(); i++) {
+					attributes.get(i).setParentId(totalObjectsCount);
+					attributes.get(i).setId(totalIndexAttributesCount);
+					addIndexAttributeToCatalog(attributes.get(i));
+				}
+				objectHolder.addObject(index);
+				index.setTree();
+				objectHolder.addObjectToRelation(index, false);
+				addIndexToCatalog(index);
+				System.out.println("Index : " + indexName + " created successfully!");
+				// Add all records to index
+				DynamicObject recordObject = new DynamicObject(relation.getAttributes());
+				DynamicObject iteratorKey = new DynamicObject(attributes);
+				PhysicalAddress recordAddress = new PhysicalAddress();
+				recordAddress.id = relation.getId();
+				Iterator iterator = new Iterator(relation);
+				while (iterator.hasNext()) {
+					ByteBuffer record = iterator.getNext();
+					if (record != null) {
+						record.position(0);
+						recordObject = recordObject.deserialize(record.array());
+						for (int i = 0; i < attributes.size(); i++) {
+							iteratorKey.obj[i] = recordObject.obj[relation.getAttributePosition(attributes.get(i).getName())];
+						}
+						recordAddress.offset = iterator.currentPage;
+						index.insert(iteratorKey, recordAddress, iterator.position - relation.getRecordSize());
+					}
+				}
+				// Added all records to index
+				return true;
+			} else {
+				System.out.println("Relation : " + relationName + " doesn't exists!");
+				return false;
+			}
+		}
+		System.out.println("Index name already " + relationName + " already exists!");
+		return false;
 	}
 
 	public boolean dropTable(String relationName) {
@@ -302,11 +289,11 @@ public class SystemCatalogManager {
 			java.util.Iterator<Long> indexIds = relation.getIndices().iterator();
 			while (indexIds.hasNext()) {
 				Index index = (Index) objectHolder.getObject(indexIds.next());
-				dropIndex(index.getName(),relationName);
+				dropIndex(index.getName(), relationName);
 			}
 			recordsPerPage = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * RELATION_RECORD_SIZE));
 			recordNumber = (relation.getRecordOffset() - (recordsPerPage + 7) / 8) / RELATION_RECORD_SIZE;
-			bufferManager.writeRecordBitmap(RELATION_CATALOG_ID, relation.getPageNumber(), recordsPerPage, recordNumber, false);
+			deleteRecord(RELATION_CATALOG_ID, relation.getPageNumber(), recordsPerPage, recordNumber);
 			bufferManager.closeFile(relationId);
 			bufferManager.deleteFile(relation.getFileName());
 			objectHolder.removeObject(relationId);
@@ -316,15 +303,15 @@ public class SystemCatalogManager {
 	}
 
 	public boolean dropIndex(String indexName, String relationName) {
-		long indexId = objectHolder.getIndexId(relationName,indexName);
+		long indexId = objectHolder.getIndexId(relationName, indexName);
 		int indexRecordsPerPage = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * INDEX_RECORD_SIZE));
 		if (indexId != -1) {
-			long relationId =  objectHolder.getRelationId(relationName);
+			long relationId = objectHolder.getRelationId(relationName);
 			Relation relation = (Relation) objectHolder.getObject(relationId);
 			Index index = (Index) objectHolder.getObject(indexId);
 			relation.removeIndex(indexId);
 			int recordNumber = (index.getRecordOffset() - (indexRecordsPerPage + 7) / 8) / RELATION_RECORD_SIZE;
-			bufferManager.writeRecordBitmap(INDEX_CATALOG_ID, index.getPageNumber(), index.getRecordsPerPage(), recordNumber, false);
+			deleteRecord(INDEX_CATALOG_ID, index.getPageNumber(), index.getRecordsPerPage(), recordNumber);
 			bufferManager.closeFile(indexId);
 			bufferManager.deleteFile(index.getFileName());
 			objectHolder.removeObject(indexId);
@@ -350,20 +337,41 @@ public class SystemCatalogManager {
 				bufferManager.writeRecordBitmap(relation.getId(), freePageNumber, relation.getRecordsPerPage(), recordNumber, true);
 				relation.updateRecordsCount(1);
 				java.util.Iterator<Long> indices = relation.getIndices().iterator();
-				PhysicalAddress insertAddress = new PhysicalAddress(relationId,freePageNumber); 
-				while(indices.hasNext()){
-					Index currIndex = ((Index)objectHolder.getObject(indices.next()));
-					if(currIndex.setTree()){
+				PhysicalAddress insertAddress = new PhysicalAddress(relationId, freePageNumber);
+				while (indices.hasNext()) {
+					Index currIndex = ((Index) objectHolder.getObject(indices.next()));
+					if (currIndex.setTree()) {
 						updateIndexCatalog(currIndex);
 					}
 					DynamicObject entryObject = Utility.toDynamicObject(columnList, valueList, currIndex.getAttributes());
-					currIndex.insert(entryObject, insertAddress , recordOffset);
+					currIndex.insert(entryObject, insertAddress, recordOffset);
 				}
 				updateRelationCatalog(relation);
 				return true;
 			}
 		}
 		return false;
+	}
+
+	public boolean deleteRecord(long id, long pageNumber, int recordNumber, int recordsPerPage) {
+		return bufferManager.writeRecordBitmap(id, pageNumber, recordsPerPage, recordNumber, false);
+	}
+
+	public void updateRelationCatalog(Relation relation) {
+		bufferManager.write(RELATION_CATALOG_ID, relation.getPageNumber(), relation.getRecordOffset(), relation.serialize());
+	}
+
+	public void updateIndexCatalog(Index index) {
+		bufferManager.write(INDEX_CATALOG_ID, index.getPageNumber(), index.getRecordOffset(), index.serialize());
+	}
+
+	public void updateRecord(long id, long pageNumber, int recordOffset, ByteBuffer serialBuffer) {
+		serialBuffer.position(0);
+		bufferManager.write(id, pageNumber, recordOffset, serialBuffer);
+	}
+
+	public void close() {
+		bufferManager.flush();
 	}
 
 	public boolean showTables() {
