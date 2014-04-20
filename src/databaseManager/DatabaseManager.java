@@ -8,6 +8,7 @@
 package databaseManager;
 
 import queriesManager.Operation;
+import queriesManager.QueryParser;
 import queriesManager.SelectOperation;
 
 public class DatabaseManager {
@@ -35,8 +36,10 @@ public class DatabaseManager {
 			Operation operation = Operation.makeOperation(query.trim());
 			operation.executeOperation();
 		} else if (splitCommand[0].equals("select")) {
-			Operation operation = Operation.makeOperation(query.trim());
-			operation.executeOperation();
+			if(QueryParser.isSelectStatementQuery(query)){
+				Operation operation = Operation.makeOperation(query.trim());
+				operation.executeOperation();
+			}
 		} else if (splitCommand[0].equals("insert")) {
 			if (splitCommand[1].equals("into")) {
 				if (systemCatalog.insertRecord(query) == true) {
@@ -50,6 +53,11 @@ public class DatabaseManager {
 				System.out.println("List of Tables.");
 				systemCatalog.showTables();
 			}
+		} else if(splitCommand[0].equals("update")){
+			if(QueryParser.isUpdateStatementQuery(query)){
+				System.out.println("hello buddy it works :)");
+			}
 		}
+		
 	}
 }
