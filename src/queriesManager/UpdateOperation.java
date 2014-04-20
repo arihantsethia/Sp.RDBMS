@@ -51,7 +51,7 @@ public class UpdateOperation extends Operation {
 
 
 		for (int i = 0; i < tableList.size(); i++) {
-			relationId = ObjectHolder.getObjectHolder().getRelationIdByRelationName(Utility.getRelationName(tableList.elementAt(i)));
+			relationId = ObjectHolder.getObjectHolder().getRelationId(Utility.getRelationName(tableList.elementAt(i)));
 			relation = (Relation) ObjectHolder.getObjectHolder().getObject(relationId);
 			recordCountList.addElement((int) relation.getRecordsCount());
 			recordCounterList.addElement(1);

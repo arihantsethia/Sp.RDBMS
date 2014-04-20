@@ -19,7 +19,7 @@ public class SelectOperation extends Operation {
 	protected Vector<DynamicObject> recordObjects;
 	protected Relation relation;
 	protected long relationId;
-
+	
 	public SelectOperation(String statement) {
 		setType(QueryParser.OperationType.SELECT);
 		Vector<String> stmtParts = QueryParser.statementParts(statement, "SELECT");
@@ -39,11 +39,9 @@ public class SelectOperation extends Operation {
 	}
 
 	public boolean executeOperation() {
-
 		long count = 1;
-
 		for (int i = 0; i < tableList.size(); i++) {
-			relationId = ObjectHolder.getObjectHolder().getRelationIdByRelationName(Utility.getRelationName(tableList.elementAt(i)));
+			relationId = ObjectHolder.getObjectHolder().getRelationId(Utility.getRelationName(tableList.elementAt(i)));
 			relation = (Relation) ObjectHolder.getObjectHolder().getObject(relationId);
 			recordCountList.addElement((int) relation.getRecordsCount());
 			recordCounterList.addElement(1);
@@ -51,7 +49,6 @@ public class SelectOperation extends Operation {
 			iteratorList.addElement(new Iterator(relation));
 			recordObjects.addElement(new DynamicObject(relation.getAttributes()));
 		}
-
 		if (count != 0) {
 			for (int i = 0; i < tableList.size(); i++) {
 				if (iteratorList.get(i).hasNext()) {
@@ -63,13 +60,11 @@ public class SelectOperation extends Operation {
 					}
 				}
 			}
-
 			if (condition == null || condition.compare(recordObjects, tableList)) {
 				print();
 			}
 			count--;
 		}
-
 		while (count > 0) {
 			incrementCounter();
 			if (condition == null || condition.compare(recordObjects, tableList)){
@@ -105,14 +100,13 @@ public class SelectOperation extends Operation {
 			recordObjects.set(i, recordObjects.get(i).deserialize(buffer.array()));
 			recordCounterList.set(i, recordCounterList.get(i) + 1);
 		}
-
 	}
-	
+
 	void print() {
 		String s = "";
 		for (int i = 0; i < tableList.size(); i++) {
 			String y = recordObjects.get(i).printRecords();
-			s = y + " === " + s;
+			s = y + " | " + s;
 		}
 		System.out.println(s);
 	}

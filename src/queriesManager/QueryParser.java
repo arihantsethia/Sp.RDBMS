@@ -13,18 +13,24 @@ import databaseManager.Attribute.Type;
 public class QueryParser {
 	public static Attribute attributeName;
 	public static TreeMap<String,String> tableMap;
-	
+
 	public static enum OperationType {
-		JOIN, SELECT, UPDATE, DELETE;
+		JOIN, SELECT, UPDATE, CREATE, DROP , DELETE ;
 		public static String toString(OperationType opType) {
 			if (opType == QueryParser.OperationType.JOIN) {
 				return "JOIN";
 			} else if (opType == QueryParser.OperationType.SELECT) {
 				return "SELECT";
-			} else if (opType == QueryParser.OperationType.DELETE) {
+			} else if (opType == QueryParser.OperationType.UPDATE) {
+				return "UPDATE";
+			} else if (opType == QueryParser.OperationType.CREATE) {
+				return "CREATE";
+			} else if (opType == QueryParser.OperationType.DROP) {
+				return "DROP";
+			}else if (opType == QueryParser.OperationType.DELETE) {
 				return "DELETE";
 			}else {
-				return "UPDATE";
+				return "ALTER";
 			}
 		}
 	};
@@ -74,7 +80,6 @@ public class QueryParser {
 	public QueryParser() {
 		tableMap = new TreeMap<String,String>(String.CASE_INSENSITIVE_ORDER);
 	}
-	
 
 	public boolean isCreateTableQuery(String statement) {
 		statement = statement.trim();
@@ -202,7 +207,7 @@ public class QueryParser {
 					if(tableMap.containsKey(key)){
 						field = Utility.getFieldName(selectPartSplit[j]);
 						relationName = tableMap.get(key);
-						long newRelationId = ObjectHolder.getObjectHolder().getRelationIdByRelationName(relationName);
+						long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
 						if (newRelationId != -1) {
 						    Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
 						    Vector<Attribute> attributes = newRelation.getAttributes();
@@ -241,7 +246,7 @@ public class QueryParser {
 					if(tableMap.containsKey(key)){
 						field = Utility.getFieldName(selectPartSplit[j]);
 						relationName = tableMap.get(key);
-						long newRelationId = ObjectHolder.getObjectHolder().getRelationIdByRelationName(relationName);
+						long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
 						if (newRelationId != -1) {
 						    Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
 						    Vector<Attribute> attributes = newRelation.getAttributes();
@@ -393,7 +398,5 @@ public class QueryParser {
 		String operator = OperatorType.toString(opType);
 		int index = statement.indexOf(operator);
 		return statement.substring(index + operator.length()).trim();
-	}
-	
+	}	
 }
-

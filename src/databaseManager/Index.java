@@ -3,6 +3,7 @@ package databaseManager;
 import java.io.File;
 import java.nio.ByteBuffer;
 import java.util.Date;
+import java.util.Vector;
 
 public class Index {
 
@@ -13,6 +14,7 @@ public class Index {
 	private String fileName;
 	private boolean duplicates;
 	private long id;
+	private long parentId;
 	private PhysicalAddress rootPage;
 	private int rootOffset;
 	private long catalogPage;
@@ -23,17 +25,26 @@ public class Index {
 	private int keySize;
 	private long creationDate;
 	private long lastModified;
+	private Vector<Attribute> attributes;
 
-	public Index(String _indexName, long _id, boolean _duplicates, int _keySize) {
+	private DynamicObject dObject;
+	private BPlusTree bTree;
+
+	public Index(String _indexName, long _id, long _parentId, boolean _duplicates, Vector<Attribute> _attributes) {
 		indexName = _indexName;
-		fileName = _indexName + ".index";
+		fileName = _indexName + _id + ".index";
 		id = _id;
+		parentId = _parentId;
 		duplicates = _duplicates;
 		creationDate = (new Date()).getTime();
 		lastModified = (new Date()).getTime();
 		pageCount = 1;
 		recordsCount = 0;
-		keySize = _keySize;
+		attributes = _attributes;
+		keySize = 0;
+		for (int i = 0; i < attributes.size(); i++) {
+			keySize += attributes.get(i).getAttributeSize();
+		}
 		nKeys = 64;
 		while (true) {
 			if ((DiskSpaceManager.PAGE_SIZE * 8 - 7) / (1 + 8 * (nKeys * (20 + keySize) + 25)) >= 1 || nKeys > 0) {
@@ -43,6 +54,8 @@ public class Index {
 			}
 		}
 		recordSize = nKeys * (keySize + 20) + 25;
+		rootPage = new PhysicalAddress();
+		rootOffset = -1;
 	}
 
 	public Index(ByteBuffer serializedBuffer) {
@@ -52,14 +65,28 @@ public class Index {
 				indexName += serializedBuffer.getChar(2 * i);
 			}
 		}
+		rootPage = new PhysicalAddress();
 		serializedBuffer.position(INDEX_NAME_LENGTH * 2);
 		id = serializedBuffer.getLong();
+		parentId = serializedBuffer.getLong();
+		nKeys = serializedBuffer.getInt();
+		keySize = serializedBuffer.getInt();
 		recordSize = serializedBuffer.getInt();
+		rootPage.id = serializedBuffer.getLong();
+		rootPage.offset = serializedBuffer.getLong();
+		rootOffset = serializedBuffer.getInt();
+		catalogPage = serializedBuffer.getLong();
+		catalogRecordOffset = serializedBuffer.getInt();
 		pageCount = serializedBuffer.getLong();
 		recordsCount = serializedBuffer.getLong();
 		creationDate = serializedBuffer.getLong();
 		lastModified = serializedBuffer.getLong();
-		fileName = indexName + ".db";
+		fileName = indexName + id + ".index";
+		attributes = new Vector<Attribute>();
+	}
+
+	public void addAttribute(Attribute attr, boolean addToSize) {
+		attributes.add(attr);
 	}
 
 	/**
@@ -73,11 +100,11 @@ public class Index {
 		return numberOfRecords;
 	}
 
-	public long getIndexId() {
+	public long getId() {
 		return id;
 	}
 
-	public String getIndexName() {
+	public String getName() {
 		return indexName;
 	}
 
@@ -102,13 +129,8 @@ public class Index {
 		return recordSize;
 	}
 
-	public int recordsPerBlock() {
-		int numberOfRecords = (int) ((DiskSpaceManager.PAGE_SIZE * 8 - 7) / (1 + 8 * recordSize));
-		return numberOfRecords;
-	}
-
 	public ByteBuffer serialize() {
-		ByteBuffer serializedBuffer = ByteBuffer.allocate((int) SystemCatalogManager.RELATION_RECORD_SIZE);
+		ByteBuffer serializedBuffer = ByteBuffer.allocate((int) SystemCatalogManager.INDEX_RECORD_SIZE);
 		for (int i = 0; i < INDEX_NAME_LENGTH; i++) {
 			if (i < indexName.length()) {
 				serializedBuffer.putChar(indexName.charAt(i));
@@ -117,7 +139,15 @@ public class Index {
 			}
 		}
 		serializedBuffer.putLong(id);
+		serializedBuffer.putLong(parentId);
+		serializedBuffer.putInt(nKeys);
+		serializedBuffer.putInt(keySize);
 		serializedBuffer.putInt(recordSize);
+		serializedBuffer.putLong(rootPage.id);
+		serializedBuffer.putLong(rootPage.offset);
+		serializedBuffer.putInt(rootOffset);
+		serializedBuffer.putLong(catalogPage);
+		serializedBuffer.putInt(catalogRecordOffset);
 		serializedBuffer.putLong(pageCount);
 		serializedBuffer.putLong(recordsCount);
 		serializedBuffer.putLong(creationDate);
@@ -125,7 +155,7 @@ public class Index {
 		return serializedBuffer;
 	}
 
-	public void setIndexname(String _indexName) {
+	public void setName(String _indexName) {
 		indexName = _indexName;
 		lastModified = (new Date()).getTime();
 	}
@@ -156,7 +186,7 @@ public class Index {
 		return rootOffset;
 	}
 
-	public long getPage() {
+	public long getPageNumber() {
 		return catalogPage;
 	}
 
@@ -166,5 +196,30 @@ public class Index {
 
 	public int getKeySize() {
 		return keySize;
+	}
+
+	public Vector<Attribute> getAttributes() {
+		return attributes;
+	}
+
+	public long getParentId() {
+		return parentId;
+	}
+
+	public boolean setTree() {
+		if (dObject == null) {
+			dObject = new DynamicObject(attributes);
+			bTree = new BPlusTree(this, dObject);
+			return true;
+		}
+		return false;
+	}
+
+	public boolean insert(DynamicObject object, PhysicalAddress value, int recordOffset) {
+		if (dObject != null) {
+			bTree.insert(object, value, recordOffset);
+			return true;
+		}
+		return false;
 	}
 }

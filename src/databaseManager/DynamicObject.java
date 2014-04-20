@@ -1,11 +1,10 @@
 package databaseManager;
 
 import java.nio.ByteBuffer;
+import java.util.Arrays;
 import java.util.Vector;
 
-import databaseManager.Attribute.Type;
-
-public class DynamicObject implements Comparable {
+public class DynamicObject implements Comparable<Object> {
 	public Object[] obj;
 	public Vector<Attribute> attributes;
 	public int size;
@@ -26,9 +25,9 @@ public class DynamicObject implements Comparable {
 		size = 0;
 		obj = new Object[attributes.size()];
 		for (int i = 0; i < attributes.size(); i++) {
-			if (attributes.get(i).getAttributeType() == Attribute.Type.Char) {
+			if (attributes.get(i).getType() == Attribute.Type.Char) {
 				obj[i] = new String();
-			} else if (attributes.get(i).getAttributeType() == Attribute.Type.Int) {
+			} else if (attributes.get(i).getType() == Attribute.Type.Int) {
 				obj[i] = new Integer(0);
 			}
 			size += attributes.get(i).getAttributeSize();
@@ -36,12 +35,11 @@ public class DynamicObject implements Comparable {
 	}
 
 	public DynamicObject deserialize(byte[] serialBytes) {
-		// TODO Auto-generated method stub
 		ByteBuffer serializedBuffer = ByteBuffer.wrap(serialBytes);
 		serializedBuffer.position(0);
 		DynamicObject temp = new DynamicObject(attributes);
 		for (int i = 0; i < attributes.size(); i++) {
-			if (attributes.get(i).getAttributeType() == Attribute.Type.Char) {
+			if (attributes.get(i).getType() == Attribute.Type.Char) {
 				String str = "";
 				for (int j = 0; j < attributes.get(i).getAttributeSize() / 2; j++) {
 					char tempChar = serializedBuffer.getChar();
@@ -61,7 +59,7 @@ public class DynamicObject implements Comparable {
 		ByteBuffer serializedBuffer = ByteBuffer.allocate(size);
 		serializedBuffer.position(0);
 		for (int i = 0; i < attributes.size(); i++) {
-			if (attributes.get(i).getAttributeType() == Attribute.Type.Char) {
+			if (attributes.get(i).getType() == Attribute.Type.Char) {
 				for (int j = 0; j < attributes.get(i).getAttributeSize() / 2; j++) {
 					if (j < ((String) temp.obj[i]).length()) {
 						serializedBuffer.putChar(((String) temp.obj[i]).charAt(j + 1));
@@ -92,15 +90,15 @@ public class DynamicObject implements Comparable {
 	}
 
 	public String printRecords() {
-		String s = "";
+		String result="";
 		for (int i = 0; i < attributes.size(); i++) {
-			if (attributes.get(i).getAttributeType() == Attribute.Type.Char) {
-				s = (String) obj[i] + " , " + s;
+			if (attributes.get(i).getType() == Attribute.Type.Char) {
+				result = (String) obj[i] + " , " + result;
 			} else {
-				s = ((Integer) obj[i]).toString() + " , " + s;
+				result = ((Integer) obj[i]).toString() + " , " + result;
 			}
 		}
-		return s;
+		return result;
 	}
 
 	@Override

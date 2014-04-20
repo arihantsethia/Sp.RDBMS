@@ -83,6 +83,26 @@ public class Utility {
 		}
 		return false;
 	}
+	
+	public static DynamicObject toDynamicObject(String[] columnList, String[] valueList, Vector<Attribute> attributes) {
+		Map<String, Integer> columnMap = new HashMap<String, Integer>();
+		DynamicObject dObject = new DynamicObject(attributes);
+		for (int i = 0; i < columnList.length; i++) {
+			columnMap.put(columnList[i].trim(), i);
+			valueList[i] = valueList[i].trim();
+		}
+		for (int i = 0; i < attributes.size(); i++) {
+			if (columnMap.containsKey(attributes.get(i).getName())) {
+				int pos = columnMap.get(attributes.get(i).getName());
+				if (attributes.get(i).getType() == Attribute.Type.Int) {
+					dObject.obj[i] = Integer.parseInt(valueList[pos]);
+				}else if (attributes.get(i).getType() == Attribute.Type.Char) {
+					dObject.obj[i] = (String)valueList[pos].substring(1, valueList[pos].length()-1);
+				}
+			}
+		}
+		return dObject;
+	}
 
 	public static ByteBuffer serialize(String[] columnList, String[] valueList, Vector<Attribute> attributesList, int recordSize) {
 		ByteBuffer serializedBuffer = ByteBuffer.allocate(recordSize);
@@ -98,16 +118,16 @@ public class Utility {
 				}
 			}
 			for (int i = 0; i < attributesList.size(); i++) {
-				if (columnMap.containsKey(attributesList.get(i).getAttributeName())) {
-					int pos = columnMap.get(attributesList.get(i).getAttributeName());
-					if (attributesList.get(i).getAttributeType() == Attribute.Type.Int) {
+				if (columnMap.containsKey(attributesList.get(i).getName())) {
+					int pos = columnMap.get(attributesList.get(i).getName());
+					if (attributesList.get(i).getType() == Attribute.Type.Int) {
 						if (Utility.getUtility().isSameType("int", valueList[pos])) {
 							serializedBuffer.putInt(Utility.getUtility().stringToInt(valueList[pos]));
 						} else {
-							System.out.println(pos + "type mismatch : " + attributesList.get(i).getAttributeName());
+							System.out.println(pos + "type mismatch : " + attributesList.get(i).getName());
 							return null;
 						}
-					} else if (attributesList.get(i).getAttributeType() == Attribute.Type.Char) {
+					} else if (attributesList.get(i).getType() == Attribute.Type.Char) {
 						if (Utility.getUtility().isVarChar(valueList[pos], attributesList.get(i).getAttributeSize())) {
 							for (int j = 0; j < attributesList.get(i).getAttributeSize() / 2; j++) {
 								if (j < valueList[pos].length() - 2) {
@@ -117,21 +137,21 @@ public class Utility {
 								}
 							}
 						} else {
-							System.out.println("type mismatch : " + attributesList.get(i).getAttributeName());
+							System.out.println("type mismatch : " + attributesList.get(i).getName());
 							return null;
 						}
 					} else {
-						System.out.println("type total mismatch : " + attributesList.get(i).getAttributeName());
+						System.out.println("type total mismatch : " + attributesList.get(i).getName());
 						return null;
 					}
 				} else if (attributesList.get(i).isNullable()) {
-					if (attributesList.get(i).getAttributeType() == Attribute.Type.Int) {
+					if (attributesList.get(i).getType() == Attribute.Type.Int) {
 						serializedBuffer.position(serializedBuffer.position() + 4);
-					} else if (attributesList.get(i).getAttributeType() == Attribute.Type.Char) {
+					} else if (attributesList.get(i).getType() == Attribute.Type.Char) {
 						serializedBuffer.position(serializedBuffer.position() + attributesList.get(i).getAttributeSize());
 					}
 				} else {
-					System.out.println(" value needed : " + attributesList.get(i).getAttributeName());
+					System.out.println(" value needed : " + attributesList.get(i).getName());
 					return null;
 				}
 			}
@@ -179,14 +199,14 @@ public class Utility {
 		relationName1 = QueryParser.tableMap.get(key1);
 		relationName2 = QueryParser.tableMap.get(key2);
 
-		long newRelationId1 = ObjectHolder.getObjectHolder().getRelationIdByRelationName(relationName1);
-		long newRelationId2 = ObjectHolder.getObjectHolder().getRelationIdByRelationName(relationName2);
+		long newRelationId1 = ObjectHolder.getObjectHolder().getRelationId(relationName1);
+		long newRelationId2 = ObjectHolder.getObjectHolder().getRelationId(relationName2);
 
 		if (newRelationId1 != -1 && newRelationId2 != -1) {
 			Relation newRelation1 = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId1);
 			Relation newRelation2 = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId2);
 
-			if (newRelation1.attributeType(field1).equals(newRelation2.attributeType(field2))) {
+			if (newRelation1.getAttributeType(field1).equals(newRelation2.getAttributeType(field2))) {
 				return true;
 			} else {
 				return false;
@@ -252,7 +272,7 @@ public class Utility {
 			if (QueryParser.tableMap.containsKey(key)) {
 				field = getFieldName(s);
 				relationName = QueryParser.tableMap.get(key);
-				long newRelationId = ObjectHolder.getObjectHolder().getRelationIdByRelationName(relationName);
+				long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
 				if (newRelationId != -1) {
 					Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
 					Vector<Attribute> attributes = newRelation.getAttributes();

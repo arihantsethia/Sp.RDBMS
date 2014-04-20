@@ -128,7 +128,7 @@ public class Attribute {
 	 * @param _nullable
 	 *            : This defines if an attribute can take null values or not.
 	 */
-	public Attribute(String _attributeName, Type _type, long _id, long _parentId, int _size, boolean _nullable) {
+	public Attribute(String _attributeName, Type _type, long _id, long _parentId, int _size, boolean _nullable, boolean _distinct) {
 		attributeName = _attributeName;
 		type = _type;
 		id = _id;
@@ -136,7 +136,7 @@ public class Attribute {
 		nullable = _nullable;
 		size = _size;
 		position = -1;
-		distinctEntries = false;
+		distinctEntries = _distinct;
 	}
 
 	/**
@@ -203,13 +203,16 @@ public class Attribute {
 	public void setPosition(int _position) {
 		position = _position;
 	}
+	public void setId(long _newId) {
+		id = _newId;
+	}
+	
+	public void setParentId(long _newId) {
+		parentId = _newId;
+	}
 
 	public String toString() {
-		String str = attributeName + " " + type;
-		if (type == Type.Char) {
-			str += "(" + size + ")";
-		}
-		return str;
+		return attributeName;
 	}
 
 	/**
@@ -285,11 +288,11 @@ public class Attribute {
 		return position;
 	}
 
-	public String getAttributeName() {
+	public String getName() {
 		return attributeName;
 	}
 
-	public Type getAttributeType() {
+	public Type getType() {
 		return type;
 	}
 

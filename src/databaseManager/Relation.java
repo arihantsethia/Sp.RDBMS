@@ -17,8 +17,8 @@ public class Relation {
 	private String fileName;
 	private Vector<Attribute> attributes;
 	private Map<String, Integer> attributesNames;
-	private Map<String, String> indexFiles;
-	private Set<String> indexed;
+	private Set<Long> indices;
+	private Map< Long, Vector<Long> > indexed;
 	private long id;
 	private long pageCount;
 	private long recordsCount;
@@ -34,8 +34,8 @@ public class Relation {
 		id = _id;
 		attributes = new Vector<Attribute>();
 		attributesNames = new HashMap<String, Integer>();
-		indexFiles = new HashMap<String, String>();
-		indexed = new HashSet<String>();
+		indices = new HashSet<Long>();
+		indexed = new HashMap<Long,Vector<Long>>();
 		creationDate = (new Date()).getTime();
 		lastModified = (new Date()).getTime();
 		pageCount = 1;
@@ -63,8 +63,8 @@ public class Relation {
 		fileName = relationName + ".db";
 		attributes = new Vector<Attribute>(attributesCount);
 		attributesNames = new HashMap<String, Integer>();
-		indexFiles = new HashMap<String, String>();
-		indexed = new HashSet<String>();
+		indices = new HashSet<Long>();
+		indexed = new HashMap<Long,Vector<Long>>();
 	}
 
 	public boolean addAttribute(String attributeName, Attribute.Type type, long _id) {
@@ -92,12 +92,12 @@ public class Relation {
 	}
 
 	public boolean addAttribute(Attribute attribute, boolean addToSize) {
-		if (!attributesNames.containsKey(attribute.getAttributeName())) {
+		if (!attributesNames.containsKey(attribute.getName())) {
 			if (attribute.getPosition() == -1) {
 				attribute.setPosition(attributes.size());
 			}
 			attributes.add(attribute.getPosition(), attribute);
-			attributesNames.put(attribute.getAttributeName(), attribute.getPosition());
+			attributesNames.put(attribute.getName(), attribute.getPosition());
 			if (addToSize) {
 
 				recordSize = recordSize + attribute.getAttributeSize();
@@ -107,11 +107,21 @@ public class Relation {
 		return false;
 	}
 
-	public boolean addIndex(String indexName) {
-		if (indexFiles.containsKey(indexName)) {
+	public boolean addIndex(Index index) {
+		if (indices.contains(index.getId())) {
 			return false;
 		} else {
-			indexFiles.put(indexName, relationName + "_" + indexName + ".index");
+			indices.add(index.getId());
+			Vector<Attribute> indexAttributes = index.getAttributes();
+			for(int i=0; i<indexAttributes.size();i++){
+				if(indexed.containsKey(indexAttributes.get(i).getId())){
+					indexed.get(indexAttributes.get(i).getId()).add(index.getId());
+				}else{
+					Vector<Long> temp = new Vector<Long>();
+					temp.add(index.getId());
+					indexed.put(indexAttributes.get(i).getId(), temp);
+				}
+			}
 			lastModified = (new Date()).getTime();
 			return true;
 		}
@@ -133,7 +143,7 @@ public class Relation {
 		return numberOfRecords;
 	}
 
-	public long getRelationId() {
+	public long getId() {
 		return id;
 	}
 
@@ -141,7 +151,7 @@ public class Relation {
 		return attributes.size();
 	}
 
-	public String getRelationName() {
+	public String getName() {
 		return relationName;
 	}
 
@@ -195,7 +205,7 @@ public class Relation {
 		return serializedBuffer;
 	}
 
-	public void setRelationname(String _relationName) {
+	public void setName(String _relationName) {
 		relationName = _relationName;
 		lastModified = (new Date()).getTime();
 	}
@@ -216,16 +226,40 @@ public class Relation {
 	public Map<String, Integer> getAttributesNames() {
 		return attributesNames;
 	}
+	
+	public Attribute getAttributeByName(String name){
+    	int attrPos = attributesNames.get(name);
+    	Attribute attr = attributes.elementAt(attrPos);
+    	return attr;
+    }
+	
+	public int getAttributePosition(String attrName){
+		if(attributesNames.containsKey(attrName)){
+			return attributesNames.get(attrName);
+		}
+		return -1;
+	}
 
-	public Attribute.Type attributeType(String field){
+	public Attribute.Type getAttributeType(String field){
     	int attrPos = attributesNames.get(field);
     	Attribute attr = attributes.elementAt(attrPos);
-    	return attr.getAttributeType();
+    	return attr.getType();
     }
     
 	public long updateRecordsCount(int i) {
 		recordsCount = recordsCount + i;
 		return recordsCount;
+	}
+
+	public Set<Long> getIndices() {
+		return indices;
+	}
+	
+	public void removeIndex(long indexId) {
+		indices.remove(indexId);
+		for (Map.Entry<Long, Vector<Long>> entry : indexed.entrySet()) {
+			entry.getValue().remove(indexId);
+		}
 	}
 
 }
