@@ -156,15 +156,57 @@ public class QueryParser {
 		}
 		return null;
 	}
-	
+	public boolean isInsertStatementQuery(String statement){
+		int insertIndex = statement.trim().indexOf("insert");
+		int intoIndex = statement.trim().indexOf("into");
+		int valueIndex = statement.trim().indexOf("values");
+		
+		String relationName = statement.substring(intoIndex + 4,statement.trim().indexOf("(")).trim();
+		long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
+		
+		if(newRelationId != -1){
+			String columnPart = "";
+			columnPart = statement.substring(statement.indexOf("("),valueIndex).trim();
+			columnPart = columnPart.replace(")"," ").trim();
+			String [] columnPartSplit = columnPart.split(",");
+			
+			if(valueIndex != -1){
+				String valuePart = "";
+				valuePart = statement.substring(valueIndex + 5).trim();
+				valuePart = statement.replace("("," ").replace(")"," ").trim();
+				String [] valuePartSplit = valuePart.split(",");
+				
+				if(columnPartSplit.length == valuePartSplit.length){
+					Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
+				    Vector<Attribute> attributes = newRelation.getAttributes();
+				    boolean chk = true ;
+				    for(int k = 0 ; k < attributes.size() ; k++ ){
+				    	
+				    	if(attributes.get(k).getName().equals(columnPartSplit[k])){
+				    		Attribute.Type fieldType = newRelation.getAttributeType(columnPartSplit[k]);
+						  
+				    		if(!Utility.isSameType(fieldType,valuePartSplit[k])){
+						     	return false;
+						    }
+						    chk = false ;
+				    	}
+				    }
+				    if(chk){
+				    	return false ;
+				    }
+				}
+			}
+		}
+		return true;
+	}
 	
 	public boolean isDeleteStatementQuery(String statement){
-		int deleteIndex = statement.toUpperCase().trim().indexOf("DELETE");
-		int fromIndex = statement.toUpperCase().trim().indexOf("FROM");
+		int deleteIndex = statement.trim().indexOf("delete");
+		int fromIndex = statement.trim().indexOf("from");
 		
 		if(deleteIndex == 0 && fromIndex != -1){
 			String fromPart = "";
-			int whereIndex = statement.toUpperCase().trim().indexOf("WHERE");
+			int whereIndex = statement.trim().indexOf("where");
 			
 			if(whereIndex != -1){
 				String wherePart = "";
@@ -199,8 +241,9 @@ public class QueryParser {
 				}
 			}
 		}
-		return false;
+		return true;
 	}
+	
     public static boolean isUpdateStatementQuery(String statement){
     	int updateIndex = statement.trim().indexOf("update");
     	int setIndex = statement.trim().indexOf("set");
