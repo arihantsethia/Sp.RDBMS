@@ -403,6 +403,7 @@ public class SystemCatalogManager {
 				relation.addPrimaryKey(attrs);				
 				return true;
 			}else{
+				System.out.println("Table already has a primary key defined on it!");
 				return false;
 			}
 		}
