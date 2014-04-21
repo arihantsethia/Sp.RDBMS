@@ -16,11 +16,16 @@ public class CreateOperation extends Operation {
 	CreateOperation(String statement) {
 		setType(QueryParser.OperationType.CREATE);
 		parsedData = new Vector<Vector<String>>();
-		statement = statement.substring(statement.toUpperCase().indexOf("CREATE") + 6).trim();
-		if (statement.toUpperCase().indexOf("TABLE") == 0) {
-			queryType = parseCreateTableQuery(statement) ? 0 : -1;
-		} else if (statement.toUpperCase().indexOf("INDEX") == 0) {
-			queryType = parseCreateIndexQuery(statement) ? 1 : -1;
+		int createIndex = statement.trim().indexOf("create");
+		if(createIndex == 0){
+			statement = statement.substring(statement.toUpperCase().indexOf("CREATE") + 6).trim();
+			if (statement.toUpperCase().indexOf("TABLE") == 0) {
+				queryType = parseCreateTableQuery(statement) ? 0 : -1;
+			} else if (statement.toUpperCase().indexOf("INDEX") == 0) {
+				queryType = parseCreateIndexQuery(statement) ? 1 : -1;
+			} else if (statement.toUpperCase().indexOf("PRIMARY") == 0) {
+				queryType = parseCreatePrimaryKeyQuery(statement) ? 2 : -1;
+			}
 		}
 	}
 
@@ -87,15 +92,14 @@ public class CreateOperation extends Operation {
 		return true;
 	}
 
-	private boolean parsePrimaryKeyQuery(String statement){
-		int createIndex = statement.trim().indexOf("create");
+	private boolean parseCreatePrimaryKeyQuery(String statement){
 		int primarykeyIndex = statement.trim().indexOf("primarykey");
 		int onIndex = statement.trim().indexOf("on");
-		int tableIndex = statement.trim().indexOf("table");
-		
-		if(createIndex == 0 && primarykeyIndex != -1 && onIndex != -1 && tableIndex != -1){
+		int tableIndex = statement.trim().indexOf("table");		
+		Vector<String> attributeList = new Vector<String>();
+		if(primarykeyIndex != -1 && onIndex != -1 && tableIndex != -1){
 			if(primarykeyIndex <= onIndex && onIndex <= tableIndex){
-				String relationName = statement.substring(tableIndex + 5,statement.indexOf("(")).trim();
+				relationName = statement.substring(tableIndex + 5,statement.indexOf("(")).trim();
 				long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
 				
 				if(newRelationId != -1){
@@ -117,11 +121,13 @@ public class CreateOperation extends Operation {
 						    if(chk){
 						    	return false ;
 						    }
+						    attributeList.add(primarykeyPartSplit[i]);
 					    }
 					}
 				}
 			}
 		}
+		parsedData.add(attributeList);
 		return true;
 	}
 	
@@ -187,6 +193,8 @@ public class CreateOperation extends Operation {
 			return DatabaseManager.getSystemCatalog().createTable(relationName, parsedData);
 		} else if (queryType == 1) {
 			return DatabaseManager.getSystemCatalog().createIndex(indexName, relationName, parsedData);
+		} else if (queryType == 2) {
+			return DatabaseManager.getSystemCatalog().addPrimaryKey(relationName, parsedData.get(0));
 		}
 		return false;
 	}

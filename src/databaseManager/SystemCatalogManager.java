@@ -279,6 +279,7 @@ public class SystemCatalogManager {
 						}
 						recordAddress.offset = iterator.currentPage;
 						if(!index.insert(iteratorKey, recordAddress, iterator.position - relation.getRecordSize())){
+							dropIndex(indexName,relationName);
 							return false;
 						}
 					}
@@ -390,7 +391,7 @@ public class SystemCatalogManager {
 				params.add("true");
 				data.add(attrs);
 				data.add(params);
-				if(createIndex(relationName+"_pk",relationName, data)){
+				if(!createIndex(relationName+"_pk",relationName, data)){
 					System.out.println("Contains duplicate data. Cannot create primary key!");
 					for (int i = 0; i < attrs.size(); i++) {
 						Attribute attribute = relation.getAttributeByName(attrs.get(i));

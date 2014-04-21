@@ -321,7 +321,7 @@ public class BPlusTree {
 			childrens = new PhysicalAddress[M + 1];
 			offset = new int[M + 1];
 			for (int i = 0; i < M; i++) {
-				keys[i] = new DynamicObject(index.getNumberOfKeys());
+				keys[i] = new DynamicObject(tempObject.attributes);
 				childrens[i] = new PhysicalAddress(-1, -1);
 				offset[i] = -1;
 			}
