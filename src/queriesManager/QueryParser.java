@@ -162,10 +162,10 @@ public class QueryParser {
 		return true;
 	}
 	
-	public boolean isDeleteStatementQuery(String statement){
+	public static boolean isDeleteStatementQuery(String statement){
 		int deleteIndex = statement.trim().indexOf("delete");
 		int fromIndex = statement.trim().indexOf("from");
-		
+		tableMap = new TreeMap<String,String>(String.CASE_INSENSITIVE_ORDER) ;
 		if(deleteIndex == 0 && fromIndex != -1){
 			String fromPart = "";
 			int whereIndex = statement.trim().indexOf("where");
@@ -231,14 +231,22 @@ public class QueryParser {
 				tableMap.clear();
 				
 				for(int i=0;i<updatePartSplit.length;i++){
-					tableMap.put(Utility.getNickName(updatePartSplit[i]),Utility.getRelationName(updatePartSplit[i]));
+					if(updatePartSplit[i].contains("as")){
+						tableMap.put(Utility.getNickName(updatePartSplit[i]),Utility.getRelationName(updatePartSplit[i]));
+					}else{
+						print_error(10,"") ;
+						return false ;
+					}
 				}
 				
 				for(int j=0;j<setPartSplit.length;j++){
 					String leftPart = "", rightPart = "";
 					leftPart = setPartSplit[j].substring(0, setPartSplit[j].indexOf("=")).trim() ;
 					rightPart = setPartSplit[j].substring(setPartSplit[j].indexOf("=") + 1).trim() ;
-					
+					if(!leftPart.contains(".")){
+						print_error(11,"") ;
+						return false ;
+					}
 					key = Utility.getRelationName(leftPart);
 					if(tableMap.containsKey(key)){
 						field = Utility.getNickName(leftPart);
@@ -298,7 +306,10 @@ public class QueryParser {
 					String leftPart = "", rightPart = "";
 					leftPart = setPartSplit[j].substring(0, setPartSplit[j].indexOf("=")).trim() ;
 					rightPart = setPartSplit[j].substring(setPartSplit[j].indexOf("=") + 1).trim() ;
-					
+					if(!leftPart.contains(".")){
+						print_error(11,"") ;
+						return false ;
+					}
 					key = Utility.getRelationName(leftPart);
 					if(tableMap.containsKey(key)){
 						field = Utility.getNickName(leftPart);
@@ -374,6 +385,13 @@ public class QueryParser {
 				}
 				
 				for(int j=0;j<selectPartSplit.length;j++){
+					if(selectPartSplit[j].contains("*")){
+						continue ;
+					}
+					if(!selectPartSplit[j].contains(".")){
+						print_error(11,"") ;
+						return false ;
+					}
 					key = Utility.getRelationName(selectPartSplit[j]);
 					if(tableMap.containsKey(key)){
 						field = Utility.getNickName(selectPartSplit[j]);
@@ -425,6 +443,13 @@ public class QueryParser {
 				}
 				
 				for(int j=0;j<selectPartSplit.length;j++){
+					if(selectPartSplit[j].contains("*")){
+						continue ;
+					}
+					if(!selectPartSplit[j].contains(".")){
+						print_error(11,"") ;
+						return false ;
+					}
 					key = Utility.getRelationName(selectPartSplit[j]);
 					if(tableMap.containsKey(key)){
 						field = Utility.getNickName(selectPartSplit[j]);
@@ -497,7 +522,6 @@ public class QueryParser {
     }   
 
 	static boolean isCondition(String s){
-	    System.out.println(s) ;
 	    s = s.trim() ;
 	    String firstPart , lastPart ;
 	    Vector<String> logicalOp , arithmeticOp ;
@@ -531,7 +555,6 @@ public class QueryParser {
 			    	if(s.toUpperCase().indexOf(arithmeticOp.get(j)) != -1){
 			    		firstPart = s.substring(0,s.toUpperCase().indexOf(arithmeticOp.get(j))).trim() ;
 			    		lastPart = s.substring(s.toUpperCase().indexOf(arithmeticOp.get(j))+arithmeticOp.get(j).length()).trim()  ;
-			    		System.out.println(firstPart + "===" + lastPart) ;
 			    		/*
 				  			first part check number , string , variable(s.id)
 			    		 */
@@ -657,6 +680,8 @@ public class QueryParser {
 	            case 7 :	 System.out.println( " Not a valid update Syntax. \n" ) ; break ;
 	            case 8 :	 System.out.println( " Column"+ s +"does not exits. \n" ) ; break ;
 	            case 9 :	 System.out.println( " Keyword table does not exits. \n" ) ; break ;
+	            case 10 :	 System.out.println( " \'as\' Expected \n" ) ; break ;
+	            case 11 :	 System.out.println( "  \'.\' or \'*\' Expected. \n" ) ; break ;
 	            default:    System.out.println( "undefined, see error message ") ; break ;
 	    }
 	}

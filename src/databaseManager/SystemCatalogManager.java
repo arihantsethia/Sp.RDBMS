@@ -435,11 +435,24 @@ public class SystemCatalogManager {
 
 	public boolean showTables() {
 		int count = 0 ;
+		String s = "" ;
 		for (Map.Entry<Long, Object> entry : objectHolder.objects.entrySet()) {
 			if ((entry.getValue() instanceof Relation) && entry.getKey() > 3) {
 				count += 1 ;
-				System.out.println(count + ".\t" + ((Relation) entry.getValue()).getName());
+				s = s + count + ".\t" + ((Relation) entry.getValue()).getName() + "\n" ;  
 			}
+		}
+		if(count==0){
+			System.out.println("Empty set");
+		}else{
+			
+			count = s.length() +  4 * count ;
+			while(count!=0){
+				System.out.print("-") ;
+				count-- ;
+			}
+			System.out.println() ; 
+			System.out.println(s);
 		}
 		return true;
 	}
@@ -447,6 +460,7 @@ public class SystemCatalogManager {
 
 	boolean descOperation(String statement){
 		int index = statement.indexOf("table") ;
+		
 		if(index != -1){
 			statement = statement.substring(index+5).trim() ;
 			if(!statement.contains(" ")) {
@@ -454,9 +468,21 @@ public class SystemCatalogManager {
 				long relationId = ObjectHolder.getObjectHolder().getRelationId(relationName) ;
 				if(relationId != -1){
 					Relation relation = (Relation) ObjectHolder.getObjectHolder().getObject(relationId) ;
+					int length = 25 ;
+					System.out.println("Table Description :-");
+					while(length!=0){
+						System.out.print("-") ;
+						length-- ;
+					}
+					System.out.println() ; 
+					
 					for(int i=0 ; i < relation.getAttributesCount() ; i++){
 						System.out.printf( "%-12s | ", relation.getAttributes().get(i).getName()) ;
-						System.out.printf( "%-12s | \n", Attribute.Type.toString(relation.getAttributes().get(i).getType()) ) ;
+						if(Attribute.Type.toString(relation.getAttributes().get(i).getType()).equals("int")){
+							System.out.printf( "%-12s | \n", Attribute.Type.toString(relation.getAttributes().get(i).getType())) ;
+						}else{
+							System.out.printf( "%-12s | \n", Attribute.Type.toString(relation.getAttributes().get(i).getType()) + "(" + (relation.getAttributes().get(i).getAttributeSize()+1)/2  + ")" ) ;
+						}
 					}
 					return true ;
 				}

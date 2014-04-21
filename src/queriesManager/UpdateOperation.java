@@ -98,7 +98,6 @@ public class UpdateOperation extends Operation {
 			for (int j = 0; j < dObject.attributes.size(); j++) {
 				if (dObject.attributes.get(j).getName().equals(attributeName) && dObject.attributes.get(j).getType() == Attribute.Type.Char) {
 					value = value.replace("\'", "");
-					System.out.println(value + "  " + value.length());
 					dObject.obj[j] = new String(value);
 				} else if (dObject.attributes.get(j).getName().equals(attributeName) && dObject.attributes.get(j).getType() == Attribute.Type.Int) {
 					dObject.obj[j] = new Integer(Utility.getUtility().stringToInt(value));

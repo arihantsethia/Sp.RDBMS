@@ -80,11 +80,8 @@ public class DeleteOperation extends Operation {
 	}
 
 	void print() {
-		String s = "";
 		for (int i = 0; i < tableList.size(); i++) {
 			String y = recordObjects.get(i).printRecords();
-			s = y + " === " + s;
 		}
-		System.out.println(s);
 	}
 }

@@ -323,9 +323,18 @@ public class Utility {
 				if (newRelationId != -1) {
 					Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
 					Vector<Attribute> attributes = newRelation.getAttributes();
-					if (!attributes.contains(field)) {
-						return false;
-					}
+					boolean chk = true ;
+				    for(int k = 0 ; k < attributes.size() ; k++ ){
+				    
+				    	if(attributes.get(k).getName().equals(field)){
+				    		chk = false ;
+				    	}
+				    }
+				    if(chk){
+				    	return false ;
+				    }else{
+				    	return true ;
+				    }
 				} 
 				else {
 					return false;
@@ -334,7 +343,6 @@ public class Utility {
 			else {
 				return false;
 			}
-			return false;
 		} 
 		else {
 			return false;

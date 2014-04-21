@@ -20,7 +20,7 @@ public class SelectOperation extends Operation {
 	protected Vector<DynamicObject> recordObjects;
 	protected Relation relation;
 	protected long relationId;
-	
+
 	public SelectOperation(String statement) {
 		setType(QueryParser.OperationType.SELECT);
 		Vector<String> stmtParts = QueryParser.statementParts(statement, "SELECT");
@@ -32,7 +32,7 @@ public class SelectOperation extends Operation {
 		} else {
 			setCondition(null);
 		}
-
+		projection = new Projection() ;
 		recordCountList = new Vector<Integer>();
 		recordCounterList = new Vector<Integer>();
 		iteratorList = new Vector<Iterator>();
@@ -51,13 +51,10 @@ public class SelectOperation extends Operation {
 			recordObjects.addElement(new DynamicObject(relation.getAttributes()));
 		}
 		if (count != 0) {
+			int length = 0;
 			for (int i = 0; i < tableList.size(); i++) {
-				
-				Relation relation = (Relation) ObjectHolder.getObjectHolder().getObject(ObjectHolder.getObjectHolder().getRelationId(Utility.getRelationName(tableList.elementAt(i)))) ;
-				for(int j=0 ; j < relation.getAttributesCount() ; j++){
-					System.out.print("|  " + Utility.getNickName(tableList.elementAt(i)) + "." + relation.getAttributes().get(j).getName() + "  |" ) ;
-	
-				}
+
+				projection.printAllTableAttributes(tableList) ;
 				
 				if (iteratorList.get(i).hasNext()) {
 					ByteBuffer a = iteratorList.get(i).getNext();
@@ -68,8 +65,6 @@ public class SelectOperation extends Operation {
 					}
 				}
 			}
-			System.out.println("") ; 
-			System.out.println("") ; 
 			if (condition == null || condition.compare(recordObjects, tableList)) {
 				print();
 			}
@@ -77,7 +72,7 @@ public class SelectOperation extends Operation {
 		}
 		while (count > 0) {
 			incrementCounter();
-			if (condition == null || condition.compare(recordObjects, tableList)){
+			if (condition == null || condition.compare(recordObjects, tableList)) {
 				print();
 			}
 			count--;
@@ -116,9 +111,8 @@ public class SelectOperation extends Operation {
 		String s = "";
 		for (int i = 0; i < tableList.size(); i++) {
 			String y = recordObjects.get(i).printRecords();
-			s =  y + " | " + s;
 		}
 		System.out.println(s);
 	}
-	
+
 }

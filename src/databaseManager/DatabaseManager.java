@@ -58,17 +58,24 @@ public class DatabaseManager {
 				System.out.println("wrong show table syntax");
 			}
 		}else if(splitCommand[0].equals("update")){
-			Operation operation = Operation.makeOperation(query.trim());
-			operation.executeOperation();
+			if(QueryParser.isUpdateStatementQuery(query)){
+				Operation operation = Operation.makeOperation(query.trim());
+				if(operation.executeOperation()){
+					System.out.println(" Successfully updated values ");
+				}
+			
+			}
+		
 		}else if(splitCommand[0].equals("delete")){
-			Operation operation = Operation.makeOperation(query.trim());
-			operation.executeOperation();
+			if(QueryParser.isDeleteStatementQuery(query)){
+				Operation operation = Operation.makeOperation(query.trim());
+				if(operation.executeOperation()){
+					System.out.println(" Data successfully deleted ");
+				}
+			}
 		}else if(splitCommand[0].equals("desc")){
-			System.out.println("") ;
 			if (systemCatalog.descOperation(query)) {
 					System.out.println();
-			} else {
-					System.out.println("wrong desc syntax" + splitCommand[2].trim());
 			}
 		}else{
 			System.out.println("undefined Syntax\n");

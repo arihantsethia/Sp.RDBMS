@@ -93,9 +93,11 @@ public class DynamicObject implements Comparable<Object> {
 		String result="";
 		for (int i = 0; i < attributes.size(); i++) {
 			if (attributes.get(i).getType() == Attribute.Type.Char) {
-				result = (String) obj[i] + " | " + result;
+				//result = (String) obj[i] + " | " + result;
+				System.out.printf("%-" + ( attributes.get(i).getAttributeSize() + 1 )/ 2 +"s | ", (String) obj[i] ) ;
 			} else {
-				result = ((Integer) obj[i]).toString() + " | " + result;
+				//result = ((Integer) obj[i]).toString() + " | " + result;
+				System.out.printf("%-10s | ", ((Integer) obj[i]).toString()) ;
 			}
 		}
 		return result;
