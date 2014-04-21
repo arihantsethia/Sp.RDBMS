@@ -158,34 +158,192 @@ public class QueryParser {
 		}
 		return null;
 	}
+	
+	public boolean isDeleteStatementQuery(String statement){
+		int deleteIndex = statement.toUpperCase().trim().indexOf("DELETE");
+		int fromIndex = statement.toUpperCase().trim().indexOf("FROM");
+		
+		if(deleteIndex == 0 && fromIndex != -1){
+			String fromPart = "";
+			int whereIndex = statement.toUpperCase().trim().indexOf("WHERE");
+			
+			if(whereIndex != -1){
+				String wherePart = "";
+				fromPart = statement.substring(fromIndex + 4, whereIndex).trim();
+				wherePart = statement.substring(whereIndex + 5).trim();
+				
+				String [] fromPartSplit = fromPart.split(",");
+				
+				tableMap.clear();
+				
+				for(int i=0;i<fromPartSplit.length;i++){
+					tableMap.put(Utility.getNickName(fromPartSplit[i]),Utility.getRelationName(fromPartSplit[i]));
+				}
+				
+				boolean whereClause = isCondition(wherePart);
+				
+				if(whereClause){
+					return true;
+				}
+				else{
+					return false;
+				}
+			}
+			else{
+				String relationName = statement.substring(fromIndex + 4).trim();
+				long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
+				if(newRelationId != -1){
+					return true;
+				}
+				else{
+					return false;
+				}
+			}
+		}
+		return false;
+	}
 
-    public static boolean isUpdateStatementQuery(String statement){
-    	String stmtUpperCase = statement.toUpperCase().trim();
-    	int updateIndex = stmtUpperCase.indexOf("UPDATE");
-    	int setIndex = stmtUpperCase.indexOf("SET");
-    	int whereIndex = stmtUpperCase.indexOf("WHERE");
+	public static boolean isUpdateStatementQuery(String statement){
+    	int updateIndex = statement.trim().indexOf("update");
+    	int setIndex = statement.trim().indexOf("set");
+    	tableMap = new TreeMap<String,String>(String.CASE_INSENSITIVE_ORDER) ;
+
     	
-    	if(updateIndex == 0 && setIndex != -1 && whereIndex != -1){
-    		String updatePart = "", setPart = "", wherePart = "";
-    		updatePart = stmtUpperCase.substring(updateIndex + 6, setIndex).trim();
-    		setPart = stmtUpperCase.substring(setIndex + 3, whereIndex).trim();
-    		wherePart = stmtUpperCase.substring(whereIndex + 5).trim();
+    	if(updateIndex == 0 && setIndex != -1){
+    		String updatePart = "", setPart = "";
+    		updatePart = statement.substring(updateIndex + 6, setIndex).trim();
+    		int whereIndex = statement.trim().indexOf("where");
+			
+    		String [] updatePartSplit = updatePart.split(",");
+			String key = "",field = "";
+			String relationName = "";
+			
+			if(whereIndex != -1){
+				String wherePart = "";
+				setPart = statement.substring(setIndex + 3, whereIndex).trim() ;
+				wherePart = statement.substring(whereIndex + 5).trim();
+				String [] setPartSplit = setPart.split(",");
+				
+				tableMap.clear();
+				
+				for(int i=0;i<updatePartSplit.length;i++){
+					tableMap.put(Utility.getNickName(updatePartSplit[i]),Utility.getRelationName(updatePartSplit[i]));
+				}
+				
+				for(int j=0;j<setPartSplit.length;j++){
+					String leftPart = "", rightPart = "";
+					leftPart = setPartSplit[j].substring(0, setPartSplit[j].indexOf("=")).trim() ;
+					rightPart = setPartSplit[j].substring(setPartSplit[j].indexOf("=") + 1).trim() ;
+					
+					key = Utility.getRelationName(leftPart);
+					if(tableMap.containsKey(key)){
+						field = Utility.getNickName(leftPart);
+						relationName = tableMap.get(key);
+						long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
+						if (newRelationId != -1) {
+						    Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
+						    Vector<Attribute> attributes = newRelation.getAttributes();
+						    boolean chk = true ;
+						    for(int k = 0 ; k < attributes.size() ; k++ ){
+						    
+						    	if(attributes.get(k).getName().equals(field)){
+						    		Attribute.Type fieldType = newRelation.getAttributeType(field);
+								    if(!Utility.isSameType(fieldType,rightPart)){
+								     	return false;
+								    }
+								    chk = false ;
+						    	}
+						    }
+						    if(chk){
+						    	return false ;
+						    }
+						    
+						}
+						else{
+							return false ;
+						}
+					}
+					else{
+						return false;
+					}
+				}
+				
+				boolean whereClause = isCondition(wherePart);
+				
+				if(whereClause){
+					return true;
+				}
+				else{
+					return false;
+				}
+			}
+			else{
+				setPart = statement.substring(setIndex + 3).trim();
+				String [] setPartSplit = setPart.split(",");
+				
+				tableMap.clear();
+				
+				for(int i=0;i<updatePartSplit.length;i++){
+					tableMap.put(Utility.getNickName(updatePartSplit[i]),Utility.getRelationName(updatePartSplit[i]));
+				}
+				
+				for(int j=0;j<setPartSplit.length;j++){
+					String leftPart = "", rightPart = "";
+					leftPart = setPartSplit[j].substring(0, setPartSplit[j].indexOf("=")).trim() ;
+					rightPart = setPartSplit[j].substring(setPartSplit[j].indexOf("=") + 1).trim() ;
+					
+					key = Utility.getRelationName(leftPart);
+					if(tableMap.containsKey(key)){
+						field = Utility.getNickName(leftPart);
+						relationName = tableMap.get(key);
+						long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
+						
+						if (newRelationId != -1) {
+						    Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
+						    Vector<Attribute> attributes = newRelation.getAttributes();
+						    
+						    boolean chk = true ;
+						    for(int k = 0 ; k < attributes.size() ; k++ ){
+						    
+						    	if(attributes.get(k).getName().equals(field)){
+						    		Attribute.Type fieldType = newRelation.getAttributeType(field);
+								    if(!Utility.isSameType(fieldType,rightPart)){
+								     	return false;
+								    }
+								    chk = false ;
+						    	}
+						    }
+						    if(chk){
+						    	return false ;
+						    }
+						}
+						else{
+							return false ;
+						}
+					}
+					else{
+						return false;
+					}
+				}
+			}
     	}
     	else{
     		return false;
     	}
-    	return true;
+    	return true ;
     }
     
-    public boolean isSelectStatementQuery(String statement){
-		String stmtUpperCase = statement.toUpperCase().trim();
-		int selectIndex = stmtUpperCase.indexOf("SELECT");
-		int fromIndex = stmtUpperCase.indexOf("FROM");
+    public static boolean isSelectStatementQuery(String statement){
+		int selectIndex = statement.trim().indexOf("select");
+		int fromIndex = statement.trim().indexOf("from");
+		
+		tableMap = new TreeMap<String,String>(String.CASE_INSENSITIVE_ORDER) ;
+		
 		
 		if(selectIndex == 0 && fromIndex != -1){
 			String selectPart = "",fromPart = "";
-			selectPart = stmtUpperCase.substring(selectIndex + 6, fromIndex).trim();
-			int whereIndex = stmtUpperCase.indexOf("WHERE");
+			selectPart = statement.trim().substring(selectIndex + 6, fromIndex).trim();
+			int whereIndex = statement.trim().indexOf("where");
 			
 			String [] selectPartSplit = selectPart.split(",");
 			String key = "",field = "";
@@ -194,25 +352,34 @@ public class QueryParser {
 			
 			if(whereIndex != -1){
 				String wherePart = "";
-				fromPart = stmtUpperCase.substring(fromIndex + 4, whereIndex).trim() ;
-				wherePart = stmtUpperCase.substring(whereIndex + 5).trim();
+				fromPart = statement.trim().substring(fromIndex + 4, whereIndex).trim() ;
+				wherePart = statement.trim().substring(whereIndex + 5).trim();
 				String [] fromPartSplit = fromPart.split(",");
+				
+				tableMap.clear();
 				
 				for(int i=0;i<fromPartSplit.length;i++){
 					tableMap.put(Utility.getNickName(fromPartSplit[i]),Utility.getRelationName(fromPartSplit[i]));
 				}
 				
 				for(int j=0;j<selectPartSplit.length;j++){
-					key = Utility.getAlias(selectPartSplit[j]);
+					key = Utility.getRelationName(selectPartSplit[j]);
 					if(tableMap.containsKey(key)){
-						field = Utility.getFieldName(selectPartSplit[j]);
+						field = Utility.getNickName(selectPartSplit[j]);
 						relationName = tableMap.get(key);
 						long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
 						if (newRelationId != -1) {
 						    Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
 						    Vector<Attribute> attributes = newRelation.getAttributes();
-						    if(!attributes.contains(field)){
-						    	return false;
+						    boolean chk = true ;
+						    for(int k = 0 ; k < attributes.size() ; k++ ){
+						    
+						    	if(attributes.get(k).getName().equals(field)){
+						    		chk = false ;
+						    	}
+						    }
+						    if(chk){
+						    	return false ;
 						    }
 						}
 						else{
@@ -234,23 +401,32 @@ public class QueryParser {
 				}
 			}
 			else{
-				fromPart = stmtUpperCase.substring(fromIndex + 4).trim();
+				fromPart = statement.substring(fromIndex + 4).trim();
 				String [] fromPartSplit = fromPart.split(",");
+				
+				tableMap.clear();
 				
 				for(int i=0;i<fromPartSplit.length;i++){
 					tableMap.put(Utility.getNickName(fromPartSplit[i]),Utility.getRelationName(fromPartSplit[i]));
 				}
 				
 				for(int j=0;j<selectPartSplit.length;j++){
-					key = Utility.getAlias(selectPartSplit[j]);
+					key = Utility.getRelationName(selectPartSplit[j]);
 					if(tableMap.containsKey(key)){
-						field = Utility.getFieldName(selectPartSplit[j]);
+						field = Utility.getNickName(selectPartSplit[j]);
 						relationName = tableMap.get(key);
 						long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
 						if (newRelationId != -1) {
 						    Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
 						    Vector<Attribute> attributes = newRelation.getAttributes();
-						    if(!attributes.contains(field)){
+						    boolean chk = true ;
+						    for(int k = 0 ; k < attributes.size() ; k++ ){
+						    
+						    	if(attributes.get(k).getName().equals(field)){
+						    		chk = false ;
+						    	}
+						    }
+						    if(chk){
 						    	return false ;
 						    }
 						}
@@ -350,22 +526,65 @@ public class QueryParser {
 			    			}
 			    		}
 			    		else if(Utility.isVariable(firstPart)){
-			    			if(Utility.isSameType("int",lastPart)){
-			    				return true ;
-			    			}
-			    			else if(Utility.isString(firstPart)){
-			    				return true ;
+			    			String key = "", field = "", relationName = "";
+			    			
+			    			key = Utility.getRelationName(firstPart);
+			    			field = Utility.getNickName(firstPart);
+			    			relationName = tableMap.get(key);
+			    			long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
+			    			
+			    			if(newRelationId != -1){
+			    				Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
+			    				Attribute.Type firstPartType = newRelation.getAttributeType(field);
+			    				
+			    				if(Utility.isNum(lastPart)){
+			    					if(Utility.isSameType(firstPartType, lastPart)){
+			    						return true ;
+			    					}
+			    					else{
+			    						return false;
+			    					}
+				    			}
+				    			else if(Utility.isString(lastPart)){
+				    				if(Utility.isSameType(firstPartType, lastPart)){
+				    					return true;
+				    				}
+				    				else{
+				    					return false;
+				    				}
+				    			}
 			    			}
 			    		}
 			    		else if(Utility.isVariable(lastPart)){
-			    			if(Utility.isNum(firstPart)){
-			    				// call to function to check type of firstPart and lastPart
-			    			}
-			    			else if(Utility.isString(firstPart)){
-			    				// call to function to check type of firstPart and lastPart
+			    			String key = "", field = "", relationName = "";
+			    			
+			    			key = Utility.getRelationName(lastPart);
+			    			field = Utility.getNickName(lastPart);
+			    			relationName = tableMap.get(key);
+			    			long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
+			    			
+			    			if(newRelationId != -1){
+			    				Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
+			    				Attribute.Type lastPartType = newRelation.getAttributeType(field);
+			    				
+			    				if(Utility.isNum(firstPart)){
+				    				if(Utility.isSameType(lastPartType,firstPart)){
+				    					return true;
+				    				}
+				    				else{
+				    					return false;
+				    				}
+				    			}
+			    				else if(Utility.isString(firstPart)){
+			    					if(Utility.isSameType(lastPartType,firstPart)){
+				    					return true;
+				    				}
+				    				else{
+				    					return false;
+				    				}
+			    				}
 			    			}
 			    		}
-			    		
 			    		return true ;
 			    	}
 			    }

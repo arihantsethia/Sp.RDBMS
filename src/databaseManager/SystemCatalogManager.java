@@ -375,9 +375,11 @@ public class SystemCatalogManager {
 	}
 
 	public boolean showTables() {
+		int count = 0 ;
 		for (Map.Entry<Long, Object> entry : objectHolder.objects.entrySet()) {
-			if ((entry.getValue() instanceof Relation) && entry.getKey() > 2) {
-				System.out.println(((Relation) entry.getValue()).getName());
+			if ((entry.getValue() instanceof Relation) && entry.getKey() > 3) {
+				count += 1 ;
+				System.out.println(count + ".\t" + ((Relation) entry.getValue()).getName());
 			}
 		}
 		return true;

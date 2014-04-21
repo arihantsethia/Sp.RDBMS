@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
 import queriesManager.QueryParser;
-
 import databaseManager.Attribute.Type;
 
 public class Utility {
@@ -34,11 +33,57 @@ public class Utility {
 				return true;
 			}
 		} else if (type1.equals("float")) {
-
+			try {
+				Float.parseFloat(Type2);
+				return true;
+			} catch (NumberFormatException e) {
+				return false;
+			}
+		} else if (type1.equals("double")) {
+			try {
+				Double.parseDouble(Type2);
+				return true;
+			} catch (NumberFormatException e) {
+				return false;
+			}
 		}
 		return false;
 	}
-
+	public static boolean isSameType(Attribute.Type type1, String type2) {
+		if (type1 == Attribute.Type.Int){
+			if(isSameType("int", type2)){
+				return true;
+			}
+			else{
+				return false;
+			}
+		}
+		else if(type1 == Attribute.Type.Char){
+			if(isSameType("char", type2)){
+				return true;
+			}
+			else{
+				return false;
+			}
+		}
+		else if(type1 == Attribute.Type.Float){
+			if(isSameType("float", type2)){
+				return true;
+			}
+			else{
+				return false;
+			}
+		}
+		else if(type1 == Attribute.Type.Double){
+			if(isSameType("double", type2)){
+				return true;
+			}
+			else{
+				return  false;
+			}
+		}
+		return false;
+	}
 	public int stringToInt(String s) {
 		return Integer.parseInt(s);
 	}
@@ -192,10 +237,10 @@ public class Utility {
 		String key1 = "", key2 = "";
 		String relationName1 = "", relationName2 = "";
 
-		key1 = getAlias(s1);
-		key2 = getAlias(s2);
-		field1 = getFieldName(s1);
-		field2 = getFieldName(s2);
+		key1 = getRelationName(s1);
+		key2 = getRelationName(s2);
+		field1 = getNickName(s1);
+		field2 = getNickName(s2);
 		relationName1 = QueryParser.tableMap.get(key1);
 		relationName2 = QueryParser.tableMap.get(key2);
 
@@ -208,10 +253,12 @@ public class Utility {
 
 			if (newRelation1.getAttributeType(field1).equals(newRelation2.getAttributeType(field2))) {
 				return true;
-			} else {
+			} 
+			else {
 				return false;
 			}
-		} else {
+		} 
+		else {
 			return false;
 		}
 	}
@@ -268,9 +315,9 @@ public class Utility {
 			String key = "", field = "";
 			String relationName = "";
 
-			key = getAlias(s);
+			key = getRelationName(s);
 			if (QueryParser.tableMap.containsKey(key)) {
-				field = getFieldName(s);
+				field = getNickName(s);
 				relationName = QueryParser.tableMap.get(key);
 				long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
 				if (newRelationId != -1) {
@@ -279,14 +326,17 @@ public class Utility {
 					if (!attributes.contains(field)) {
 						return false;
 					}
-				} else {
+				} 
+				else {
 					return false;
 				}
-			} else {
+			} 
+			else {
 				return false;
 			}
-			return true;
-		} else {
+			return false;
+		} 
+		else {
 			return false;
 		}
 	}
