@@ -405,6 +405,7 @@ public class SystemCatalogManager {
 				}
 			}else{
 				QueryParser.print_error(2,statement) ;
+				return false ;
 			}	
 		}
 		QueryParser.print_error(9,"") ;

@@ -49,7 +49,7 @@ public class DatabaseManager {
 				}
 			}
 		} else if (splitCommand[0].equals("show")) {
-			if (query.replace(" ","").trim().equals("showtables")) {
+			if (query.replace(" ","").trim().equals("showtables") && query.split(" ").length == 2 ) {
 				System.out.println("List of Tables :- ");
 				systemCatalog.showTables();
 			}else {
