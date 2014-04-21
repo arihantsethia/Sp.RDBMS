@@ -53,6 +53,16 @@ public class DatabaseManager {
 		}else if(splitCommand[0].equals("update")){
 			Operation operation = Operation.makeOperation(query.trim());
 			operation.executeOperation();
+		}else if(splitCommand[0].equals("delete")){
+			Operation operation = Operation.makeOperation(query.trim());
+			operation.executeOperation();
+		}else if(splitCommand[0].equals("desc")){
+			System.out.println("") ;
+			if (systemCatalog.descOperation(query)) {
+					System.out.println();
+			} else {
+					System.out.println("wrong statement" + splitCommand[2].trim());
+			}
 		}
 	}
 }

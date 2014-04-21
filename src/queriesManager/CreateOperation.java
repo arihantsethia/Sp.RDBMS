@@ -27,6 +27,9 @@ public class CreateOperation extends Operation {
 	private boolean parseCreateTableQuery(String statement) {
 		statement = statement.substring(statement.toUpperCase().indexOf("TABLE") + 5).trim();
 		relationName = statement.substring(0, statement.indexOf("(")).trim();
+		if(relationName.contains(" ")){
+			return false ;
+		}
 		StringTokenizer tokens = new StringTokenizer(statement.substring(statement.indexOf("(") + 1, statement.lastIndexOf(")")), ",");
 		Vector<String> parsedToken;
 		while (tokens.hasMoreTokens()) {

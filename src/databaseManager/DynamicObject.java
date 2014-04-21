@@ -62,7 +62,7 @@ public class DynamicObject implements Comparable<Object> {
 			if (attributes.get(i).getType() == Attribute.Type.Char) {
 				for (int j = 0; j < attributes.get(i).getAttributeSize() / 2; j++) {
 					if (j < ((String) temp.obj[i]).length()) {
-						serializedBuffer.putChar(((String) temp.obj[i]).charAt(j + 1));
+						serializedBuffer.putChar(((String) temp.obj[i]).charAt(j));
 					} else {
 						serializedBuffer.putChar('\0');
 					}
@@ -93,9 +93,9 @@ public class DynamicObject implements Comparable<Object> {
 		String result="";
 		for (int i = 0; i < attributes.size(); i++) {
 			if (attributes.get(i).getType() == Attribute.Type.Char) {
-				result = (String) obj[i] + " , " + result;
+				result = (String) obj[i] + " | " + result;
 			} else {
-				result = ((Integer) obj[i]).toString() + " , " + result;
+				result = ((Integer) obj[i]).toString() + " | " + result;
 			}
 		}
 		return result;

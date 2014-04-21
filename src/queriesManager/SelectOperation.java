@@ -3,6 +3,7 @@ package queriesManager;
 import java.nio.ByteBuffer;
 import java.util.Vector;
 
+import databaseManager.Attribute;
 import databaseManager.DynamicObject;
 import databaseManager.Iterator;
 import databaseManager.ObjectHolder;
@@ -51,6 +52,13 @@ public class SelectOperation extends Operation {
 		}
 		if (count != 0) {
 			for (int i = 0; i < tableList.size(); i++) {
+				
+				Relation relation = (Relation) ObjectHolder.getObjectHolder().getObject(ObjectHolder.getObjectHolder().getRelationId(Utility.getRelationName(tableList.elementAt(i)))) ;
+				for(int j=0 ; j < relation.getAttributesCount() ; j++){
+					System.out.print("|  " + Utility.getNickName(tableList.elementAt(i)) + "." + relation.getAttributes().get(j).getName() + "  |" ) ;
+	
+				}
+				
 				if (iteratorList.get(i).hasNext()) {
 					ByteBuffer a = iteratorList.get(i).getNext();
 					if (a != null) {
@@ -60,6 +68,8 @@ public class SelectOperation extends Operation {
 					}
 				}
 			}
+			System.out.println("") ; 
+			System.out.println("") ; 
 			if (condition == null || condition.compare(recordObjects, tableList)) {
 				print();
 			}
@@ -106,8 +116,9 @@ public class SelectOperation extends Operation {
 		String s = "";
 		for (int i = 0; i < tableList.size(); i++) {
 			String y = recordObjects.get(i).printRecords();
-			s = y + " | " + s;
+			s =  y + " | " + s;
 		}
 		System.out.println(s);
 	}
+	
 }

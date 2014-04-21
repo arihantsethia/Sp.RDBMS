@@ -38,6 +38,23 @@ public class Attribute {
 			} else
 				return 0;
 		}
+		
+		public static String toString(Type _type) {
+			if (_type == Attribute.Type.Int) {
+				return "int";
+			} else if (_type == Attribute.Type.Char) {
+				return "char";
+			} else if (_type == Attribute.Type.Boolean) {
+				return "boolean";
+			} else if (_type == Attribute.Type.Long) {
+				return "long";
+			} else if (_type == Attribute.Type.Float) {
+				return "float";
+			} else if (_type == Attribute.Type.Double) {
+				return "double";
+			} else
+				return "";
+		}
 	};
 
 	public static final int CHAR_SIZE = Character.SIZE / Byte.SIZE;

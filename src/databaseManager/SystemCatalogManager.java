@@ -382,4 +382,27 @@ public class SystemCatalogManager {
 		}
 		return true;
 	}
+	
+
+	boolean descOperation(String statement){
+		int index = statement.indexOf("table") ;
+		if(index != -1){
+			statement = statement.substring(index+5).trim() ;
+			if(!statement.contains(" ")) {
+				String relationName = statement ;
+				long relationId = ObjectHolder.getObjectHolder().getRelationId(relationName) ;
+				if(relationId != -1){
+					Relation relation = (Relation) ObjectHolder.getObjectHolder().getObject(relationId) ;
+					for(int i=0 ; i < relation.getAttributesCount() ; i++){
+						System.out.print("|  " + relation.getAttributes().get(i).getName() + "  |" ) ;
+						System.out.println("|  " + Attribute.Type.toString(relation.getAttributes().get(i).getType()) + "  |" ) ;
+						
+					}
+					return true ;
+				}
+			}	
+		}
+		return false;
+		
+	}
 }
