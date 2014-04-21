@@ -121,4 +121,25 @@ public class DynamicObject implements Comparable<Object> {
 		}
 		return 0;
 	}
+	
+	@Override
+	public boolean equals(Object o) {
+		DynamicObject newObj = (DynamicObject) o;
+		for (int i = 0; i < obj.length; i++) {
+			if (obj[i] instanceof String) {
+				if (((String) obj[i]).compareTo((String) newObj.obj[i]) > 0) {
+					return false;
+				} else if (((String) obj[i]).compareTo((String) newObj.obj[i]) < 0) {
+					return false;
+				}
+			} else if (obj[i] instanceof Integer) {
+				if (((Integer) obj[i]) > (Integer) newObj.obj[i]) {
+					return false;
+				} else if ((Integer) obj[i] < (Integer) newObj.obj[i]) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
 }

@@ -32,11 +32,11 @@ public class SystemCatalogManager {
 	public static final String INDEX_ATTRIBUTE_CATALOG = "index_attribute_catalog.db";
 	public static final int RELATION_RECORD_SIZE = 160;
 	public static final long RELATION_CATALOG_ID = 0;
-	public static final int ATTRIBUTE_RECORD_SIZE = 142;
+	public static final int ATTRIBUTE_RECORD_SIZE = 143;
 	public static final long ATTRIBUTE_CATALOG_ID = 1;
-	public static final int INDEX_RECORD_SIZE = 192;
+	public static final int INDEX_RECORD_SIZE = 196;
 	public static final long INDEX_CATALOG_ID = 2;
-	public static final int INDEX_ATTRIBUTE_RECORD_SIZE = 142;
+	public static final int INDEX_ATTRIBUTE_RECORD_SIZE = 143;
 	public static final long INDEX_ATTRIBUTE_CATALOG_ID = 3;
 
 	private BufferManager bufferManager;
@@ -211,8 +211,21 @@ public class SystemCatalogManager {
 				newRelation.getAttributes().get(i).setId(totalAttributesCount);
 				addAttributeToCatalog(newRelation.getAttributes().get(i));
 			}
-			objectHolder.addObject(newRelation);
+			objectHolder.addObject(newRelation);			
 			addRelationToCatalog(newRelation);
+			for (int i = 0; i < newRelation.getAttributesCount(); i++) {
+				Attribute newAttribute = newRelation.getAttributes().get(i);
+				if(newAttribute.isDistinct()){
+					Vector<Vector<String>> data = new Vector<Vector<String>>();
+					Vector<String> params = new Vector<String>();
+					params.add(newAttribute.getName());
+					data.add(params);
+					params =new Vector<String>();
+					params.add("true");
+					data.add(params);
+					createIndex(newAttribute.getName()+"_uk",relationName, data);
+				}
+			}
 			System.out.println("Table " + relationName + " successfully created!");
 			return true;
 		}
@@ -229,7 +242,8 @@ public class SystemCatalogManager {
 				for (int i = 0; i < parsedData.get(0).size(); i++) {
 					Attribute attribute = relation.getAttributeByName(parsedData.get(0).get(i));
 					if (attribute != null) {
-						attributes.add(relation.getAttributeByName(parsedData.get(0).get(i)));
+						attribute = new Attribute(relation.getAttributeByName(parsedData.get(0).get(i)).serialize());
+						attributes.add(attribute);
 					} else {
 						System.out.println("Attribute : " + parsedData.get(0).get(i) + " doesn't exists!");
 						return false;
@@ -237,15 +251,16 @@ public class SystemCatalogManager {
 
 				}
 				boolean distinct = Boolean.valueOf(parsedData.get(1).get(0));
-				Index index = new Index(indexName, totalObjectsCount, relationId, distinct, attributes);
+				Index index = new Index(indexName, totalObjectsCount+1, relationId, distinct, attributes);
 				for (int i = 0; i < attributes.size(); i++) {
-					attributes.get(i).setParentId(totalObjectsCount);
+					attributes.get(i).setParentId(totalObjectsCount+1);
 					attributes.get(i).setId(totalIndexAttributesCount);
 					addIndexAttributeToCatalog(attributes.get(i));
 				}
 				objectHolder.addObject(index);
 				index.setTree();
 				objectHolder.addObjectToRelation(index, false);
+				updateRelationCatalog(relation);
 				addIndexToCatalog(index);
 				System.out.println("Index : " + indexName + " created successfully!");
 				// Add all records to index
@@ -263,7 +278,9 @@ public class SystemCatalogManager {
 							iteratorKey.obj[i] = recordObject.obj[relation.getAttributePosition(attributes.get(i).getName())];
 						}
 						recordAddress.offset = iterator.currentPage;
-						index.insert(iteratorKey, recordAddress, iterator.position - relation.getRecordSize());
+						if(!index.insert(iteratorKey, recordAddress, iterator.position - relation.getRecordSize())){
+							return false;
+						}
 					}
 				}
 				// Added all records to index
@@ -336,8 +353,6 @@ public class SystemCatalogManager {
 			if (serializedBuffer != null) {
 				bufferManager.write(relation.getId(), freePageNumber, recordOffset, serializedBuffer);
 				int recordNumber = (recordOffset - (relation.getRecordsPerPage() + 7) / 8) / relation.getRecordSize();
-				bufferManager.writeRecordBitmap(relation.getId(), freePageNumber, relation.getRecordsPerPage(), recordNumber, true);
-				relation.updateRecordsCount(1);
 				java.util.Iterator<Long> indices = relation.getIndices().iterator();
 				PhysicalAddress insertAddress = new PhysicalAddress(relationId, freePageNumber);
 				while (indices.hasNext()) {
@@ -346,10 +361,48 @@ public class SystemCatalogManager {
 						updateIndexCatalog(currIndex);
 					}
 					DynamicObject entryObject = Utility.toDynamicObject(columnList, valueList, currIndex.getAttributes());
-					currIndex.insert(entryObject, insertAddress, recordOffset);
+					if(!currIndex.insert(entryObject, insertAddress, recordOffset)){
+						System.out.println("Couldn't insert into table. Doesn't satisfy the check constraints.");
+						return false;
+					}
 				}
+				bufferManager.writeRecordBitmap(relation.getId(), freePageNumber, relation.getRecordsPerPage(), recordNumber, true);
+				relation.updateRecordsCount(1);
 				updateRelationCatalog(relation);
 				return true;
+			}
+		}
+		return false;
+	}
+	
+	public boolean addPrimaryKey(String relationName, Vector<String> attrs){
+		long relationId = objectHolder.getRelationId(relationName);
+		if(relationId!=-1){
+			Relation relation = (Relation) objectHolder.getObject(relationId);
+			if(relation.getPrimaryKey().size()==0){
+				for (int i = 0; i < attrs.size(); i++) {
+					Attribute attribute = relation.getAttributeByName(attrs.get(i));
+					attribute.partPK(true);
+					updateAttributeCatalog(attribute);
+				}
+				Vector<Vector<String>> data = new Vector<Vector<String>>();
+				Vector<String> params = new Vector<String>();
+				params.add("true");
+				data.add(attrs);
+				data.add(params);
+				if(createIndex(relationName+"_pk",relationName, data)){
+					System.out.println("Contains duplicate data. Cannot create primary key!");
+					for (int i = 0; i < attrs.size(); i++) {
+						Attribute attribute = relation.getAttributeByName(attrs.get(i));
+						attribute.partPK(false);
+						updateAttributeCatalog(attribute);
+					}
+					return false;
+				}
+				relation.addPrimaryKey(attrs);				
+				return true;
+			}else{
+				return false;
 			}
 		}
 		return false;
@@ -362,7 +415,11 @@ public class SystemCatalogManager {
 	public void updateRelationCatalog(Relation relation) {
 		bufferManager.write(RELATION_CATALOG_ID, relation.getPageNumber(), relation.getRecordOffset(), relation.serialize());
 	}
-
+	
+	public void updateAttributeCatalog(Attribute attribute) {
+		bufferManager.write(ATTRIBUTE_CATALOG_ID, attribute.getPageNumber(), attribute.getRecordOffset(), attribute.serialize());
+	}
+	
 	public void updateIndexCatalog(Index index) {
 		bufferManager.write(INDEX_CATALOG_ID, index.getPageNumber(), index.getRecordOffset(), index.serialize());
 	}
