@@ -52,6 +52,8 @@ public class DatabaseManager {
 			if (query.replace(" ","").trim().equals("showtables")) {
 				System.out.println("List of Tables :- ");
 				systemCatalog.showTables();
+			}else {
+				System.out.println("wrong show table syntax");
 			}
 		}else if(splitCommand[0].equals("update")){
 			Operation operation = Operation.makeOperation(query.trim());
@@ -64,8 +66,10 @@ public class DatabaseManager {
 			if (systemCatalog.descOperation(query)) {
 					System.out.println();
 			} else {
-					System.out.println("wrong statement" + splitCommand[2].trim());
+					System.out.println("wrong desc syntax" + splitCommand[2].trim());
 			}
+		}else{
+			System.out.println("undefined Syntax\n");
 		}
 		
 	}

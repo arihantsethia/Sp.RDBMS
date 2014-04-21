@@ -121,10 +121,12 @@ public class QueryParser {
 					}
 				}
 			} else {
+				print_error( 6 , "") ;
 				return false;
 			}
 			return true;
 		}
+		print_error( 9 , "") ;
 		return false;
 	}
 
@@ -190,12 +192,14 @@ public class QueryParser {
 							    		Attribute.Type fieldType = newRelation.getAttributeType(columnPartSplit[i]);
 									  
 							    		if(!Utility.isSameType(fieldType,valuePartSplit[i])){
-									     	return false;
+							    			print_error(5,fieldType + " " + valuePartSplit[i]) ;
+							    			return false;
 									    }
 									    chk = false ;
 							    	}
 							    }
 							    if(chk){
+							    	print_error(8,columnPartSplit[i]) ;
 							    	return false ;
 							    }
 						    }
@@ -244,6 +248,7 @@ public class QueryParser {
 					return true;
 				}
 				else{
+					print_error(2,relationName) ;
 					return false;
 				}
 			}
@@ -303,15 +308,18 @@ public class QueryParser {
 						    	}
 						    }
 						    if(chk){
+						    	print_error(1,field) ;
 						    	return false ;
 						    }
 						    
 						}
 						else{
+							print_error(2,relationName) ;
 							return false ;
 						}
 					}
 					else{
+						print_error(3,key) ;
 						return false;
 					}
 				}
@@ -362,20 +370,24 @@ public class QueryParser {
 						    	}
 						    }
 						    if(chk){
+						    	print_error(1,field) ;
 						    	return false ;
 						    }
 						}
 						else{
+							print_error(3,relationName) ;
 							return false ;
 						}
 					}
 					else{
+						print_error(3,key) ;
 						return false;
 					}
 				}
 			}
     	}
     	else{
+    		print_error(7,"") ;
     		return false;
     	}
     	return true ;
@@ -427,14 +439,17 @@ public class QueryParser {
 						    	}
 						    }
 						    if(chk){
+						    	print_error(1,field) ;
 						    	return false ;
 						    }
 						}
 						else{
+							print_error(2,relationName) ;
 							return false ;
 						}
 					}
 					else{
+						print_error(3,key) ;
 						return false;
 					}
 				}
@@ -475,20 +490,24 @@ public class QueryParser {
 						    	}
 						    }
 						    if(chk){
+								print_error(1,field) ;
 						    	return false ;
 						    }
 						}
 						else{
+							print_error(2,relationName) ;
 							return false ;
 						}
 					}
 					else{
+						print_error(3,key) ;
 						return false;
 					}
 				}
 			}
 		}
 		else{
+			print_error(4,"") ;
 			return false;
 		}
     	return true ;
@@ -570,6 +589,7 @@ public class QueryParser {
 			    				return true;
 			    			}
 			    			else{
+			    				print_error(5,firstPart + " " + lastPart) ;
 			    				return false;
 			    			}
 			    		}
@@ -590,6 +610,7 @@ public class QueryParser {
 			    						return true ;
 			    					}
 			    					else{
+			    						print_error(5,firstPart + " " + lastPart) ;
 			    						return false;
 			    					}
 				    			}
@@ -598,6 +619,7 @@ public class QueryParser {
 				    					return true;
 				    				}
 				    				else{
+				    					print_error(5,firstPart + " " + lastPart) ;
 				    					return false;
 				    				}
 				    			}
@@ -620,6 +642,7 @@ public class QueryParser {
 				    					return true;
 				    				}
 				    				else{
+				    					print_error(5,firstPart + " " + lastPart) ;
 				    					return false;
 				    				}
 				    			}
@@ -628,6 +651,7 @@ public class QueryParser {
 				    					return true;
 				    				}
 				    				else{
+				    					print_error(5,firstPart + " " + lastPart) ;
 				    					return false;
 				    				}
 			    				}
@@ -638,6 +662,7 @@ public class QueryParser {
 			    }
 			}
 	    }
+	    print_error(6 ," ") ;
 	    return false ;
 	}
 
@@ -666,4 +691,22 @@ public class QueryParser {
 		int index = statement.indexOf(operator);
 		return statement.substring(index + operator.length()).trim();
 	}	
+	
+	public static void print_error(int i , String s)
+	{
+		String[] t  = s.split(" ") ;
+	    switch(i)
+	    {
+	            case 1 :    System.out.println( "Attribute " + s + "is not a valid attribute. \n" ) ; break ;
+	            case 2 :	 System.out.println( s + " is not a valid Relation Name. \n" ) ; break ;
+	            case 3 :	 System.out.println( s + " is not a valid Relation Instance. \n" ) ; break ;
+	            case 4 :	 System.out.println( " Not a valid select Syntax. \n" ) ; break ;
+	            case 5 :	 System.out.println( t[0] + " and " + t[1] + " are not of Same Type. \n" ) ; break ;
+	            case 6 :	 System.out.println( " ( or ) brackets expected. \n" ) ; break ;
+	            case 7 :	 System.out.println( " Not a valid update Syntax. \n" ) ; break ;
+	            case 8 :	 System.out.println( " Column"+ s +"does not exits. \n" ) ; break ;
+	            case 9 :	 System.out.println( " Keyword table does not exits. \n" ) ; break ;
+	            default:    System.out.println( "undefined, see error message ") ; break ;
+	    }
+	}
 }

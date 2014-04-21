@@ -13,6 +13,8 @@ import java.util.Set;
 import java.util.Vector;
 import java.nio.ByteBuffer;
 
+import queriesManager.QueryParser;
+
 /**
  * @param ATTRIBUTE_CATALOG
  *            string containing value "attribute_catalog.cat" RELATION_CATALOG
@@ -396,14 +398,16 @@ public class SystemCatalogManager {
 				if(relationId != -1){
 					Relation relation = (Relation) ObjectHolder.getObjectHolder().getObject(relationId) ;
 					for(int i=0 ; i < relation.getAttributesCount() ; i++){
-						System.out.print("|  " + relation.getAttributes().get(i).getName() + "  |" ) ;
-						System.out.println("|  " + Attribute.Type.toString(relation.getAttributes().get(i).getType()) + "  |" ) ;
-						
+						System.out.printf( "%-12s | ", relation.getAttributes().get(i).getName()) ;
+						System.out.printf( "%-12s | \n", Attribute.Type.toString(relation.getAttributes().get(i).getType()) ) ;
 					}
 					return true ;
 				}
+			}else{
+				QueryParser.print_error(2,statement) ;
 			}	
 		}
+		QueryParser.print_error(9,"") ;
 		return false;
 		
 	}
