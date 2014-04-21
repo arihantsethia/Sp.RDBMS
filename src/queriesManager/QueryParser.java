@@ -161,42 +161,46 @@ public class QueryParser {
 		int intoIndex = statement.trim().indexOf("into");
 		int valueIndex = statement.trim().indexOf("values");
 		
-		String relationName = statement.substring(intoIndex + 4,statement.trim().indexOf("(")).trim();
+		String relationName = statement.substring(intoIndex + 4,statement.indexOf("(")).trim();
 		long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
 		
-		if(newRelationId != -1){
-			String columnPart = "";
-			columnPart = statement.substring(statement.indexOf("("),valueIndex).trim();
-			columnPart = columnPart.replace(")"," ").trim();
-			String [] columnPartSplit = columnPart.split(",");
-			
-			if(valueIndex != -1){
-				String valuePart = "";
-				valuePart = statement.substring(valueIndex + 5).trim();
-				valuePart = statement.replace("("," ").replace(")"," ").trim();
-				String [] valuePartSplit = valuePart.split(",");
+		if(insertIndex == 0 && intoIndex != -1){
+			if(newRelationId != -1){
+				String columnPart = "";
+				columnPart = statement.substring(statement.indexOf("("),valueIndex).trim();
+				columnPart = columnPart.replace(")"," ").trim();
+				String [] columnPartSplit = columnPart.split(",");
 				
-				if(columnPartSplit.length == valuePartSplit.length){
-					Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
-				    Vector<Attribute> attributes = newRelation.getAttributes();
-				    boolean chk = true ;
-				    for(int k = 0 ; k < attributes.size() ; k++ ){
-				    	
-				    	if(attributes.get(k).getName().equals(columnPartSplit[k])){
-				    		Attribute.Type fieldType = newRelation.getAttributeType(columnPartSplit[k]);
-						  
-				    		if(!Utility.isSameType(fieldType,valuePartSplit[k])){
-						     	return false;
+				if(valueIndex != -1){
+					String valuePart = "";
+					valuePart = statement.substring(valueIndex + 5).trim();
+					valuePart = statement.replace("("," ").replace(")"," ").trim();
+					String [] valuePartSplit = valuePart.split(",");
+					
+					if(columnPartSplit.length == valuePartSplit.length){
+						Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
+					    Vector<Attribute> attributes = newRelation.getAttributes();
+						    for(int i=0;i<columnPartSplit.length;i++){
+						    	boolean chk = true ;
+							    for(int k = 0 ; k < attributes.size() ; k++ ){
+							    	if(attributes.get(k).getName().equals(columnPartSplit[i])){
+							    		Attribute.Type fieldType = newRelation.getAttributeType(columnPartSplit[i]);
+									  
+							    		if(!Utility.isSameType(fieldType,valuePartSplit[i])){
+									     	return false;
+									    }
+									    chk = false ;
+							    	}
+							    }
+							    if(chk){
+							    	return false ;
+							    }
 						    }
-						    chk = false ;
-				    	}
-				    }
-				    if(chk){
-				    	return false ;
-				    }
+					}
 				}
 			}
 		}
+		
 		return true;
 	}
 	

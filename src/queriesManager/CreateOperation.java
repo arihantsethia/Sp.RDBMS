@@ -83,6 +83,44 @@ public class CreateOperation extends Operation {
 		return true;
 	}
 
+	private boolean parsePrimaryKeyQuery(String statement){
+		int createIndex = statement.trim().indexOf("create");
+		int primarykeyIndex = statement.trim().indexOf("primarykey");
+		int onIndex = statement.trim().indexOf("on");
+		int tableIndex = statement.trim().indexOf("table");
+		
+		if(createIndex == 0 && primarykeyIndex != -1 && onIndex != -1 && tableIndex != -1){
+			if(primarykeyIndex <= onIndex && onIndex <= tableIndex){
+				String relationName = statement.substring(tableIndex + 5,statement.indexOf("(")).trim();
+				long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
+				
+				if(newRelationId != -1){
+					String primarykeyPart = "";
+					primarykeyPart = statement.substring(statement.indexOf("(") + 1,statement.indexOf(")")).trim();
+					
+					if(primarykeyPart.length() != 0){
+						String [] primarykeyPartSplit = primarykeyPart.split(",");
+						Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
+					    Vector<Attribute> attributes = newRelation.getAttributes();
+					    
+					    for(int i=0;i<primarykeyPartSplit.length;i++){
+					    	boolean chk = true ;
+						    for(int k = 0 ; k < attributes.size() ; k++ ){
+						    	if(attributes.get(k).getName().equals(primarykeyPartSplit[i])){
+						    		chk = false ;
+						    	}
+						    }
+						    if(chk){
+						    	return false ;
+						    }
+					    }
+					}
+				}
+			}
+		}
+		return true;
+	}
+	
 	private boolean parseCreateIndexQuery(String statement) {
 		statement = statement.substring(statement.toUpperCase().indexOf("INDEX") + 5).trim();
 		Vector<String> parsedToken;
