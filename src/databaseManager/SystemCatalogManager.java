@@ -34,9 +34,9 @@ public class SystemCatalogManager {
 	public static final long RELATION_CATALOG_ID = 0;
 	public static final int ATTRIBUTE_RECORD_SIZE = 143;
 	public static final long ATTRIBUTE_CATALOG_ID = 1;
-	public static final int INDEX_RECORD_SIZE = 192;
+	public static final int INDEX_RECORD_SIZE = 196;
 	public static final long INDEX_CATALOG_ID = 2;
-	public static final int INDEX_ATTRIBUTE_RECORD_SIZE = 142;
+	public static final int INDEX_ATTRIBUTE_RECORD_SIZE = 143;
 	public static final long INDEX_ATTRIBUTE_CATALOG_ID = 3;
 
 	private BufferManager bufferManager;
@@ -206,23 +206,26 @@ public class SystemCatalogManager {
 					System.out.println("Table already contains " + attributeName + "! Duplicate entries not allowed.");
 					return false;
 				}
-				if(newAttribute.isDistinct()){
-					Vector<Vector<String>> data = new Vector<Vector<String>>();
-					Vector<String> params = new Vector<String>();
-					params.add(attributeName);
-					data.add(params);
-					params =new Vector<String>();
-					params.add("true");
-					data.add(params);
-					createIndex(attributeName+"_uk",relationName, data);
-				}
 			}
 			for (int i = 0; i < newRelation.getAttributesCount(); i++) {
 				newRelation.getAttributes().get(i).setId(totalAttributesCount);
 				addAttributeToCatalog(newRelation.getAttributes().get(i));
 			}
-			objectHolder.addObject(newRelation);
+			objectHolder.addObject(newRelation);			
 			addRelationToCatalog(newRelation);
+			for (int i = 0; i < newRelation.getAttributesCount(); i++) {
+				Attribute newAttribute = newRelation.getAttributes().get(i);
+				if(newAttribute.isDistinct()){
+					Vector<Vector<String>> data = new Vector<Vector<String>>();
+					Vector<String> params = new Vector<String>();
+					params.add(newAttribute.getName());
+					data.add(params);
+					params =new Vector<String>();
+					params.add("true");
+					data.add(params);
+					createIndex(newAttribute.getName()+"_uk",relationName, data);
+				}
+			}
 			System.out.println("Table " + relationName + " successfully created!");
 			return true;
 		}
@@ -239,7 +242,8 @@ public class SystemCatalogManager {
 				for (int i = 0; i < parsedData.get(0).size(); i++) {
 					Attribute attribute = relation.getAttributeByName(parsedData.get(0).get(i));
 					if (attribute != null) {
-						attributes.add(relation.getAttributeByName(parsedData.get(0).get(i)));
+						attribute = new Attribute(relation.getAttributeByName(parsedData.get(0).get(i)).serialize());
+						attributes.add(attribute);
 					} else {
 						System.out.println("Attribute : " + parsedData.get(0).get(i) + " doesn't exists!");
 						return false;
@@ -247,15 +251,16 @@ public class SystemCatalogManager {
 
 				}
 				boolean distinct = Boolean.valueOf(parsedData.get(1).get(0));
-				Index index = new Index(indexName, totalObjectsCount, relationId, distinct, attributes);
+				Index index = new Index(indexName, totalObjectsCount+1, relationId, distinct, attributes);
 				for (int i = 0; i < attributes.size(); i++) {
-					attributes.get(i).setParentId(totalObjectsCount);
+					attributes.get(i).setParentId(totalObjectsCount+1);
 					attributes.get(i).setId(totalIndexAttributesCount);
 					addIndexAttributeToCatalog(attributes.get(i));
 				}
 				objectHolder.addObject(index);
 				index.setTree();
 				objectHolder.addObjectToRelation(index, false);
+				updateRelationCatalog(relation);
 				addIndexToCatalog(index);
 				System.out.println("Index : " + indexName + " created successfully!");
 				// Add all records to index

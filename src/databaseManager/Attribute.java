@@ -270,6 +270,7 @@ public class Attribute {
 		serializedBuffer.put((byte) (nullable ? 1 : 0));
 		serializedBuffer.put((byte) (distinctEntries ? 1 : 0));
 		serializedBuffer.put((byte) (isPartPK ? 1 : 0));
+		serializedBuffer.position(0);
 		return serializedBuffer;
 	}
 

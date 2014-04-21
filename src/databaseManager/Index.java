@@ -12,7 +12,7 @@ public class Index {
 	private int nKeys;
 	private String indexName;
 	private String fileName;
-	private boolean duplicates;
+	private boolean unique;
 	private long id;
 	private long parentId;
 	private PhysicalAddress rootPage;
@@ -30,12 +30,12 @@ public class Index {
 	private DynamicObject dObject;
 	private BPlusTree bTree;
 
-	public Index(String _indexName, long _id, long _parentId, boolean _duplicates, Vector<Attribute> _attributes) {
+	public Index(String _indexName, long _id, long _parentId, boolean _unique, Vector<Attribute> _attributes) {
 		indexName = _indexName;
 		fileName = _indexName + _id + ".index";
 		id = _id;
 		parentId = _parentId;
-		duplicates = _duplicates;
+		unique = _unique;
 		creationDate = (new Date()).getTime();
 		lastModified = (new Date()).getTime();
 		pageCount = 1;
@@ -81,6 +81,7 @@ public class Index {
 		recordsCount = serializedBuffer.getLong();
 		creationDate = serializedBuffer.getLong();
 		lastModified = serializedBuffer.getLong();
+		unique = serializedBuffer.getInt()==1;
 		fileName = indexName + id + ".index";
 		attributes = new Vector<Attribute>();
 	}
@@ -152,6 +153,7 @@ public class Index {
 		serializedBuffer.putLong(recordsCount);
 		serializedBuffer.putLong(creationDate);
 		serializedBuffer.putLong(lastModified);
+		serializedBuffer.putInt(unique?1:0);
 		return serializedBuffer;
 	}
 
@@ -170,7 +172,7 @@ public class Index {
 	}
 
 	public boolean containsDuplicates() {
-		return duplicates;
+		return !unique;
 	}
 
 	public void setAddress(long pageNumber, int _recordOffset) {
@@ -217,8 +219,7 @@ public class Index {
 
 	public boolean insert(DynamicObject object, PhysicalAddress value, int recordOffset) {
 		if (dObject != null) {
-			bTree.insert(object, value, recordOffset);
-			return true;
+			return bTree.insert(object, value, recordOffset);
 		}
 		return false;
 	}

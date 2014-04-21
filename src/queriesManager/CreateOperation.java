@@ -66,9 +66,10 @@ public class CreateOperation extends Operation {
 				Boolean[] properties = new Boolean[2];
 				Arrays.fill(properties, Boolean.FALSE);
 				while (attributeTokens.hasMoreTokens()) {
-					if (attributeTokens.nextToken().equals("notnull") && !properties[0]) {
+					String token = attributeTokens.nextToken();
+					if (token.equals("notnull") && !properties[0]) {
 						properties[0] = true;
-					} else if (attributeTokens.nextToken().equals("notnull") && !properties[1]) {
+					} else if (token.equals("unique") && !properties[1]) {
 						properties[1] = true;
 					} else {
 						System.out.println("Improper Syntax!");
@@ -76,7 +77,7 @@ public class CreateOperation extends Operation {
 					}
 				}
 				parsedToken.add(properties[0].toString());
-				parsedToken.add(properties[0].toString());
+				parsedToken.add(properties[1].toString());
 			} else {
 				System.out.println("Only 4 properties per attribute i.e name , type , null/not_null , unique are allowed");
 				return false;

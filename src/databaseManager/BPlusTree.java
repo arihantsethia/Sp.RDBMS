@@ -102,8 +102,12 @@ public class BPlusTree {
 		return returnData;
 	}
 
-	public void insert(DynamicObject key, PhysicalAddress value, int recordOffset) {
+	public boolean insert(DynamicObject key, PhysicalAddress value, int recordOffset) {
 		Split result = insert(rootAddress, rootOffset, key, value, recordOffset);
+		
+		if(result.error==1){
+			return false;
+		}
 		if (result.hasSplit) {
 			// The old root was splitted in two parts.
 			// We have to create a new root pointing to them
@@ -117,6 +121,7 @@ public class BPlusTree {
 			_root.offset[0] = rootOffset;
 			updateIndexHead(_root);
 		}
+		return true;
 	}
 
 	private void updateIndexHead(Node _root) {
