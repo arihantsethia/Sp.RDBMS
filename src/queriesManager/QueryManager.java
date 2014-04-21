@@ -12,8 +12,9 @@ public class QueryManager {
 	input = "";
 	databaseManager = new DatabaseManager();
 	inputScanner = new Scanner(System.in).useDelimiter(";");
-
+	System.out.println(" \t\t\t** Welcome to Sp.Sql ** ") ;
 	while (!input.toLowerCase().trim().equals("exit")) {
+		System.out.print("Sp.Sql-> ") ;
 	    input = inputScanner.next().toLowerCase().trim();
 	    if (!input.equals("exit")) {
 		databaseManager.parseCommand(input);
@@ -21,6 +22,7 @@ public class QueryManager {
 		databaseManager.close();
 		System.exit(1);
 	    }
+	    System.out.println() ;
 	}
     }
 }

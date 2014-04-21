@@ -41,11 +41,13 @@ public class DatabaseManager {
 				operation.executeOperation();
 			}
 		} else if (splitCommand[0].equals("insert")) {
-			if (splitCommand[1].equals("into")) {
-				if (systemCatalog.insertRecord(query) == true) {
-					System.out.println(" Successfully inserted into Table :" + splitCommand[2].trim());
+			if(QueryParser.isInsertStatementQuery(query)){
+				if (splitCommand[1].equals("into")) {
+					if (systemCatalog.insertRecord(query) == true) {
+						System.out.println(" Successfully inserted into Table :" + splitCommand[2].trim());
 				} else {
-					System.out.println("Can not insert Table :" + splitCommand[2].trim());
+						System.out.println("Can not insert Table :" + splitCommand[2].trim());
+					}
 				}
 			}
 		} else if (splitCommand[0].equals("show")) {
