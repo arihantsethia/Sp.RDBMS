@@ -73,6 +73,7 @@ public class Attribute {
 	private int position;
 	private boolean nullable;
 	private boolean distinctEntries;
+	private boolean isPartPK;
 	private long pageNumber;
 	private int recordOffset;
 
@@ -98,6 +99,7 @@ public class Attribute {
 		size = getSize();
 		position = -1;
 		distinctEntries = false;
+		isPartPK = false;
 	}
 
 	/**
@@ -125,6 +127,7 @@ public class Attribute {
 		position = -1;
 		nullable = true;
 		distinctEntries = false;
+		isPartPK = false;
 	}
 
 	/**
@@ -154,6 +157,7 @@ public class Attribute {
 		size = _size;
 		position = -1;
 		distinctEntries = _distinct;
+		isPartPK = false;
 	}
 
 	/**
@@ -180,6 +184,7 @@ public class Attribute {
 		type = Type.toType(serializedBuffer.getInt());
 		nullable = serializedBuffer.get() != 0;
 		distinctEntries = serializedBuffer.get() != 0;
+		isPartPK = serializedBuffer.get() != 0;
 	}
 
 	/**
@@ -231,6 +236,14 @@ public class Attribute {
 	public String toString() {
 		return attributeName;
 	}
+	
+	public void partPK(boolean val) {
+		isPartPK = val;
+	}
+	
+	public boolean isPartPK() {
+		return isPartPK;
+	}
 
 	/**
 	 * This function serializes the attribute object.
@@ -256,6 +269,7 @@ public class Attribute {
 		serializedBuffer.putInt(Type.toInt(type));
 		serializedBuffer.put((byte) (nullable ? 1 : 0));
 		serializedBuffer.put((byte) (distinctEntries ? 1 : 0));
+		serializedBuffer.put((byte) (isPartPK ? 1 : 0));
 		return serializedBuffer;
 	}
 
@@ -328,5 +342,9 @@ public class Attribute {
 	
 	public int getRecordOffset(){
 		return recordOffset;
+	}
+
+	public boolean isDistinct() {
+		return distinctEntries;
 	}
 }

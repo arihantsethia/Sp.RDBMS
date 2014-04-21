@@ -18,6 +18,7 @@ public class Relation {
 	private Vector<Attribute> attributes;
 	private Map<String, Integer> attributesNames;
 	private Set<Long> indices;
+	private Vector<Attribute> primaryKey;
 	private Map< Long, Vector<Long> > indexed;
 	private long id;
 	private long pageCount;
@@ -36,6 +37,7 @@ public class Relation {
 		attributesNames = new HashMap<String, Integer>();
 		indices = new HashSet<Long>();
 		indexed = new HashMap<Long,Vector<Long>>();
+		primaryKey = new Vector<Attribute> ();
 		creationDate = (new Date()).getTime();
 		lastModified = (new Date()).getTime();
 		pageCount = 1;
@@ -65,6 +67,7 @@ public class Relation {
 		attributesNames = new HashMap<String, Integer>();
 		indices = new HashSet<Long>();
 		indexed = new HashMap<Long,Vector<Long>>();
+		primaryKey = new Vector<Attribute> ();
 	}
 
 	public boolean addAttribute(String attributeName, Attribute.Type type, long _id) {
@@ -98,8 +101,10 @@ public class Relation {
 			}
 			attributes.add(attribute.getPosition(), attribute);
 			attributesNames.put(attribute.getName(), attribute.getPosition());
+			if(attribute.isPartPK()){
+				primaryKey.add(attribute);
+			}
 			if (addToSize) {
-
 				recordSize = recordSize + attribute.getAttributeSize();
 			}
 			return true;
@@ -261,5 +266,20 @@ public class Relation {
 			entry.getValue().remove(indexId);
 		}
 	}
-
+	
+	public void addToPrimaryKey(Attribute attr, boolean ordered){
+		primaryKey.add(attr);
+	}
+	
+	public Vector<Attribute> getPrimaryKey(){
+		return primaryKey;
+	}
+	
+	public void addPrimaryKey(Vector<String> attrs){
+		for(int i=0;i<attributes.size();i++){
+			if(attrs.contains(attributes.get(i).getName())){
+				primaryKey.add(attributes.get(i));
+			}
+		}		
+	}
 }
