@@ -35,7 +35,13 @@ public class DatabaseManager {
 		} else if (splitCommand[0].equals("drop")) {
 			Operation operation = Operation.makeOperation(query.trim());
 			operation.executeOperation();
-		} else if (splitCommand[0].equals("select")) {
+		} else if(query.contains("equi")){
+			Operation operation = Operation.makeOperation(query.trim());
+			operation.executeOperation();
+		} else if(query.contains("join")){
+			Operation operation = Operation.makeOperation(query.trim());
+			operation.executeOperation();
+		}else if (splitCommand[0].equals("select")) {
 			if(QueryParser.isSelectStatementQuery(query)){
 				Operation operation = Operation.makeOperation(query.trim());
 				operation.executeOperation();

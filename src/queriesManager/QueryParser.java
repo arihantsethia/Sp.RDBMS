@@ -15,10 +15,12 @@ public class QueryParser {
 	public static TreeMap<String, String> tableMap;
 
 	public static enum OperationType {
-		JOIN, SELECT, UPDATE, CREATE, DROP, DELETE;
+		NATURALJOIN , CONDJOIN , EQUIJOIN, SELECT, UPDATE, CREATE, DROP, DELETE;
 		public static String toString(OperationType opType) {
-			if (opType == QueryParser.OperationType.JOIN) {
-				return "JOIN";
+			if (opType == QueryParser.OperationType.NATURALJOIN) {
+				return "NATURALJOIN";
+			}else if (opType == QueryParser.OperationType.EQUIJOIN) {
+				return "EQUIJOIN";
 			} else if (opType == QueryParser.OperationType.SELECT) {
 				return "SELECT";
 			} else if (opType == QueryParser.OperationType.UPDATE) {
@@ -123,7 +125,7 @@ public class QueryParser {
 		if (insertIndex == 0 && intoIndex != -1) {
 			if (newRelationId != -1) {
 				String columnPart = "";
-				columnPart = statement.substring(statement.indexOf("("), valueIndex).trim();
+				columnPart = statement.substring(statement.indexOf("(")+1, valueIndex).trim();
 				columnPart = columnPart.replace(")", " ").trim();
 				String[] columnPartSplit = columnPart.split(",");
 
@@ -150,6 +152,7 @@ public class QueryParser {
 								}
 							}
 							if (chk) {
+								System.out.println(columnPartSplit[i]) ;
 								print_error(8, columnPartSplit[i]);
 								return false;
 							}
@@ -420,6 +423,10 @@ public class QueryParser {
 				tableMap.clear();
 
 				for (int i = 0; i < fromPartSplit.length; i++) {
+					if (!fromPartSplit[i].contains("as")) {
+						print_error(10, "");
+						return false;
+					}
 					tableMap.put(Utility.getNickName(fromPartSplit[i]), Utility.getRelationName(fromPartSplit[i]));
 				}
 
@@ -486,6 +493,7 @@ public class QueryParser {
 					break;
 				}
 			}
+			
 			if (condition.substring(i + 1, i + 1 + condition.substring(i + 1).indexOf('(')).trim().toUpperCase().equals("AND")) {
 				return ConditionType.AND;
 			} else {
@@ -677,5 +685,16 @@ public class QueryParser {
 			System.out.println("undefined, see error message ");
 			break;
 		}
+	}
+	
+	static Vector<String> getJoinTableList(String statement,String JoinName) {
+		Vector<String> result;
+		statement = statement.replace("join","").trim();
+		String[] tableList = statement.split(JoinName) ;
+		result = new Vector<String>(tableList.length);
+		for (int i = 0; i < tableList.length; i++) {
+			result.add(i, tableList[i].trim());
+		}
+		return result;
 	}
 }

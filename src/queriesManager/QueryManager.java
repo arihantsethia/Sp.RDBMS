@@ -15,7 +15,7 @@ public class QueryManager {
 	System.out.println(" \t\t\t** Welcome to Sp.Sql ** ") ;
 	while (!input.toLowerCase().trim().equals("exit")) {
 		System.out.print("Sp.Sql-> ") ;
-	    input = inputScanner.next().toLowerCase().trim();
+	    input = inputScanner.next().trim();
 	    if (!input.equals("exit")) {
 		databaseManager.parseCommand(input);
 	    } else {

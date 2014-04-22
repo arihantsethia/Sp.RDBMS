@@ -14,29 +14,31 @@ public class SelectOperation extends Operation {
 	protected Projection projection;
 	protected int tableCount;
 	protected Vector<String> tableList;
-	protected Vector<Integer> recordCountList;
-	protected Vector<Integer> recordCounterList;
+	protected Vector<Long> recordCountList;
+	protected Vector<Long> recordCounterList;
 	protected Vector<Iterator> iteratorList;
 	protected Vector<DynamicObject> recordObjects;
 	protected Relation relation;
-	protected long relationId	;
-	protected String projectionPart ;
+	protected long relationId;
+	protected String projectionPart;
+	
+	int p = 0;
 
 	public SelectOperation(String statement) {
 		setType(QueryParser.OperationType.SELECT);
 		Vector<String> stmtParts = QueryParser.statementParts(statement, "select");
-		projectionPart = stmtParts.elementAt(0) ;
+		projectionPart = stmtParts.elementAt(0);
 		tableList = QueryParser.getSelectTableList(stmtParts.elementAt(1));
 		tableCount = tableList.size();
-		
+
 		if (stmtParts.size() == 3) {
 			setCondition(Condition.makeCondition(stmtParts.elementAt(2)));
 		} else {
 			setCondition(null);
 		}
-		projection = new Projection() ;
-		recordCountList = new Vector<Integer>();
-		recordCounterList = new Vector<Integer>();
+		projection = new Projection();
+		recordCountList = new Vector<Long>();
+		recordCounterList = new Vector<Long>();
 		iteratorList = new Vector<Iterator>();
 		recordObjects = new Vector<DynamicObject>();
 	}
@@ -46,16 +48,15 @@ public class SelectOperation extends Operation {
 		for (int i = 0; i < tableList.size(); i++) {
 			relationId = ObjectHolder.getObjectHolder().getRelationId(Utility.getRelationName(tableList.elementAt(i)));
 			relation = (Relation) ObjectHolder.getObjectHolder().getObject(relationId);
-			recordCountList.addElement((int) relation.getRecordsCount());
-			recordCounterList.addElement(1);
+			recordCountList.addElement(relation.getRecordsCount());
+			recordCounterList.addElement((long)1);
 			count = count * recordCountList.get(i);
 			iteratorList.addElement(new Iterator(relation));
 			recordObjects.addElement(new DynamicObject(relation.getAttributes()));
 		}
 		if (count != 0) {
-			projection.printTableAttributes(projectionPart,tableList,recordObjects) ;
-			for (int i = 0; i < tableList.size(); i++) {		
-				
+			projection.printTableAttributes(projectionPart, tableList, recordObjects);
+			for (int i = 0; i < tableList.size(); i++) {
 				if (iteratorList.get(i).hasNext()) {
 					ByteBuffer a = iteratorList.get(i).getNext();
 					if (a != null) {
@@ -66,14 +67,14 @@ public class SelectOperation extends Operation {
 				}
 			}
 			if (condition == null || condition.compare(recordObjects, tableList)) {
-				projection.printRecords(projectionPart ,tableList ,recordObjects) ;
+				projection.printRecords(projectionPart, tableList, recordObjects);
 			}
 			count--;
 		}
 		while (count > 0) {
 			incrementCounter();
 			if (condition == null || condition.compare(recordObjects, tableList)) {
-				projection.printRecords(projectionPart ,tableList ,recordObjects) ;
+				projection.printRecords(projectionPart, tableList, recordObjects);
 			}
 			count--;
 		}
@@ -83,7 +84,7 @@ public class SelectOperation extends Operation {
 	void incrementCounter() {
 		int i = tableList.size() - 1;
 		ByteBuffer buffer = null;
-		while ((i >= 0) && (recordCounterList.get(i) == recordCountList.get(i))) {
+		while ((i >= 0) && (recordCounterList.get(i).equals(recordCountList.get(i)))) {
 			iteratorList.get(i).initialize();
 			while (iteratorList.get(i).hasNext()) {
 				buffer = iteratorList.get(i).getNext();
@@ -92,7 +93,7 @@ public class SelectOperation extends Operation {
 				}
 			}
 			recordObjects.set(i, recordObjects.get(i).deserialize(buffer.array()));
-			recordCounterList.set(i, 1);
+			recordCounterList.set(i, (long)1);
 			i--;
 		}
 		if (i >= 0) {
@@ -106,6 +107,5 @@ public class SelectOperation extends Operation {
 			recordCounterList.set(i, recordCounterList.get(i) + 1);
 		}
 	}
-
 
 }
