@@ -485,6 +485,9 @@ public class SystemCatalogManager {
 						}
 					}
 					return true ;
+				}else{
+					QueryParser.print_error(2,relationName) ;
+					return false ;
 				}
 			}else{
 				QueryParser.print_error(2,statement) ;

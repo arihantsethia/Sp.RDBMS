@@ -89,18 +89,24 @@ public class DynamicObject implements Comparable<Object> {
 		}
 	}
 
-	public String printRecords() {
-		String result="";
+	public void printRecords() {	
 		for (int i = 0; i < attributes.size(); i++) {
 			if (attributes.get(i).getType() == Attribute.Type.Char) {
-				//result = (String) obj[i] + " | " + result;
 				System.out.printf("%-" + ( attributes.get(i).getAttributeSize() + 1 )/ 2 +"s | ", (String) obj[i] ) ;
-			} else {
-				//result = ((Integer) obj[i]).toString() + " | " + result;
+			}else if (attributes.get(i).getType() == Attribute.Type.Int) {
 				System.out.printf("%-10s | ", ((Integer) obj[i]).toString()) ;
 			}
 		}
-		return result;
+	}
+	
+	public void printRecords(String s) {	
+		for (int i = 0; i < attributes.size(); i++) {
+			if (attributes.get(i).getType() == Attribute.Type.Char && attributes.get(i).getName().equals(s)) {
+				System.out.printf("%-" + ( attributes.get(i).getAttributeSize() + 1 )/ 2 +"s | ", (String) obj[i] ) ;
+			} else if (attributes.get(i).getType() == Attribute.Type.Int && attributes.get(i).getName().equals(s)) {
+				System.out.printf("%-10s | ", ((Integer) obj[i]).toString()) ;
+			}
+		}
 	}
 
 	@Override

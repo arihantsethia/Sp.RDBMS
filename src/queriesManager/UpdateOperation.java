@@ -82,10 +82,7 @@ public class UpdateOperation extends Operation {
 	}
 
 	void print() {
-		String s = "";
-		String y = recordObjects.get(0).printRecords();
-		s = y + " === " + s;
-		System.out.println(s);
+		recordObjects.get(0).printRecords();
 	}
 
 	void setValue(String statement, DynamicObject dObject) {

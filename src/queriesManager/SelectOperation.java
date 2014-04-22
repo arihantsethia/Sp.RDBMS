@@ -19,14 +19,16 @@ public class SelectOperation extends Operation {
 	protected Vector<Iterator> iteratorList;
 	protected Vector<DynamicObject> recordObjects;
 	protected Relation relation;
-	protected long relationId;
+	protected long relationId	;
+	protected String projectionPart ;
 
 	public SelectOperation(String statement) {
 		setType(QueryParser.OperationType.SELECT);
-		Vector<String> stmtParts = QueryParser.statementParts(statement, "SELECT");
+		Vector<String> stmtParts = QueryParser.statementParts(statement, "select");
+		projectionPart = stmtParts.elementAt(0) ;
 		tableList = QueryParser.getSelectTableList(stmtParts.elementAt(1));
 		tableCount = tableList.size();
-
+		
 		if (stmtParts.size() == 3) {
 			setCondition(Condition.makeCondition(stmtParts.elementAt(2)));
 		} else {
@@ -51,10 +53,8 @@ public class SelectOperation extends Operation {
 			recordObjects.addElement(new DynamicObject(relation.getAttributes()));
 		}
 		if (count != 0) {
-			int length = 0;
-			for (int i = 0; i < tableList.size(); i++) {
-
-				projection.printAllTableAttributes(tableList) ;
+			projection.printTableAttributes(projectionPart,tableList,recordObjects) ;
+			for (int i = 0; i < tableList.size(); i++) {		
 				
 				if (iteratorList.get(i).hasNext()) {
 					ByteBuffer a = iteratorList.get(i).getNext();
@@ -66,14 +66,14 @@ public class SelectOperation extends Operation {
 				}
 			}
 			if (condition == null || condition.compare(recordObjects, tableList)) {
-				print();
+				projection.printRecords(projectionPart ,tableList ,recordObjects) ;
 			}
 			count--;
 		}
 		while (count > 0) {
 			incrementCounter();
 			if (condition == null || condition.compare(recordObjects, tableList)) {
-				print();
+				projection.printRecords(projectionPart ,tableList ,recordObjects) ;
 			}
 			count--;
 		}
@@ -107,12 +107,5 @@ public class SelectOperation extends Operation {
 		}
 	}
 
-	void print() {
-		String s = "";
-		for (int i = 0; i < tableList.size(); i++) {
-			String y = recordObjects.get(i).printRecords();
-		}
-		System.out.println(s);
-	}
 
 }

@@ -13,16 +13,16 @@ public class DropOperation extends Operation {
 
 	DropOperation(String statement) {
 		setType(QueryParser.OperationType.DROP);
-		statement = statement.substring(statement.toUpperCase().indexOf("DROP") + 4).trim();
-		if (statement.toUpperCase().indexOf("TABLE") == 0) {
+		statement = statement.substring(statement.indexOf("drop") + 4).trim();
+		if (statement.indexOf("table") == 0) {
 			queryType = parseDropTableQuery(statement) ? 0 : -1;
-		} else if (statement.toUpperCase().indexOf("INDEX") == 0) {
+		} else if (statement.indexOf("index") == 0) {
 			queryType = parseDropIndexQuery(statement) ? 1 : -1;
 		}
 	}
 
 	private boolean parseDropIndexQuery(String statement) {
-		statement = statement.substring(statement.toUpperCase().indexOf("TABLE") + 5).trim();
+		statement = statement.substring(statement.indexOf("table") + 5).trim();
 		relationName = statement.substring(0, statement.indexOf(" ")).trim();
 		if (relationName.contentEquals(statement)) {
 			return true;
@@ -32,7 +32,7 @@ public class DropOperation extends Operation {
 	}
 
 	private boolean parseDropTableQuery(String statement) {
-		statement = statement.substring(statement.toUpperCase().indexOf("INDEX") + 5).trim();
+		statement = statement.substring(statement.indexOf("index") + 5).trim();
 		StringTokenizer tokens = new StringTokenizer(statement, " ");
 		if (tokens.countTokens() == 4) {
 			indexName = tokens.nextToken().trim();

@@ -81,7 +81,7 @@ public class DeleteOperation extends Operation {
 
 	void print() {
 		for (int i = 0; i < tableList.size(); i++) {
-			String y = recordObjects.get(i).printRecords();
+			recordObjects.get(i).printRecords();
 		}
 	}
 }
