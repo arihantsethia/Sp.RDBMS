@@ -314,7 +314,7 @@ public class BufferManager {
 		long page = pageNumber / (DiskSpaceManager.PAGE_SIZE * Byte.SIZE);
 		int pageMod = (int) (pageNumber % (DiskSpaceManager.PAGE_SIZE * Byte.SIZE));
 		PhysicalAddress physicalAddress = getPhysicalAddress(objectId, page);
-		if (lookUpMap.containsKey(physicalAddress)) {
+		if (!lookUpMap.containsKey(physicalAddress)) {
 			read(objectId, page);
 		}
 		isDirty[lookUpMap.get(physicalAddress).intValue()] = true;
@@ -331,7 +331,7 @@ public class BufferManager {
 
 	public boolean writeRecordBitmap(long objectId, long page, int recordsPerPage, int recordNumber, boolean setValue) {
 		PhysicalAddress physicalAddress = getPhysicalAddress(objectId, page);
-		if (lookUpMap.containsKey(physicalAddress)) {
+		if (!lookUpMap.containsKey(physicalAddress)) {
 			read(objectId, page);
 		}
 		isDirty[lookUpMap.get(physicalAddress).intValue()] = true;
