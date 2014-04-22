@@ -47,7 +47,7 @@ public class Index {
 		}
 		nKeys = 64;
 		while (nKeys > 0) {
-			if ((DiskSpaceManager.PAGE_SIZE * 8 - 7) / (1 + 8 * (nKeys * (20 + keySize) + 25)) >= 1 ) {
+			if ((DiskSpaceManager.PAGE_SIZE * 8 - 7) / (1 + 8 * (nKeys * (20 + keySize) + 25)) >= 1) {
 				break;
 			} else {
 				nKeys--;
@@ -81,7 +81,7 @@ public class Index {
 		recordsCount = serializedBuffer.getLong();
 		creationDate = serializedBuffer.getLong();
 		lastModified = serializedBuffer.getLong();
-		unique = serializedBuffer.getInt()==1;
+		unique = serializedBuffer.getInt() == 1;
 		fileName = indexName + id + ".index";
 		attributes = new Vector<Attribute>();
 	}
@@ -153,7 +153,7 @@ public class Index {
 		serializedBuffer.putLong(recordsCount);
 		serializedBuffer.putLong(creationDate);
 		serializedBuffer.putLong(lastModified);
-		serializedBuffer.putInt(unique?1:0);
+		serializedBuffer.putInt(unique ? 1 : 0);
 		return serializedBuffer;
 	}
 
@@ -222,5 +222,13 @@ public class Index {
 			return bTree.insert(object, value, recordOffset);
 		}
 		return false;
+	}
+
+	public BPlusTree.Split search(DynamicObject object) {
+		if (dObject != null) {
+			setTree();
+			return bTree.search(object);
+		}
+		return null;
 	}
 }

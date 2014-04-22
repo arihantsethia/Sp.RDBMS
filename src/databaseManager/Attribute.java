@@ -38,7 +38,7 @@ public class Attribute {
 			} else
 				return 0;
 		}
-		
+
 		public static String toString(Type _type) {
 			if (_type == Attribute.Type.Int) {
 				return "int";
@@ -225,10 +225,11 @@ public class Attribute {
 	public void setPosition(int _position) {
 		position = _position;
 	}
+
 	public void setId(long _newId) {
 		id = _newId;
 	}
-	
+
 	public void setParentId(long _newId) {
 		parentId = _newId;
 	}
@@ -236,11 +237,11 @@ public class Attribute {
 	public String toString() {
 		return attributeName;
 	}
-	
+
 	public void partPK(boolean val) {
 		isPartPK = val;
 	}
-	
+
 	public boolean isPartPK() {
 		return isPartPK;
 	}
@@ -331,17 +332,17 @@ public class Attribute {
 	public boolean isNullable() {
 		return nullable;
 	}
-	
-	public void setAddress(long _pageNumber, int _pageOffset){
+
+	public void setAddress(long _pageNumber, int _pageOffset) {
 		pageNumber = _pageNumber;
 		recordOffset = _pageOffset;
 	}
-	
-	public long getPageNumber(){
+
+	public long getPageNumber() {
 		return pageNumber;
 	}
-	
-	public int getRecordOffset(){
+
+	public int getRecordOffset() {
 		return recordOffset;
 	}
 

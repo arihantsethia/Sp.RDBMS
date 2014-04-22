@@ -19,7 +19,7 @@ public class Relation {
 	private Map<String, Integer> attributesNames;
 	private Set<Long> indices;
 	private Vector<Attribute> primaryKey;
-	private Map< Long, Vector<Long> > indexed;
+	private Map<Long, Vector<Long>> indexed;
 	private long id;
 	private long pageCount;
 	private long recordsCount;
@@ -36,8 +36,8 @@ public class Relation {
 		attributes = new Vector<Attribute>();
 		attributesNames = new HashMap<String, Integer>();
 		indices = new HashSet<Long>();
-		indexed = new HashMap<Long,Vector<Long>>();
-		primaryKey = new Vector<Attribute> ();
+		indexed = new HashMap<Long, Vector<Long>>();
+		primaryKey = new Vector<Attribute>();
 		creationDate = (new Date()).getTime();
 		lastModified = (new Date()).getTime();
 		pageCount = 1;
@@ -66,8 +66,8 @@ public class Relation {
 		attributes = new Vector<Attribute>(attributesCount);
 		attributesNames = new HashMap<String, Integer>();
 		indices = new HashSet<Long>();
-		indexed = new HashMap<Long,Vector<Long>>();
-		primaryKey = new Vector<Attribute> ();
+		indexed = new HashMap<Long, Vector<Long>>();
+		primaryKey = new Vector<Attribute>();
 	}
 
 	public boolean addAttribute(String attributeName, Attribute.Type type, long _id) {
@@ -101,7 +101,7 @@ public class Relation {
 			}
 			attributes.add(attribute.getPosition(), attribute);
 			attributesNames.put(attribute.getName(), attribute.getPosition());
-			if(attribute.isPartPK()){
+			if (attribute.isPartPK()) {
 				primaryKey.add(attribute);
 			}
 			if (addToSize) {
@@ -118,10 +118,10 @@ public class Relation {
 		} else {
 			indices.add(index.getId());
 			Vector<Attribute> indexAttributes = index.getAttributes();
-			for(int i=0; i<indexAttributes.size();i++){
-				if(indexed.containsKey(indexAttributes.get(i).getId())){
+			for (int i = 0; i < indexAttributes.size(); i++) {
+				if (indexed.containsKey(indexAttributes.get(i).getId())) {
 					indexed.get(indexAttributes.get(i).getId()).add(index.getId());
-				}else{
+				} else {
 					Vector<Long> temp = new Vector<Long>();
 					temp.add(index.getId());
 					indexed.put(indexAttributes.get(i).getId(), temp);
@@ -231,26 +231,26 @@ public class Relation {
 	public Map<String, Integer> getAttributesNames() {
 		return attributesNames;
 	}
-	
-	public Attribute getAttributeByName(String name){
-    	int attrPos = attributesNames.get(name);
-    	Attribute attr = attributes.elementAt(attrPos);
-    	return attr;
-    }
-	
-	public int getAttributePosition(String attrName){
-		if(attributesNames.containsKey(attrName)){
+
+	public Attribute getAttributeByName(String name) {
+		int attrPos = attributesNames.get(name);
+		Attribute attr = attributes.elementAt(attrPos);
+		return attr;
+	}
+
+	public int getAttributePosition(String attrName) {
+		if (attributesNames.containsKey(attrName)) {
 			return attributesNames.get(attrName);
 		}
 		return -1;
 	}
 
-	public Attribute.Type getAttributeType(String field){
-    	int attrPos = attributesNames.get(field);
-    	Attribute attr = attributes.elementAt(attrPos);
-    	return attr.getType();
-    }
-    
+	public Attribute.Type getAttributeType(String field) {
+		int attrPos = attributesNames.get(field);
+		Attribute attr = attributes.elementAt(attrPos);
+		return attr.getType();
+	}
+
 	public long updateRecordsCount(int i) {
 		recordsCount = recordsCount + i;
 		return recordsCount;
@@ -259,27 +259,27 @@ public class Relation {
 	public Set<Long> getIndices() {
 		return indices;
 	}
-	
+
 	public void removeIndex(long indexId) {
 		indices.remove(indexId);
 		for (Map.Entry<Long, Vector<Long>> entry : indexed.entrySet()) {
 			entry.getValue().remove(indexId);
 		}
 	}
-	
-	public void addToPrimaryKey(Attribute attr, boolean ordered){
+
+	public void addToPrimaryKey(Attribute attr, boolean ordered) {
 		primaryKey.add(attr);
 	}
-	
-	public Vector<Attribute> getPrimaryKey(){
+
+	public Vector<Attribute> getPrimaryKey() {
 		return primaryKey;
 	}
-	
-	public void addPrimaryKey(Vector<String> attrs){
-		for(int i=0;i<attributes.size();i++){
-			if(attrs.contains(attributes.get(i).getName())){
+
+	public void addPrimaryKey(Vector<String> attrs) {
+		for (int i = 0; i < attributes.size(); i++) {
+			if (attrs.contains(attributes.get(i).getName())) {
 				primaryKey.add(attributes.get(i));
 			}
-		}		
+		}
 	}
 }
