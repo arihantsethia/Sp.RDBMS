@@ -249,7 +249,6 @@ public class QueryParser {
 						    Vector<Attribute> attributes = newRelation.getAttributes();
 						    boolean chk = true ;
 						    for(int k = 0 ; k < attributes.size() ; k++ ){
-						    
 						    	if(attributes.get(k).getName().equals(field)){
 						    		Attribute.Type fieldType = newRelation.getAttributeType(field);
 								    if(!Utility.isSameType(fieldType,rightPart)){
@@ -383,8 +382,7 @@ public class QueryParser {
 						    Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
 						    Vector<Attribute> attributes = newRelation.getAttributes();
 						    boolean chk = true ;
-						    for(int k = 0 ; k < attributes.size() ; k++ ){
-						    
+						    for(int k = 0 ; k < attributes.size() ; k++ ){   
 						    	if(attributes.get(k).getName().equals(field)){
 						    		chk = false ;
 						    	}
@@ -655,8 +653,10 @@ public class QueryParser {
 	            case 5 :	 System.out.println( t[0] + " and " + t[1] + " are not of Same Type. \n" ) ; break ;
 	            case 6 :	 System.out.println( " ( or ) brackets expected. \n" ) ; break ;
 	            case 7 :	 System.out.println( " Not a valid update Syntax. \n" ) ; break ;
-	            case 8 :	 System.out.println( " Column"+ s +"does not exits. \n" ) ; break ;
-	            case 9 :	 System.out.println( " Keyword table does not exits. \n" ) ; break ;
+	            case 8 :	 System.out.println( " Column"+ s +"does not exist. \n" ) ; break ;
+	            case 9 :	 System.out.println( " Keyword table does not exist. \n" ) ; break ;
+	            case 12 :	 System.out.println( " Not a valid create Syntax. \n" ) ; break ;
+	            
 	            default:    System.out.println( "undefined, see error message ") ; break ;
 	    }
 	}

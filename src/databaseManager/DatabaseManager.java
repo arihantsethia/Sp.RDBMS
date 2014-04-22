@@ -68,7 +68,7 @@ public class DatabaseManager {
 			if (systemCatalog.descOperation(query)) {
 					System.out.println();
 			} else {
-					System.out.println("wrong desc syntax" + splitCommand[2].trim());
+					System.out.println("wrong desc syntax");
 			}
 		}else{
 			System.out.println("undefined Syntax\n");
