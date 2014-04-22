@@ -21,7 +21,7 @@ public class CreateOperation extends Operation {
 			statement = statement.substring(statement.toUpperCase().indexOf("CREATE") + 6).trim();
 			if (statement.toUpperCase().indexOf("TABLE") == 0) {
 				queryType = parseCreateTableQuery(statement) ? 0 : -1;
-			} else if (statement.toUpperCase().indexOf("INDEX") == 0) {
+			} else if (statement.toUpperCase().indexOf("INDEX") == 0 || statement.toUpperCase().indexOf("UNIQUE") == 0) {
 				queryType = parseCreateIndexQuery(statement) ? 1 : -1;
 			} else if (statement.toUpperCase().indexOf("PRIMARY") == 0) {
 				queryType = parseCreatePrimaryKeyQuery(statement) ? 2 : -1;
@@ -127,16 +127,35 @@ public class CreateOperation extends Operation {
 	}
 
 	private boolean parseCreatePrimaryKeyQuery(String statement){
-		int primarykeyIndex = statement.trim().indexOf("primarykey");
+		int primarykeyIndex = statement.trim().indexOf("primary key");
 		int onIndex = statement.trim().indexOf("on");
-		int tableIndex = statement.trim().indexOf("table");		
+		//int tableIndex = statement.trim().indexOf("table");		
 		Vector<String> attributeList = new Vector<String>();
-		if(primarykeyIndex != -1 && onIndex != -1 && tableIndex != -1){
-			if(primarykeyIndex <= onIndex && onIndex <= tableIndex){
-				relationName = statement.substring(tableIndex + 5,statement.indexOf("(")).trim();
+		if(primarykeyIndex != -1 && onIndex != -1){
+			if(primarykeyIndex <= onIndex){
+				statement = statement.substring(onIndex + 2).trim();
+				if(statement.length() == 0){
+					System.out.println("table name is missing");
+					return false;
+				}
+				int lp = statement.indexOf("(");
+				if(lp != -1){
+					relationName = statement.substring(0,lp).trim();
+				}
+				else{
+					relationName = statement.substring(0).trim();
+				}
+				//relationName = statement.substring(onIndex + 2,statement.indexOf("(")).trim();
 				long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
+				//System.out.println("relationName->"+relationName);
 				
 				if(newRelationId != -1){
+					statement = statement.substring(statement.indexOf(relationName) + relationName.length()).trim();
+					//System.out.println("statement->"+statement);
+					if(statement.length() == 0){
+						System.out.println("Parenthesis are missing");
+						return false;
+					}
 					String primarykeyPart = "";
 					primarykeyPart = statement.substring(statement.indexOf("(") + 1,statement.indexOf(")")).trim();
 					
@@ -153,36 +172,117 @@ public class CreateOperation extends Operation {
 						    	}
 						    }
 						    if(chk){
+						    	QueryParser.print_error(1,primarykeyPartSplit[i]);
 						    	return false ;
 						    }
 						    attributeList.add(primarykeyPartSplit[i]);
 					    }
 					}
+					else{
+						System.out.println("Primary key attribute is missing");
+						return false;
+					}
+				}
+				else{
+					System.out.println(relationName + " is not a valid Relation Name");
+					return false;
 				}
 			}
+			else{
+				System.out.println("Keyword \'on\' appears before keyword \'primary key\'");
+				return false;
+			}
+		}
+		else{
+			System.out.println("Not a valid Primary Key syntax");
+			return false;
 		}
 		parsedData.add(attributeList);
 		return true;
 	}
 	
 	private boolean parseCreateIndexQuery(String statement) {
-		statement = statement.substring(statement.toUpperCase().indexOf("INDEX") + 5).trim();
+		int uniqueIndex = statement.indexOf("unique");
+		int index = statement.indexOf("index");
+		
+		System.out.println("uniqueIndex->"+uniqueIndex);
+		System.out.println("index->"+index);
+		
+		if(uniqueIndex == 0 && index == -1){
+			statement = statement.substring(uniqueIndex + 6).trim();
+			if(statement.length() == 0){
+				System.out.println("Keyword index is missing");
+				return false;
+			}
+			else if(!statement.startsWith("index")){
+				System.out.println("Keyword Index is missing");
+				return false;
+			}
+			else if(statement.startsWith("index")){
+				statement = statement.substring(index + 5).trim();
+			}
+		}
+		
+		else if(index == 0){
+			statement = statement.substring(index + 5).trim();
+			if(statement.length() == 0){
+				System.out.println("Index name is missing");
+				return false;
+			}
+		}
+		
+		else if(uniqueIndex == 0 && index == 7 ){
+			statement = statement.substring(index + 5).trim();
+			if(statement.length() == 0){
+				System.out.println("Index name is missing");
+				return false;
+			}
+		}
+		
+		//statement = statement.substring(statement.toUpperCase().indexOf("INDEX") + 5).trim();
 		Vector<String> parsedToken;
 		String attribtueName;
 		if (statement.contains(" ")) {
+			if(statement.startsWith("on")){
+				System.out.println("Index name is missing");
+				return false;
+			}
 			indexName = statement.substring(0, statement.indexOf(" ")).trim();
 			statement = statement.substring(statement.indexOf(" ")).trim();
 			if(statement.toUpperCase().indexOf("ON") == 0){
 				statement = statement.substring(statement.toUpperCase().indexOf("ON") + 2).trim();
-				if (statement.toUpperCase().indexOf("TABLE") == 0) {
-					statement = statement.substring(statement.toUpperCase().indexOf("TABLE") + 5).trim();
+				if(statement.length() == 0){
+					System.out.println("table name is missing");
+					return false;
+				}
+				//if (statement.toUpperCase().indexOf("TABLE") == 0) {
+					//statement = statement.substring(statement.toUpperCase().indexOf("TABLE") + 5).trim();
 					if(statement.indexOf("(")!=-1){
 						relationName = statement.substring(0, statement.indexOf("(")).trim();
+						System.out.println("relationName->"+relationName);
 						parsedToken = new Vector<String>();
 						StringTokenizer attribtueNames = new StringTokenizer(statement.substring(statement.indexOf("(") + 1, statement.lastIndexOf(")")), ",");
 						if(attribtueNames.countTokens() > 0){
 							while(attribtueNames.hasMoreTokens()){
 								attribtueName = attribtueNames.nextToken().trim();
+								long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
+								if (newRelationId != -1) {
+									Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
+									Vector<Attribute> attributes = newRelation.getAttributes();
+									boolean chk = true;
+									for (int k = 0; k < attributes.size(); k++) {
+										if (attributes.get(k).getName().equals(attribtueName)) {
+											chk = false;
+										}
+									}
+									if (chk) {
+										QueryParser.print_error(1,attribtueName);
+										return false;
+									}
+								} else {
+									QueryParser.print_error(2, relationName);
+									return false;
+								}
 								if(attribtueName.indexOf(" ")==-1){
 									parsedToken.add(attribtueName);
 								}else{
@@ -191,7 +291,7 @@ public class CreateOperation extends Operation {
 								}
 							}
 							parsedData.add(parsedToken);
-							parsedToken = new Vector<String>();
+							/*parsedToken = new Vector<String>();
 							statement = statement.substring(statement.lastIndexOf(")")+1).trim();
 							if(statement.equalsIgnoreCase("UNIQUE")){
 								parsedToken.add("true");
@@ -200,19 +300,24 @@ public class CreateOperation extends Operation {
 							}else{
 								System.out.println("Improper syntax. Error near : "+statement);
 								return false;
-							}
+							}*/
 							parsedData.add(parsedToken);
 						}else{
 							System.out.println("Atleat one attribute should be specified. Error near : "+statement);
 							return false;
 						}
 					}
-				}else{
+					else{
+						System.out.println("Parenthesis are missing");
+						return false;
+					}
+				/*}else{
 					System.out.println("Error near syntax \"" + statement + "\"");
 					return false;
-				}
+				}*/
 			} else {
-				System.out.println("Error near syntax \"" + statement + "\"");
+				//System.out.println("Error near syntax \"" + statement + "\"");
+				System.out.println("Keyword on is missing");
 				return false;
 			}
 		} else {
