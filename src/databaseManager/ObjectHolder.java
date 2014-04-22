@@ -48,7 +48,7 @@ public class ObjectHolder {
 				relation.addAttribute(aObject, addToSize);
 			} else if (toObject instanceof Index) {
 				Index index = (Index) toObject;
-				index.addAttribute(aObject,addToSize);
+				index.addAttribute(aObject, addToSize);
 			}
 
 		} else if (object instanceof Index) {
@@ -89,17 +89,16 @@ public class ObjectHolder {
 		}
 		return -1;
 	}
-	
 
 	public long getIndexId(String relationName, String indexName) {
 		long relationId = getRelationId(relationName);
-		if(relationId!=-1){
+		if (relationId != -1) {
 			for (Map.Entry<Long, Object> entry : objects.entrySet()) {
 				Object objectEntry = entry.getValue();
 				if (objectEntry instanceof Index) {
 					Index indexEntry = (Index) objectEntry;
 					if (indexEntry.getName().equalsIgnoreCase(indexName)) {
-						if(indexEntry.getParentId()==relationId){
+						if (indexEntry.getParentId() == relationId) {
 							return indexEntry.getId();
 						}
 					}

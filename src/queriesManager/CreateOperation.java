@@ -16,69 +16,108 @@ public class CreateOperation extends Operation {
 	CreateOperation(String statement) {
 		setType(QueryParser.OperationType.CREATE);
 		parsedData = new Vector<Vector<String>>();
-		statement = statement.substring(statement.toUpperCase().indexOf("CREATE") + 6).trim();
-		if (statement.toUpperCase().indexOf("TABLE") == 0) {
-			queryType = parseCreateTableQuery(statement) ? 0 : -1;
-		} else if (statement.toUpperCase().indexOf("INDEX") == 0) {
-			queryType = parseCreateIndexQuery(statement) ? 1 : -1;
+		int createIndex = statement.trim().indexOf("create");
+		if(createIndex == 0){
+			statement = statement.substring(statement.toUpperCase().indexOf("CREATE") + 6).trim();
+			if (statement.toUpperCase().indexOf("TABLE") == 0) {
+				queryType = parseCreateTableQuery(statement) ? 0 : -1;
+			} else if (statement.toUpperCase().indexOf("INDEX") == 0) {
+				queryType = parseCreateIndexQuery(statement) ? 1 : -1;
+			} else if (statement.toUpperCase().indexOf("PRIMARY") == 0) {
+				queryType = parseCreatePrimaryKeyQuery(statement) ? 2 : -1;
+			}
 		}
 	}
 
 	private boolean parseCreateTableQuery(String statement) {
-		statement = statement.substring(statement.toUpperCase().indexOf("TABLE") + 5).trim();
+		int tableIndex = statement.indexOf("table");
+		
+		statement = statement.substring(tableIndex + 5).trim();
+		
+		if(statement.length() == 0){
+			System.out.println("table name is missing");
+			return false;
+		}
+		
+		//System.out.println(statement);
+		
+		int lpIndex = statement.indexOf("(");
+		int rpIndex = statement.lastIndexOf(")");
+		if(lpIndex == -1 || rpIndex != statement.length() -1){
+			System.out.println("parenthesis are missing");
+			return false;
+		}
+		
 		relationName = statement.substring(0, statement.indexOf("(")).trim();
+
 		if(relationName.contains(" ")){
+			System.out.println("Rubbish between table name and opening parenthesis");
 			return false ;
 		}
-		StringTokenizer tokens = new StringTokenizer(statement.substring(statement.indexOf("(") + 1, statement.lastIndexOf(")")), ",");
+		//System.out.println(statement);
+		statement = statement.substring(statement.indexOf(relationName) + relationName.length()).trim();
+		//System.out.println(statement);
+		
+		StringTokenizer tokens = new StringTokenizer(statement.substring(statement.indexOf("(") + 1, statement.lastIndexOf(")")).trim(), ",");
+		//System.out.println(tokens.countTokens());
+		if(tokens.countTokens() == 0){
+			System.out.println("Attributes are missing");
+			return false;
+		}
 		Vector<String> parsedToken;
 		while (tokens.hasMoreTokens()) {
 			parsedToken = new Vector<String>();
 			StringTokenizer attributeTokens = new StringTokenizer(tokens.nextToken().trim(), " ");
 			if (attributeTokens.countTokens() < 2) {
-				System.out.println("Name and type of attribute needs to be specified!");
-				return false;
+					System.out.println("Name and type of attribute needs to be specified!");
+					return false;
 			}
 			parsedToken.add(attributeTokens.nextToken().trim());
 			parsedToken.add(attributeTokens.nextToken().trim());
 			if (Attribute.stringToType(parsedToken.get(1)) == Attribute.Type.Undeclared) {
 				System.out.println("Not a valid data type!");
 				return false;
-			} else if (Attribute.stringToType(parsedToken.get(1)) == Attribute.Type.Char) {
+			} 
+			else if (Attribute.stringToType(parsedToken.get(1)) == Attribute.Type.Char) {
 				int size = 2;
 				if (parsedToken.get(1).indexOf("(") != -1 && parsedToken.get(1).indexOf(")") != -1) {
-					try {
-						String temp = parsedToken.get(1).substring(parsedToken.get(1).indexOf("(") + 1, parsedToken.get(1).indexOf(")")).trim();
-						size = size * Integer.parseInt(temp);
-						parsedToken.add(String.valueOf(size));
-					} catch (NumberFormatException e) {
-						System.out.println("Integer length needs to be specified for char data type as \"(length)\" !");
-						return false;
-					}
-				} else {
+				try {
+					String temp = parsedToken.get(1).substring(parsedToken.get(1).indexOf("(") + 1, parsedToken.get(1).indexOf(")")).trim();
+					size = size * Integer.parseInt(temp);
+					parsedToken.add(String.valueOf(size));
+				} catch (NumberFormatException e) {
+					System.out.println("Integer length needs to be specified for char data type as \"(length)\" !");
+					return false;
+				}
+			}
+				else {
 					System.out.println("Length needs to be specified for char data type as \"(length)\" !");
 					return false;
 				}
-			} else {
+			} 
+			else {
 				parsedToken.add("4");
-			}
-			if (attributeTokens.countTokens() < 3) {
-				Boolean[] properties = new Boolean[2];
-				Arrays.fill(properties, Boolean.FALSE);
-				while (attributeTokens.hasMoreTokens()) {
-					String token = attributeTokens.nextToken();
-					if (token.equals("notnull") && !properties[0]) {
-						properties[0] = true;
-					} else if (token.equals("unique") && !properties[1]) {
-						properties[1] = true;
-					} else {
-						System.out.println("Improper Syntax!");
-						return false;
-					}
+		}
+		if (attributeTokens.countTokens() < 3) {
+			Boolean[] properties = new Boolean[2];
+			Arrays.fill(properties, Boolean.FALSE);
+			while (attributeTokens.hasMoreTokens()) {
+				String token = attributeTokens.nextToken();
+				if (token.equals("notnull") && !properties[0]) {
+					properties[0] = true;
+				} 
+				else if (token.equals("unique") && !properties[1]) {
+					properties[1] = true;
+				} 
+				else {
+					System.out.println("Improper Syntax!");
+					return false;
 				}
-				parsedToken.add(properties[0].toString());
-				parsedToken.add(properties[1].toString());
-			} else {
+			}
+			parsedToken.add(properties[0].toString());
+			parsedToken.add(properties[1].toString());
+			} 
+			else {
 				System.out.println("Only 4 properties per attribute i.e name , type , null/not_null , unique are allowed");
 				return false;
 			}
@@ -87,15 +126,14 @@ public class CreateOperation extends Operation {
 		return true;
 	}
 
-	private boolean parsePrimaryKeyQuery(String statement){
-		int createIndex = statement.trim().indexOf("create");
+	private boolean parseCreatePrimaryKeyQuery(String statement){
 		int primarykeyIndex = statement.trim().indexOf("primarykey");
 		int onIndex = statement.trim().indexOf("on");
-		int tableIndex = statement.trim().indexOf("table");
-		
-		if(createIndex == 0 && primarykeyIndex != -1 && onIndex != -1 && tableIndex != -1){
+		int tableIndex = statement.trim().indexOf("table");		
+		Vector<String> attributeList = new Vector<String>();
+		if(primarykeyIndex != -1 && onIndex != -1 && tableIndex != -1){
 			if(primarykeyIndex <= onIndex && onIndex <= tableIndex){
-				String relationName = statement.substring(tableIndex + 5,statement.indexOf("(")).trim();
+				relationName = statement.substring(tableIndex + 5,statement.indexOf("(")).trim();
 				long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
 				
 				if(newRelationId != -1){
@@ -117,11 +155,13 @@ public class CreateOperation extends Operation {
 						    if(chk){
 						    	return false ;
 						    }
+						    attributeList.add(primarykeyPartSplit[i]);
 					    }
 					}
 				}
 			}
 		}
+		parsedData.add(attributeList);
 		return true;
 	}
 	
@@ -187,6 +227,8 @@ public class CreateOperation extends Operation {
 			return DatabaseManager.getSystemCatalog().createTable(relationName, parsedData);
 		} else if (queryType == 1) {
 			return DatabaseManager.getSystemCatalog().createIndex(indexName, relationName, parsedData);
+		} else if (queryType == 2) {
+			return DatabaseManager.getSystemCatalog().addPrimaryKey(relationName, parsedData.get(0));
 		}
 		return false;
 	}
