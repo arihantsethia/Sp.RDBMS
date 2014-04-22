@@ -46,8 +46,8 @@ public class Index {
 			keySize += attributes.get(i).getAttributeSize();
 		}
 		nKeys = 64;
-		while (true) {
-			if ((DiskSpaceManager.PAGE_SIZE * 8 - 7) / (1 + 8 * (nKeys * (20 + keySize) + 25)) >= 1 || nKeys > 0) {
+		while (nKeys > 0) {
+			if ((DiskSpaceManager.PAGE_SIZE * 8 - 7) / (1 + 8 * (nKeys * (20 + keySize) + 25)) >= 1 ) {
 				break;
 			} else {
 				nKeys--;
