@@ -129,28 +129,32 @@ public class QueryParser {
 
 				if (valueIndex != -1) {
 					String valuePart = "";
-					valuePart = statement.substring(valueIndex + 5).trim();
-					valuePart = statement.replace("(", " ").replace(")", " ").trim();
-					String[] valuePartSplit = valuePart.split(",");
+					valuePart = statement.substring(valueIndex + 6).trim();
+					
+					valuePart = valuePart.replace("(", " ").trim();
+					valuePart = valuePart.replace(")", " ").trim();
 
+					String[] valuePartSplit = valuePart.split(",");
+					
 					if (columnPartSplit.length == valuePartSplit.length) {
 						Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
 						Vector<Attribute> attributes = newRelation.getAttributes();
+						
 						for (int i = 0; i < columnPartSplit.length; i++) {
 							boolean chk = true;
 							for (int k = 0; k < attributes.size(); k++) {
-								if (attributes.get(k).getName().equals(columnPartSplit[i])) {
-									Attribute.Type fieldType = newRelation.getAttributeType(columnPartSplit[i]);
+								if (attributes.get(k).getName().equals(columnPartSplit[i].trim())) {
+									Attribute.Type fieldType = newRelation.getAttributeType(columnPartSplit[i].trim());
 
-									if (!Utility.isSameType(fieldType, valuePartSplit[i])) {
-										print_error(5, fieldType + " " + valuePartSplit[i]);
+									if (!Utility.isSameType(fieldType, valuePartSplit[i].trim())) {
+										print_error(5, fieldType + " " + valuePartSplit[i].trim());
 										return false;
 									}
 									chk = false;
 								}
 							}
 							if (chk) {
-								print_error(8, columnPartSplit[i]);
+								print_error(8, columnPartSplit[i].trim());
 								return false;
 							}
 						}
@@ -675,7 +679,7 @@ public class QueryParser {
 			System.out.println(" Not a valid update Syntax. \n");
 			break;
 		case 8:
-			System.out.println(" Column" + s + "does not exits. \n");
+			System.out.println(" Column " + s + "does not exits. \n");
 			break;
 		case 9:
 			System.out.println(" Keyword table does not exits. \n");
