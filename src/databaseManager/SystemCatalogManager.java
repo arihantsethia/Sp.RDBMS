@@ -15,15 +15,6 @@ import java.nio.ByteBuffer;
 
 import queriesManager.QueryParser;
 
-/**
- * @param ATTRIBUTE_CATALOG
- *            string containing value "attribute_catalog.cat" RELATION_CATALOG
- *            string containing value "relation_catalog.cat" bufferManager
- *            object of class named BufferManager. that object will be initiated
- *            when constructor of this class is called. attributeList list of
- *            attributes
- */
-
 public class SystemCatalogManager {
 
 	public static final String RELATION_CATALOG = "relation_catalog.db";
@@ -58,6 +49,9 @@ public class SystemCatalogManager {
 		loadIndexAttributeCatalog();
 	}
 
+	/**
+	 * Loads all the relationObjects of current database
+	 */
 	public void loadRelationCatalog() {
 		Relation tableRelation = new Relation("relation_catalog", RELATION_CATALOG_ID);
 		tableRelation.setRecordSize(RELATION_RECORD_SIZE);
@@ -78,6 +72,9 @@ public class SystemCatalogManager {
 		}
 	}
 
+	/**
+	 * Loads all the attributes of all relation in current database
+	 */
 	public void loadAttributeCatalog() {
 		Relation attributeRelation = new Relation("attribute_catalog", ATTRIBUTE_CATALOG_ID);
 		attributeRelation.setRecordSize(ATTRIBUTE_RECORD_SIZE);
@@ -98,6 +95,9 @@ public class SystemCatalogManager {
 		}
 	}
 
+	/**
+	 * Loads all the index of all relation in current database
+	 */
 	public void loadIndexCatalog() {
 		Relation indexRelation = new Relation("index_catalog", INDEX_CATALOG_ID);
 		indexRelation.setRecordSize(INDEX_RECORD_SIZE);
@@ -118,6 +118,9 @@ public class SystemCatalogManager {
 		}
 	}
 
+	/**
+	 * Loads all the attributes of all indexes in current database
+	 */
 	public void loadIndexAttributeCatalog() {
 		Relation attributeRelation = new Relation("index_attribute_catalog", INDEX_ATTRIBUTE_CATALOG_ID);
 		attributeRelation.setRecordSize(INDEX_ATTRIBUTE_RECORD_SIZE);
@@ -148,6 +151,12 @@ public class SystemCatalogManager {
 		}
 	}
 
+	/**
+	 * Writes the attribute to the attribute_catalog.db
+	 * 
+	 * @param newAttribute
+	 *            : Object of attribute that should be inserted to catalog
+	 */
 	public void addAttributeToCatalog(Attribute newAttribute) {
 		int attributeRecordsPerPage = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * ATTRIBUTE_RECORD_SIZE));
 		long freePageNumber = bufferManager.getFreePageNumber(ATTRIBUTE_CATALOG_ID);
@@ -159,6 +168,12 @@ public class SystemCatalogManager {
 		totalAttributesCount++;
 	}
 
+	/**
+	 * Writes the relation to the relation_catalog.db
+	 * 
+	 * @param newRelation
+	 *            : Object of relation that should be inserted to catalog
+	 */
 	public void addRelationToCatalog(Relation newRelation) {
 		int relationRecordsPerPage = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * RELATION_RECORD_SIZE));
 		long freePageNumber = bufferManager.getFreePageNumber(RELATION_CATALOG_ID);
@@ -170,6 +185,12 @@ public class SystemCatalogManager {
 		totalObjectsCount++;
 	}
 
+	/**
+	 * Writes the relation to the index_attribute_catalog.db
+	 * 
+	 * @param newAttribtue
+	 *            : Object of attribute that should be inserted to catalog
+	 */
 	public void addIndexAttributeToCatalog(Attribute newAttribute) {
 		int attributeRecordsPerPage = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * INDEX_ATTRIBUTE_RECORD_SIZE));
 		long freePageNumber = bufferManager.getFreePageNumber(INDEX_ATTRIBUTE_CATALOG_ID);
@@ -181,6 +202,12 @@ public class SystemCatalogManager {
 		totalIndexAttributesCount++;
 	}
 
+	/**
+	 * Writes the relation to the index_catalog.db
+	 * 
+	 * @param newAttribtue
+	 *            : Object of index that should be inserted to catalog
+	 */
 	public void addIndexToCatalog(Index newIndex) {
 		int indexRecordsPerPage = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * INDEX_RECORD_SIZE));
 		long freePageNumber = bufferManager.getFreePageNumber(INDEX_CATALOG_ID);
@@ -192,6 +219,15 @@ public class SystemCatalogManager {
 		totalObjectsCount++;
 	}
 
+	/**
+	 * This function creates a new table in current database
+	 * 
+	 * @param relationName
+	 *            : Name of the relation to be created
+	 * @param parsedData
+	 *            : This contains information about attributes of the relation
+	 * @return : Returns true if table is successfully created
+	 */
 	public boolean createTable(String relationName, Vector<Vector<String>> parsedData) {
 		if (objectHolder.getRelationId(relationName) == -1) {
 			Relation newRelation = new Relation(relationName, totalObjectsCount);
@@ -240,6 +276,17 @@ public class SystemCatalogManager {
 		return false;
 	}
 
+	/**
+	 * This function creates a new index on give table in current database
+	 * 
+	 * @param indexName
+	 *            : Name of the index to be created
+	 * @param relationName
+	 *            : Name of the relation to which index should be added.
+	 * @param parsedData
+	 *            : This contains information about attributes of the relation
+	 * @return : Returns true if index is successfully created
+	 */
 	public boolean createIndex(String indexName, String relationName, Vector<Vector<String>> parsedData) {
 		if (objectHolder.getIndexId(relationName, indexName) == -1) {
 			long relationId = objectHolder.getRelationId(relationName);
@@ -291,7 +338,6 @@ public class SystemCatalogManager {
 						}
 					}
 				}
-				// Added all records to index
 				return true;
 			} else {
 				System.out.println("Relation : " + relationName + " doesn't exists!");
@@ -302,6 +348,13 @@ public class SystemCatalogManager {
 		return false;
 	}
 
+	/**
+	 * This function drops the table in current database
+	 * 
+	 * @param relationName
+	 *            : Name of the table which needs to be dropped.
+	 * @return : Returns true if table was successfully dropped.
+	 */
 	public boolean dropTable(String relationName) {
 		long relationId = objectHolder.getRelationId(relationName);
 		int recordsPerPage, recordNumber;
@@ -329,6 +382,15 @@ public class SystemCatalogManager {
 		return false;
 	}
 
+	/**
+	 * This function drops an index on give table in current database
+	 * 
+	 * @param indexName
+	 *            : Name of the index which needs to be dropped.
+	 * @param relationName
+	 *            : Name of the relation from which index needs to be dropped.
+	 * @return : Returns true if table was successfully dropped.
+	 */
 	public boolean dropIndex(String indexName, String relationName) {
 		long indexId = objectHolder.getIndexId(relationName, indexName);
 		int indexRecordsPerPage = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * INDEX_RECORD_SIZE));
@@ -347,6 +409,15 @@ public class SystemCatalogManager {
 		return false;
 	}
 
+	/**
+	 * This function drops an index on give table in current database
+	 * 
+	 * @param query
+	 *            : Name of the index which needs to be dropped.
+	 * @param relationName
+	 *            : Name of the relation from which index needs to be dropped.
+	 * @return : Returns true if table was successfully dropped.
+	 */
 	public boolean insertRecord(String query) {
 		String relationName = query.split(" ")[2].trim();
 		ObjectHolder objectHolder = ObjectHolder.getObjectHolder();
@@ -369,7 +440,6 @@ public class SystemCatalogManager {
 						updateIndexCatalog(currIndex);
 					}
 					DynamicObject entryObject = Utility.toDynamicObject(columnList, valueList, currIndex.getAttributes());
-					BPlusTree.Split s = currIndex.search(entryObject);
 					if (!currIndex.insert(entryObject, insertAddress, recordOffset)) {
 						System.out.println("Couldn't insert into table. Doesn't satisfy the check constraints.");
 						return false;
@@ -384,6 +454,15 @@ public class SystemCatalogManager {
 		return false;
 	}
 
+	/**
+	 * Adds primary key to table if no primary key exists on the table
+	 * 
+	 * @param relationName
+	 *            : Name of the table on which primary key needs to be created
+	 * @param attrs
+	 *            : Vector of attributes for the given key.
+	 * @return true if successfully added primary key, else false;
+	 */
 	public boolean addPrimaryKey(String relationName, Vector<String> attrs) {
 		long relationId = objectHolder.getRelationId(relationName);
 		if (relationId != -1) {
@@ -418,33 +497,87 @@ public class SystemCatalogManager {
 		return false;
 	}
 
+	/**
+	 * Deletes the record from given relation by setting corresponding bit in
+	 * bitmap to false
+	 * 
+	 * @param id
+	 *            : relation id from which record needs to be deleted
+	 * @param pageNumber
+	 *            : page number from which record needs to be deleted
+	 * @param recordNumber
+	 *            : record number on page for the record.
+	 * @param recordsPerPage
+	 *            : Number of records per page for the relation from which
+	 *            record is to be deleted.
+	 * @return
+	 */
 	public boolean deleteRecord(long id, long pageNumber, int recordNumber, int recordsPerPage) {
 		return bufferManager.writeRecordBitmap(id, pageNumber, recordsPerPage, recordNumber, false);
 	}
 
+	/**
+	 * Updates the relation entry in relation catalog
+	 * 
+	 * @param relation
+	 *            : relation for which update is to be done
+	 */
 	public void updateRelationCatalog(Relation relation) {
 		bufferManager.write(RELATION_CATALOG_ID, relation.getPageNumber(), relation.getRecordOffset(), relation.serialize());
 	}
 
+	/**
+	 * Updates the attribute entry in attribute catalog
+	 * 
+	 * @param attribute
+	 *            : attribute for which update is to be done
+	 */
 	public void updateAttributeCatalog(Attribute attribute) {
 		bufferManager.write(ATTRIBUTE_CATALOG_ID, attribute.getPageNumber(), attribute.getRecordOffset(), attribute.serialize());
 	}
 
+	/**
+	 * Updates the index entry in index catalog
+	 * 
+	 * @param index
+	 *            : index for which update is to be done
+	 */
 	public void updateIndexCatalog(Index index) {
 		bufferManager.write(INDEX_CATALOG_ID, index.getPageNumber(), index.getRecordOffset(), index.serialize());
 	}
 
+	/**
+	 * Updates the record from given relation
+	 * 
+	 * @param id
+	 *            : relation id from which record needs to be updated
+	 * @param pageNumber
+	 *            : page number from which record needs to be updated
+	 * @param recordOffset
+	 *            : record offset on page for the record.
+	 * @param serialBuffer
+	 *            : Bytebuffer for the record.
+	 */
 	public void updateRecord(long id, long pageNumber, int recordOffset, ByteBuffer serialBuffer) {
 		serialBuffer.position(0);
 		bufferManager.write(id, pageNumber, recordOffset, serialBuffer);
 	}
 
+	/**
+	 * Call this to ensure all pages in main memory are written back to physical
+	 * memory. This function also resets the bufferManager
+	 */
 	public void close() {
 		bufferManager.flush();
 		bufferManager.unPinAll();
 		bufferManager.initializeTable();
 	}
 
+	/**
+	 * Shows the list of tables in current database
+	 * 
+	 * @return
+	 */
 	public boolean showTables() {
 		int count = 0;
 		String s = "";
@@ -469,9 +602,15 @@ public class SystemCatalogManager {
 		return true;
 	}
 
+	/**
+	 * Prints description of the give table;
+	 * 
+	 * @param statement
+	 *            : query in proper format. format: 'desc table table_name'
+	 * @return true is query correctly formatted.
+	 */
 	boolean descOperation(String statement) {
 		int index = statement.indexOf("table");
-
 		if (index != -1) {
 			statement = statement.substring(index + 5).trim();
 			if (!statement.contains(" ")) {
