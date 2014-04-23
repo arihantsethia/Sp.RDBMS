@@ -1,6 +1,7 @@
 package queriesManager;
 
 import java.util.Arrays;
+import java.util.Map;
 import java.util.StringTokenizer;
 import java.util.Vector;
 
@@ -58,28 +59,22 @@ public class CreateOperation extends Operation {
 			System.out.println("table name is missing");
 			return false;
 		}
-
-		// System.out.println(statement);
-
 		int lpIndex = statement.indexOf("(");
 		int rpIndex = statement.lastIndexOf(")");
 		if (lpIndex == -1 || rpIndex != statement.length() - 1) {
 			System.out.println("parenthesis are missing");
 			return false;
 		}
-
 		relationName = statement.substring(0, statement.indexOf("(")).trim();
 
 		if (relationName.contains(" ")) {
 			System.out.println("Rubbish between table name and opening parenthesis");
 			return false;
 		}
-		// System.out.println(statement);
+
 		statement = statement.substring(statement.indexOf(relationName) + relationName.length()).trim();
-		// System.out.println(statement);
 
 		StringTokenizer tokens = new StringTokenizer(statement.substring(statement.indexOf("(") + 1, statement.lastIndexOf(")")).trim(), ",");
-		// System.out.println(tokens.countTokens());
 		if (tokens.countTokens() == 0) {
 			System.out.println("Attributes are missing");
 			return false;
@@ -146,9 +141,8 @@ public class CreateOperation extends Operation {
 	 * @return
 	 */
 	private boolean parseCreatePrimaryKeyQuery(String statement) {
-		int primarykeyIndex = statement.trim().indexOf("primary key");
+		int primarykeyIndex = statement.trim().indexOf("primary key ");
 		int onIndex = statement.trim().indexOf("on");
-		// int tableIndex = statement.trim().indexOf("table");
 		Vector<String> attributeList = new Vector<String>();
 		if (primarykeyIndex != -1 && onIndex != -1) {
 			if (primarykeyIndex <= onIndex) {
@@ -163,14 +157,11 @@ public class CreateOperation extends Operation {
 				} else {
 					relationName = statement.substring(0).trim();
 				}
-				// relationName = statement.substring(onIndex +
-				// 2,statement.indexOf("(")).trim();
+
 				long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
-				// System.out.println("relationName->"+relationName);
 
 				if (newRelationId != -1) {
 					statement = statement.substring(statement.indexOf(relationName) + relationName.length()).trim();
-					// System.out.println("statement->"+statement);
 					if (statement.length() == 0) {
 						System.out.println("Parenthesis are missing");
 						return false;
@@ -222,128 +213,80 @@ public class CreateOperation extends Operation {
 	 * @return
 	 */
 	private boolean parseCreateIndexQuery(String statement) {
-		int uniqueIndex = statement.indexOf("unique");
-		int index = statement.indexOf("index");
-
-		System.out.println("uniqueIndex->" + uniqueIndex);
-		System.out.println("index->" + index);
-
-		if (uniqueIndex == 0 && index == -1) {
-			statement = statement.substring(uniqueIndex + 6).trim();
-			if (statement.length() == 0) {
-				System.out.println("Keyword index is missing");
-				return false;
-			} else if (!statement.startsWith("index")) {
-				System.out.println("Keyword Index is missing");
-				return false;
-			} else if (statement.startsWith("index")) {
-				statement = statement.substring(index + 5).trim();
-			}
-		}
-
-		else if (index == 0) {
-			statement = statement.substring(index + 5).trim();
-			if (statement.length() == 0) {
-				System.out.println("Index name is missing");
-				return false;
-			}
-		}
-
-		else if (uniqueIndex == 0 && index == 7) {
-			statement = statement.substring(index + 5).trim();
-			if (statement.length() == 0) {
-				System.out.println("Index name is missing");
-				return false;
-			}
-		}
-
+		boolean unique = false;
 		Vector<String> parsedToken;
 		String attribtueName;
-		if (statement.contains(" ")) {
-			if (statement.startsWith("on")) {
-				System.out.println("Index name is missing");
+		if (statement.indexOf("unique ") == 0) {
+			unique = true;
+			statement = statement.substring(6).trim();
+		}
+		if (statement.indexOf("index ") == 0) {
+			statement = statement.substring(5).trim();
+		} else {
+			System.out.println("Keyword index is missing");
+			return false;
+		}
+		if (statement.length() == 0 || statement.startsWith("on ") || statement.indexOf(" ") <= 0) {
+			System.out.println("Index name is missing");
+			return false;
+		}
+		indexName = statement.substring(0, statement.indexOf(" ")).trim();
+		statement = statement.substring(statement.indexOf(" ")).trim();
+		if (statement.indexOf("on ") == 0) {
+			statement = statement.substring(2).trim();
+			if (statement.length() == 0) {
+				System.out.println("table name is missing");
 				return false;
 			}
-			indexName = statement.substring(0, statement.indexOf(" ")).trim();
-			statement = statement.substring(statement.indexOf(" ")).trim();
-			if (statement.toUpperCase().indexOf("ON") == 0) {
-				statement = statement.substring(statement.toUpperCase().indexOf("ON") + 2).trim();
-				if (statement.length() == 0) {
-					System.out.println("table name is missing");
-					return false;
-				}
-				// if (statement.toUpperCase().indexOf("TABLE") == 0) {
-				// statement =
-				// statement.substring(statement.toUpperCase().indexOf("TABLE")
-				// + 5).trim();
-				if (statement.indexOf("(") != -1) {
-					relationName = statement.substring(0, statement.indexOf("(")).trim();
-					System.out.println("relationName->" + relationName);
+			if (statement.indexOf("(") != -1) {
+				relationName = statement.substring(0, statement.indexOf("(")).trim();
+				long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
+				if (newRelationId != -1) {
+					Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
+					Map<String, Integer> relationAttributes = newRelation.getAttributesNames();
 					parsedToken = new Vector<String>();
-					StringTokenizer attribtueNames = new StringTokenizer(statement.substring(statement.indexOf("(") + 1, statement.lastIndexOf(")")), ",");
-					if (attribtueNames.countTokens() > 0) {
-						while (attribtueNames.hasMoreTokens()) {
-							attribtueName = attribtueNames.nextToken().trim();
-							long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
-							if (newRelationId != -1) {
-								Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
-								Vector<Attribute> attributes = newRelation.getAttributes();
-								boolean chk = true;
-								for (int k = 0; k < attributes.size(); k++) {
-									if (attributes.get(k).getName().equals(attribtueName)) {
-										chk = false;
-									}
+					statement = statement.substring(statement.indexOf("(")).trim();
+					if (statement.startsWith("(") && statement.endsWith(")")) {
+						statement = statement.substring(statement.indexOf("(") + 1, statement.lastIndexOf(")")).trim();
+						StringTokenizer attribtueNames = new StringTokenizer(statement, ",");
+						if (attribtueNames.countTokens() > 0) {
+							while (attribtueNames.hasMoreTokens()) {
+								attribtueName = attribtueNames.nextToken().trim();
+								if (attribtueName.indexOf(" ") != -1) {
+									System.out.println("All attributes must be seperated by ','. Error near : " + attribtueName);
+									return false;
 								}
-								if (chk) {
+								if (relationAttributes.containsKey(attribtueName)) {
+									parsedToken.add(attribtueName);
+								} else {
 									QueryParser.print_error(1, attribtueName);
 									return false;
 								}
-							} else {
-								QueryParser.print_error(2, relationName);
-								return false;
 							}
-							if (attribtueName.indexOf(" ") == -1) {
-								parsedToken.add(attribtueName);
-							} else {
-								System.out.println("All attributes must be seperated by ','. Error near : " + attribtueName);
-								return false;
-							}
+							parsedData.add(parsedToken);
+						} else {
+							System.out.println("Atleat one attribute should be specified. Error near : " + statement);
+							return false;
 						}
-						parsedData.add(parsedToken);
-						/*
-						 * parsedToken = new Vector<String>(); statement =
-						 * statement
-						 * .substring(statement.lastIndexOf(")")+1).trim();
-						 * if(statement.equalsIgnoreCase("UNIQUE")){
-						 * parsedToken.add("true"); }else
-						 * if(statement.length()==0){ parsedToken.add("false");
-						 * }else{
-						 * System.out.println("Improper syntax. Error near : "
-						 * +statement); return false; }
-						 */
-						parsedData.add(parsedToken);
 					} else {
-						System.out.println("Atleat one attribute should be specified. Error near : " + statement);
+						System.out.println("Closing Parenthesis are missing at the end");
 						return false;
 					}
 				} else {
-					System.out.println("Parenthesis are missing");
+					QueryParser.print_error(2, relationName);
 					return false;
 				}
-				/*
-				 * }else{ System.out.println("Error near syntax \"" + statement
-				 * + "\""); return false; }
-				 */
 			} else {
-				// System.out.println("Error near syntax \"" + statement +
-				// "\"");
-				System.out.println("Keyword on is missing");
+				System.out.println("Parenthesis are missing");
 				return false;
 			}
 		} else {
-			System.out.println("Error near syntax \"" + statement + "\"");
+			System.out.println("Keyword on is missing");
 			return false;
 		}
+		parsedToken = new Vector<String>();
+		parsedToken.add(String.valueOf(unique));
+		parsedData.add(parsedToken);
 		return true;
 	}
 
