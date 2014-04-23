@@ -94,8 +94,8 @@ public class UpdateOperation extends Operation {
 						setValue(setTuple, obj);
 						relationId = ObjectHolder.getObjectHolder().getRelationId(Utility.getRelationName(tableList.elementAt(i)));
 						relation = (Relation) ObjectHolder.getObjectHolder().getObject(relationId);
-						DatabaseManager.getSystemCatalog().updateRecord(relationId, iteratorList.get(i).currentPage, (iteratorList.get(i).position - relation.getRecordSize()),
-								recordObjects.get(i).serialize(obj));
+						DatabaseManager.getSystemCatalog().updateRecord(relation, iteratorList.get(i).currentPage, (iteratorList.get(i).position - relation.getRecordSize()),
+								obj);
 					}
 
 				} else {

@@ -321,7 +321,6 @@ public class SystemCatalogManager {
 				DynamicObject recordObject = new DynamicObject(relation.getAttributes());
 				DynamicObject iteratorKey = new DynamicObject(attributes);
 				PhysicalAddress recordAddress = new PhysicalAddress();
-				recordAddress.id = relation.getId();
 				Iterator iterator = new Iterator(relation);
 				while (iterator.hasNext()) {
 					ByteBuffer record = iterator.getNext();
@@ -331,6 +330,7 @@ public class SystemCatalogManager {
 						for (int i = 0; i < attributes.size(); i++) {
 							iteratorKey.obj[i] = recordObject.obj[relation.getAttributePosition(attributes.get(i).getName())];
 						}
+						recordAddress.id = relation.getId();
 						recordAddress.offset = iterator.currentPage;
 						if (!index.insert(iteratorKey, recordAddress, iterator.position - relation.getRecordSize())) {
 							dropIndex(indexName, relationName);
@@ -591,9 +591,30 @@ public class SystemCatalogManager {
 	 *            : Bytebuffer for the record.
 	 */
 	public void updateRecord(long id, long pageNumber, int recordOffset, ByteBuffer serialBuffer) {
-		//TODO Delete and reinsert into indices
 		serialBuffer.position(0);
 		bufferManager.write(id, pageNumber, recordOffset, serialBuffer);
+	}
+	
+	public void updateRecord(Relation relation, long pageNumber, int recordOffset, DynamicObject dObj) {
+		java.util.Iterator<Long> indices = relation.getIndices().iterator();
+		PhysicalAddress address = new PhysicalAddress(relation.getId(), pageNumber);
+		while (indices.hasNext()) {
+			Index currIndex = ((Index) objectHolder.getObject(indices.next()));
+			deleteIndexRecord(currIndex,dObj, address, recordOffset);
+			DynamicObject entryObject = new DynamicObject(currIndex.getAttributes());
+			for(int i=0; i<entryObject.attributes.size();i++){
+				for(int j=0;j<currIndex.getAttributes().size();j++){
+					if(currIndex.getAttributes().get(j).getName().equals(entryObject.attributes.get(i).getName())){
+						entryObject.obj[i] = dObj.obj[j];
+						break;
+					}
+				}
+			}
+			currIndex.insert(entryObject, address, recordOffset);
+		}
+		ByteBuffer serialBuffer = dObj.serialize(dObj);
+		serialBuffer.position(0);
+		bufferManager.write(relation.getId(), pageNumber, recordOffset, serialBuffer);
 	}
 
 	/**

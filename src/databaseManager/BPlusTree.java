@@ -70,6 +70,7 @@ public class BPlusTree {
 					bucket.pointers[currentBucketPtr - 1] = new PhysicalAddress(-1, -1);
 					bucket.offset[currentBucketPtr - 1] = -1;
 					bufferManager.write(index.getId(), prevAddress.offset, prevOffset, bucket.serialize());
+					return true;
 				}
 			} else {
 				searchNode.childrens[currentLocation-1] = new PhysicalAddress(-2, -2);
@@ -82,6 +83,7 @@ public class BPlusTree {
 	}
 
 	public Split search(DynamicObject key) {
+		readHead();
 		Node node = rootNode;
 		prevAddress = rootAddress;
 		prevOffset = rootOffset;
@@ -145,7 +147,7 @@ public class BPlusTree {
 					returnData.value = bucket.pointers[currentBucketPtr];
 					returnData.recordOffset = bucket.offset[currentBucketPtr++];
 					nextEntry = bucket.pointers[currentBucketPtr];
-					if (returnData.value.id != -2) {
+					if (returnData.value.id >= 0) {
 						flag = true;
 						break;
 					}
@@ -198,8 +200,6 @@ public class BPlusTree {
 	}
 
 	private void readHead() {
-		rootAddress = index.getRootPageAddress();
-		rootOffset = index.getRootOffset();
 		ByteBuffer serialData = bufferManager.read(rootAddress.id, rootAddress.offset);
 		rootNode = new Node(serialData, rootOffset);
 	}
@@ -348,11 +348,7 @@ public class BPlusTree {
 			}
 		}
 		if (flag) {
-			if (i < N) {
-				bucket.pointers[i] = new PhysicalAddress(-1, -1);
-				bucket.offset[i] = -1;
-				return;
-			}
+			return;
 		}
 		Bucket _bucket = new Bucket();
 		insertToBucket(_bucket, value, recordOffset);

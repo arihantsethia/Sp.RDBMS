@@ -121,13 +121,12 @@ public class DropOperation extends Operation {
 		
 		if(statement.contains(" ")){
 			indexName = statement.substring(0,statement.indexOf(" ")).trim();
-			//System.out.println("indexName->"+indexName);
 			statement = statement.substring(statement.indexOf(indexName) + indexName.length()).trim();
 			if(statement.length() == 0){
 				System.out.println("Keyword \'on\' is missing");
 				return false;
 			}
-			int onIndex = statement.indexOf("on");
+			int onIndex = statement.indexOf("on ");
 			if(onIndex == 0){
 				statement = statement.substring(onIndex + 2).trim();
 				if(statement.length() == 0){
@@ -153,33 +152,6 @@ public class DropOperation extends Operation {
 			System.out.println("Not a valid drop index syntax");
 			return false;
 		}
-		
-		/*StringTokenizer tokens = new StringTokenizer(statement, " ");
-		if (tokens.countTokens() == 3) {
-			indexName = tokens.nextToken().trim();
-			if (tokens.nextToken().trim().equalsIgnoreCase("ON")) {
-				//if (tokens.nextToken().trim().equalsIgnoreCase("TABLE")) {
-					relationName = tokens.nextToken().trim();
-					long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
-					if(newRelationId != -1){
-						return true;
-					}
-					else{
-						System.out.println("Not a valid relation name");
-						return false;
-					}
-					
-				//} else {
-					//return false;
-				//}
-			} else {
-				System.out.println("keyword \'on\' is missing");
-				return false;
-			}
-		} else {
-			System.out.println("Not a valid drop index query");
-			return false;
-		}*/
 	}
 
 	/**

@@ -28,7 +28,7 @@ public class Index {
 	private Vector<Attribute> attributes;
 
 	private DynamicObject dObject;
-	private BPlusTree bTree;
+	public BPlusTree bTree;
 
 	public Index(String _indexName, long _id, long _parentId, boolean _unique, Vector<Attribute> _attributes) {
 		indexName = _indexName;
