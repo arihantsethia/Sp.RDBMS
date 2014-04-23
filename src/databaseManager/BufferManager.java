@@ -75,13 +75,16 @@ public class BufferManager {
 	/**
 	 * initializes all the attributes of bufferManager to its default values.
 	 */
-	private void initializeTable() {
+	public void initializeTable() {
 		for (int i = 0; i < MAX_PAGE_COUNT; i++) {
 			isDirty[i] = false;
 			lookUpTable[i] = new PhysicalAddress(-1, -1);
 			clockTick[i] = 0;
 		}
 		lookUpMap.clear();
+		for (Map.Entry<Long, FileChannel> entry : openFiles.entrySet()) {
+			diskSpaceManager.closeFile(openFiles.get(entry.getKey()));
+		}
 		openFiles.clear();
 	}
 
@@ -229,6 +232,13 @@ public class BufferManager {
 			return unPinPage(lookUpMap.get(physicalAddress));
 		} else {
 			return false;
+		}
+	}
+
+	// UNPIN all the pages in main memory which are PINNED.
+	public void unPinAll() {
+		for (int i = 0; i < MAX_PAGE_COUNT; i++) {
+			unPinPage((long) i);
 		}
 	}
 

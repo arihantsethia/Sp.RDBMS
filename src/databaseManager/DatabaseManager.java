@@ -17,13 +17,12 @@ import queriesManager.SelectOperation;
 public class DatabaseManager {
 
 	private static SystemCatalogManager systemCatalog;
-	private Vector<String> dbHolder;
+	private static Vector<String> dbHolder;
 	public static String rootDir;
 	public static boolean inDb;
 
 	public DatabaseManager() {
-		File directory = new File(".");
-		rootDir = directory.getAbsolutePath();
+		rootDir = System.getProperty("user.dir");
 		dbHolder = new Vector<String>();
 		inDb = false;
 		loadDatabases();
@@ -46,17 +45,19 @@ public class DatabaseManager {
 		return dbHolder.size() > 0 ? true : false;
 	}
 
-	public boolean createDatabase(String dbName) {
+	public static boolean createDatabase(String dbName) {
 		if (!dbHolder.contains(dbName)) {
 			File dir = new File(rootDir + "/db_" + dbName);
 			dir.mkdir();
 			dbHolder.add(dbName);
+			System.out.println("Database successfully created " + dbName);
 			return true;
 		}
+		System.out.println("Error : Database already exists.");
 		return false;
 	}
 
-	public void showDatabases() {
+	public static void showDatabases() {
 		if (dbHolder.size() > 0) {
 			for (int i = 0; i < dbHolder.size(); i++) {
 				System.out.println((i + 1) + ". " + dbHolder.get(i));
@@ -67,22 +68,30 @@ public class DatabaseManager {
 	}
 
 	public static void useDatabase(String dbName) {
-		if (systemCatalog != null) {
-			systemCatalog.close();
-		}
-		System.setProperty("user.dir", rootDir);
-		File directory = new File("db_" + dbName).getAbsoluteFile();
-		boolean result = (System.setProperty("user.dir", directory.getAbsolutePath()) != null);
-		systemCatalog = new SystemCatalogManager();
-		if (result) {
-			inDb = true;
-			System.out.println("Current Database Change to : " + dbName);
-		} else {
+		if (dbHolder.contains(dbName)) {
+			if (systemCatalog != null) {
+				systemCatalog.close();
+			}
+			System.setProperty("user.dir", rootDir);
+			inDb = false;
+			File directory = new File(rootDir + "/db_" + dbName);
+			System.out.println(directory.isDirectory());
+			System.out.println(directory.getAbsolutePath());
+			boolean result = (System.setProperty("user.dir", directory.getAbsolutePath()) != null);
+			systemCatalog = new SystemCatalogManager();
+			if (result) {
+				inDb = true;
+				System.out.println(System.getProperty("user.dir"));
+				System.out.println("Current Database Change to : " + dbName);
+			} else {
+				System.out.println("Error : Couldn't change to database " + dbName + ".");
+			}
+		}else{
 			System.out.println("Error : Database " + dbName + " doesn't exist.");
 		}
 	}
 
-	public boolean dropDatabse(String dbName) {
+	public static boolean dropDatabase(String dbName) {
 		if (dbHolder.contains(dbName)) {
 			File dir = new File(".");
 			String currPath = dir.getAbsolutePath();
@@ -94,12 +103,14 @@ public class DatabaseManager {
 			if (dir.exists() && dir.isDirectory()) {
 				System.setProperty("user.dir", currPath);
 			} else {
-				inDb=false;
+				inDb = false;
 				systemCatalog.close();
 				systemCatalog = null;
 			}
+			System.out.println("Database successfully droped.");
 			return true;
 		}
+		System.out.println("Error : Database doesn't exist.");
 		return false;
 	}
 
@@ -137,11 +148,17 @@ public class DatabaseManager {
 				}
 			}
 		} else if (splitCommand[0].equals("show")) {
-			if (query.replace(" ", "").trim().equals("showtables") && query.split(" ").length == 2) {
-				System.out.println("List of Tables :- ");
-				systemCatalog.showTables();
+			if (splitCommand.length == 2) {
+				if (splitCommand[1].equals("databases")) {
+					showDatabases();
+				} else if (splitCommand[1].equals("tables")) {
+					System.out.println("List of Tables :- ");
+					systemCatalog.showTables();
+				} else {
+					System.out.println("Error : Undefined Syntax.");
+				}
 			} else {
-				System.out.println("wrong show table syntax");
+				System.out.println("Error : Undefined Syntax.");
 			}
 		} else if (splitCommand[0].equals("update")) {
 			if (QueryParser.isUpdateStatementQuery(query)) {
@@ -162,6 +179,16 @@ public class DatabaseManager {
 		} else if (splitCommand[0].equals("desc")) {
 			if (systemCatalog.descOperation(query)) {
 				System.out.println();
+			}
+		} else if (splitCommand[0].equals("use")) {
+			if (splitCommand.length == 3) {
+				if (splitCommand[1].equals("database")) {
+					useDatabase(splitCommand[2]);
+				} else {
+					System.out.println("Error : Undefined Syntax.");
+				}
+			} else {
+				System.out.println("Error : Undefined Syntax.");
 			}
 		} else {
 			System.out.println("undefined Syntax\n");

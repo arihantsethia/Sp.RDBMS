@@ -443,6 +443,8 @@ public class SystemCatalogManager {
 
 	public void close() {
 		bufferManager.flush();
+		bufferManager.unPinAll();
+		bufferManager.initializeTable();
 	}
 
 	public boolean showTables() {
