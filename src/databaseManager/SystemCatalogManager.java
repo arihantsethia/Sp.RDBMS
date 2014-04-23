@@ -496,6 +496,10 @@ public class SystemCatalogManager {
 		}
 		return false;
 	}
+	
+	public boolean deleteRecord(long id, long pageNumber, int recordNumber, int recordsPerPage) {
+		return bufferManager.writeRecordBitmap(id, pageNumber, recordsPerPage, recordNumber, false);
+	}
 
 	/**
 	 * Deletes the record from given relation by setting corresponding bit in
@@ -512,8 +516,36 @@ public class SystemCatalogManager {
 	 *            record is to be deleted.
 	 * @return
 	 */
-	public boolean deleteRecord(long id, long pageNumber, int recordNumber, int recordsPerPage) {
+	public boolean deleteRecord(long id, long pageNumber, int recordOffset, DynamicObject dObj) {
+		Relation relation = (Relation) objectHolder.getObject(id);
+		relation.updateRecordsCount(-1);
+		java.util.Iterator<Long> indices = relation.getIndices().iterator();
+		PhysicalAddress deleteAddress = new PhysicalAddress(id, pageNumber);
+		int recordsPerPage = relation.getRecordsPerPage();
+		int recordNumber = (recordOffset - (recordsPerPage + 7) / 8) / relation.getRecordSize();		
+		while (indices.hasNext()) {
+			Index currIndex = ((Index) objectHolder.getObject(indices.next()));
+			deleteIndexRecord(currIndex,dObj, deleteAddress, recordOffset);
+		}
+		relation.updateRecordsCount(-1);
+		updateRelationCatalog(relation);
 		return bufferManager.writeRecordBitmap(id, pageNumber, recordsPerPage, recordNumber, false);
+	}
+	
+	private boolean deleteIndexRecord(Index index, DynamicObject dObj, PhysicalAddress deleteAddress, int recordOffset){
+		if (index.setTree()) {
+			updateIndexCatalog(index);
+		}
+		DynamicObject entryObject = new DynamicObject(index.getAttributes());//= Utility.toDynamicObject(columnList, valueList, currIndex.getAttributes());
+		for(int i=0; i<entryObject.attributes.size();i++){
+			for(int j=0;j<index.getAttributes().size();j++){
+				if(index.getAttributes().get(j).getName().equals(entryObject.attributes.get(i).getName())){
+					entryObject.obj[i] = dObj.obj[j];
+					break;
+				}
+			}
+		}
+		return index.delete(entryObject, deleteAddress, recordOffset);
 	}
 
 	/**
@@ -559,6 +591,7 @@ public class SystemCatalogManager {
 	 *            : Bytebuffer for the record.
 	 */
 	public void updateRecord(long id, long pageNumber, int recordOffset, ByteBuffer serialBuffer) {
+		//TODO Delete and reinsert into indices
 		serialBuffer.position(0);
 		bufferManager.write(id, pageNumber, recordOffset, serialBuffer);
 	}

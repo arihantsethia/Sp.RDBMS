@@ -223,6 +223,13 @@ public class Index {
 		}
 		return false;
 	}
+	
+	public boolean delete(DynamicObject object, PhysicalAddress value, int recordOffset) {
+		if (dObject != null) {
+			return bTree.delete(object, value, recordOffset);
+		}
+		return false;
+	}
 
 	public BPlusTree.Split search(DynamicObject object) {
 		if (dObject != null) {
