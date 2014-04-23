@@ -6,6 +6,12 @@ import databaseManager.ObjectHolder;
 import databaseManager.Relation;
 import databaseManager.Utility;
 
+/**
+ * 
+ * The instance of "EquiOperation" class is called whenever we want to execute
+ * Equip Join query. it calls instance of Select Class to evaluate final expression.
+ * 
+ */
 public class EquiJoin extends Operation {
 	protected Projection projection;
 	protected int tableCount;
@@ -20,6 +26,11 @@ public class EquiJoin extends Operation {
 	protected Vector<Attribute.Type> commonAttributeType;
 	protected String newCondition, projectionPart, tablePart;
 
+	/**
+	 * This constructor will be called when we want to create object of class
+	 * EquiJoinOperation It takes input query as arguments and split it into
+	 * projectionPart , tablePart and newCondition. 
+	 */
 	public EquiJoin(String statement) {
 		setType(QueryParser.OperationType.EQUIJOIN);
 		Vector<String> stmtParts = QueryParser.statementParts(statement, "select");
@@ -41,6 +52,10 @@ public class EquiJoin extends Operation {
 		projection = new Projection();
 	}
 
+	/**
+	 * It create intermediate select query to evaluate operation and 
+	 * Execute operation of that new Intermediate Class.
+	 */
 	public boolean executeOperation() {
 		if (newCondition == null || newCondition.equals("")) {
 			intermediateOP = Operation.makeOperation("select " + projectionPart + " from " + tablePart);
@@ -54,6 +69,10 @@ public class EquiJoin extends Operation {
 		}
 	}
 
+	/**
+	 * It updates commonAttribute Vector which contains name of attributes which are common
+	 * in all relations that are used.
+	 */
 	void getCommonAttribute() {
 
 		commonAttribute = new Vector<String>();
@@ -91,6 +110,10 @@ public class EquiJoin extends Operation {
 		}
 	}
 
+	/**
+	 * It updates restAttribute Vector which contains name of attributes which are not in 
+	 * commonAttributes Vector and Contain in any one of relations.
+	 */
 	void getRestAttribute() {
 
 		restAttribute = new Vector<String>();
@@ -110,6 +133,10 @@ public class EquiJoin extends Operation {
 
 	}
 
+	/**
+	 * It adds extra equality conditions to previous condition to evaluate expressions.
+	 * @param condition
+	 */
 	void addCondition(String condition) {
 		String prev, cur, prevResult, attributeName;
 		prevResult = condition;

@@ -4,6 +4,11 @@ import java.util.StringTokenizer;
 
 import databaseManager.DatabaseManager;
 
+/**
+ * 
+ * The instance of "DropOperation" class is called whenever we want to execute
+ * Create query. 
+ */
 public class DropOperation extends Operation {
 
 	protected String indexName;
@@ -11,6 +16,12 @@ public class DropOperation extends Operation {
 	protected String dbName;
 	protected int queryType;
 
+	/**
+	 * 
+	 * The instance of "DropOperation" class is called whenever we want to execute
+	 * Drop query.
+	 * 
+	 */
 	DropOperation(String statement) {
 		queryType = -1;
 		setType(QueryParser.OperationType.DROP);
@@ -29,10 +40,20 @@ public class DropOperation extends Operation {
 		}
 	}
 
+	/**
+	 * It parse drop primary key query and give result true or false according to that. 
+	 * @param statement
+	 * @return
+	 */
 	private boolean parseDropPrimaryKeyQuery(String statement) {
 		return true;
 	}
 
+	/**
+	 * It parse the drop statement query given as input and return true or false according to that.
+	 * @param statement
+	 * @return
+	 */
 	private boolean parseDropTableQuery(String statement) {
 		statement = statement.substring(statement.indexOf("table") + 5).trim();
 		if (statement.length() == 0) {
@@ -47,6 +68,11 @@ public class DropOperation extends Operation {
 		}
 	}
 
+	/**
+	 * It parse drop index key query and give result true or false according to that. 
+	 * @param statement
+	 * @return
+	 */
 	private boolean parseDropIndexQuery(String statement) {
 		statement = statement.substring(statement.indexOf("index") + 5).trim();
 		StringTokenizer tokens = new StringTokenizer(statement, " ");
@@ -67,6 +93,11 @@ public class DropOperation extends Operation {
 		}
 	}
 
+	/**
+	 * parser for delete database query.
+	 * @param statement
+	 * @return
+	 */
 	private boolean parseDropDBQuery(String statement) {
 		if (statement.length() >= 8) {
 			statement = statement.substring(8).trim();
@@ -81,6 +112,10 @@ public class DropOperation extends Operation {
 		return false;
 	}
 
+	/**
+	 * This method will execute delete query and will reply true if query
+	 * successfully executed. It evaluates according to query type whether it is delete index or primary key.
+	 */
 	public boolean executeOperation() {
 		if (queryType == 0) {
 			return DatabaseManager.getSystemCatalog().dropTable(relationName);

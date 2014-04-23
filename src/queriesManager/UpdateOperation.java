@@ -45,6 +45,12 @@ public class UpdateOperation extends Operation {
 		setCondition(Condition.makeCondition(updateStatementParts(statement)));
 	}
 
+	/**
+	 * This function divide statement string into three parts 
+	 * TableList , setTuple and conditionPart.
+	 * @param	statement update query
+	 * @return where condition of update query.
+	 */
 	String updateStatementParts(String statement) {
 		int index = statement.indexOf("update");
 		statement = statement.substring(index + 6).trim();
@@ -61,6 +67,12 @@ public class UpdateOperation extends Operation {
 		return null;
 	}
 
+	/**
+	 * This method will execute update query and will reply true if query
+	 * successfully executed. It takes records of each table by using iterator
+	 * of corresponding class.
+	 * IncrementCounter function increments recordCounterList.
+	 */
 	public boolean executeOperation() {
 
 		for (int i = 0; i < tableList.size(); i++) {
@@ -93,11 +105,12 @@ public class UpdateOperation extends Operation {
 		}
 		return true;
 	}
-
-	void print() {
-		recordObjects.get(0).printRecords();
-	}
-
+	
+	/**
+	 * This function change attributes values of dObject named DynamicObject.  
+	 * @param statement setTuple given as argument.
+	 * @param dObject DynamicObject of one relation Instance.
+	 */
 	void setValue(String statement, DynamicObject dObject) {
 		String[] token = statement.split(",");
 		for (int i = 0; i < token.length; i++) {

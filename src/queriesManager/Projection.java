@@ -9,14 +9,28 @@ import databaseManager.ObjectHolder;
 import databaseManager.Relation;
 import databaseManager.Utility;
 
+/**
+ * 
+ * The instance of "Projection" class is called whenever we want to project
+ * result of any query. It is a leaf class which print Results.
+ * 
+ */
 public class Projection extends Operation {
 	public static TreeMap<String, Integer> tableMap;
 	public static int attributeCount;
 
+	/**
+	 * This constructor will be called when we want to create object of class
+	 * Projection. It initializes tableMap which required to map nick name to relation name.
+	 */
 	public Projection() {
 		tableMap = new TreeMap<String, Integer>(String.CASE_INSENSITIVE_ORDER);
 	}
 
+	/**
+	 * It prints every attributes present in every table of tableList.
+	 * @param tableList
+	 */
 	void printAllTableAttributes(Vector<String> tableList) {
 		int length = 0;
 		for (int i = 0; i < tableList.size(); i++) {
@@ -36,6 +50,10 @@ public class Projection extends Operation {
 		attributeCount += length;
 	}
 
+	/**
+	 * It prints every attributes present in table at position index in tableList.
+	 * @param tableList
+	 */
 	void printAllTableAttributes(Vector<String> tableList, int index) {
 		int length = 0;
 		Relation relation = (Relation) ObjectHolder.getObjectHolder().getObject(ObjectHolder.getObjectHolder().getRelationId(Utility.getRelationName(tableList.elementAt(index))));
@@ -52,6 +70,10 @@ public class Projection extends Operation {
 		attributeCount += length;
 	}
 
+	/**
+	 * It prints individual attribute named 'x' present in table at position index in tableList.
+	 * @param tableList
+	 */
 	void printAttribute(Vector<String> tableList, int index, String s) {
 		int length = 0;
 		Relation relation = (Relation) ObjectHolder.getObjectHolder().getObject(ObjectHolder.getObjectHolder().getRelationId(Utility.getRelationName(tableList.elementAt(index))));
@@ -68,16 +90,28 @@ public class Projection extends Operation {
 		attributeCount += length;
 	}
 
+	/**
+	 * It prints every attributes present in every table of tableList.
+	 * @param tableList
+	 */
 	void printAllRecords(Vector<DynamicObject> recordObjects, Vector<String> tableList) {
 		for (int i = 0; i < tableList.size(); i++) {
 			recordObjects.get(i).printRecords();
 		}
 	}
 
+	/**
+	 * It prints every attributes present in table at index i of tableList.
+	 * @param tableList
+	 */
 	void printAllRecords(Vector<DynamicObject> recordObjects, int index) {
 		recordObjects.get(index).printRecords();
 	}
 
+	/**
+	 * constructor to initialize map.
+	 * @param tableList
+	 */
 	void initializeMap(Vector<String> tableList) {
 		tableMap.clear();
 		for (int i = 0; i < tableList.size(); i++) {
@@ -86,6 +120,12 @@ public class Projection extends Operation {
 		}
 	}
 
+	/**
+	 * print Records according to attributes present in projectionString ,tableList and recordObjects
+	 * @param projectionString
+	 * @param tableList
+	 * @param recordObjects
+	 */
 	void printRecords(String projectionString, Vector<String> tableList, Vector<DynamicObject> recordObjects) {
 		initializeMap(tableList);
 		String[] tokens = projectionString.split(",");
@@ -105,6 +145,12 @@ public class Projection extends Operation {
 		System.out.println();
 	}
 
+	/**
+	 * print attributes according to attributes present in projectionString ,tableList and recordObjects
+	 * @param projectionString
+	 * @param tableList
+	 * @param recordObjects
+	 */
 	void printTableAttributes(String projectionString, Vector<String> tableList, Vector<DynamicObject> recordObjects) {
 		attributeCount = 0;
 		initializeMap(tableList);

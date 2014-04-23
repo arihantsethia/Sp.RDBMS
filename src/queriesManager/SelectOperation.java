@@ -56,7 +56,7 @@ public class SelectOperation extends Operation {
 	/**
 	 * This method will execute select query and will reply true if query
 	 * successfully executed. It takes records of each table by using iterator
-	 * of corresponding class IncrementCounter function increment
+	 * of corresponding class. IncrementCounter function increment
 	 * recordCounterList.
 	 */
 	@Override

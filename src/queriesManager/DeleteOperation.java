@@ -10,6 +10,13 @@ import databaseManager.ObjectHolder;
 import databaseManager.Relation;
 import databaseManager.Utility;
 
+/**
+ * 
+ * The instance of "DeleteOperation" class is called whenever we want to Delete
+ * a query. it also calls instance of Condition Class to check associates
+ * conditions Evaluate with it.
+ * 
+ */
 public class DeleteOperation extends Operation {
 
 	protected int tableCount;
@@ -22,6 +29,13 @@ public class DeleteOperation extends Operation {
 	protected Relation relation;
 	protected long relationId;
 
+	/**
+	 * This constructor will be called when we want to create object of class
+	 * DeleteOperation It takes input query as arguments and split it into
+	 * projectionPart , tablePart and conditionPart. It also generates Condition
+	 * and Projection class Instance if Necessary.
+	 */
+
 	DeleteOperation(String statement) {
 		setType(QueryParser.OperationType.DELETE);
 		recordCountList = new Vector<Integer>();
@@ -31,6 +45,14 @@ public class DeleteOperation extends Operation {
 		setCondition(Condition.makeCondition(deleteStatementParts(statement)));
 	}
 
+	/**
+	 * This function divide statement string into three parts TableList ,
+	 * setTuple and conditionPart.
+	 * 
+	 * @param statement
+	 *            delete query
+	 * @return where condition of delete query.
+	 */
 	String deleteStatementParts(String statement) {
 		int index = statement.indexOf("from");
 		statement = statement.substring(index + 4).trim();
@@ -45,6 +67,12 @@ public class DeleteOperation extends Operation {
 		return null;
 	}
 
+	/**
+	 * This method will execute delete query and will reply true if query
+	 * successfully executed. It takes records of each table by using iterator
+	 * of corresponding class. IncrementCounter function increment
+	 * recordCounterList.
+	 */
 	public boolean executeOperation() {
 
 		for (int i = 0; i < tableList.size(); i++) {
@@ -76,11 +104,5 @@ public class DeleteOperation extends Operation {
 			}
 		}
 		return true;
-	}
-
-	void print() {
-		for (int i = 0; i < tableList.size(); i++) {
-			recordObjects.get(i).printRecords();
-		}
 	}
 }

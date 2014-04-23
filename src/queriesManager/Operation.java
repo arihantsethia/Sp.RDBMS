@@ -2,15 +2,31 @@ package queriesManager;
 
 import queriesManager.QueryParser.OperationType;
 
+/**
+ * 
+ * The instance of "Operation" class is called whenever we want to execute
+ * any query. 
+ * It checks operationType and create class instance according to it.
+ * 
+ */
 public abstract class Operation {
 	protected OperationType operationType;
 	protected Condition condition;
 	protected Projection projection;
 
+	/**
+	 * set Type of operation.
+	 * @param opType
+	 */
 	void setType(OperationType opType) {
 		operationType = opType;
 	}
 
+	/**
+	 * constructor to create operation instance corresponding to operation type.
+	 * @param statement
+	 * @return
+	 */
 	public static Operation makeOperation(String statement) {
 		if (statement.toUpperCase().contains("NATURAL")) {
 			return new NaturalJoin(statement);
@@ -36,10 +52,18 @@ public abstract class Operation {
 		return null;
 	}
 
+	/**
+	 * it is overloaded by derived classes to set condition class instance corresponding to where statement.
+	 * @param cond
+	 */
 	void setCondition(Condition cond) {
 		condition = cond;
 	}
 
+	/**
+	 * it is overloaded by derived classes to evaluate corresponding statement.
+	 * @return
+	 */
 	public boolean executeOperation() {
 		return false;
 	}

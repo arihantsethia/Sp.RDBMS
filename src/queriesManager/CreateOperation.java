@@ -6,6 +6,11 @@ import java.util.Vector;
 
 import databaseManager.*;
 
+/**
+ * 
+ * The instance of "CreateOperation" class is called whenever we want to execute
+ * Create query. 
+ */
 public class CreateOperation extends Operation {
 
 	protected String indexName;
@@ -14,6 +19,12 @@ public class CreateOperation extends Operation {
 	protected Vector<Vector<String>> parsedData;
 	protected int queryType;
 
+	/**
+	 * 
+	 * The instance of "CreateOperation" class is called whenever we want to execute
+	 * Create query.
+	 * 
+	 */
 	CreateOperation(String statement) {
 		setType(QueryParser.OperationType.CREATE);
 		parsedData = new Vector<Vector<String>>();
@@ -33,6 +44,11 @@ public class CreateOperation extends Operation {
 		}
 	}
 
+	/**
+	 * It parse the create statement query given as input and return true or false according to that.
+	 * @param statement
+	 * @return
+	 */
 	private boolean parseCreateTableQuery(String statement) {
 		int tableIndex = statement.indexOf("table");
 
@@ -124,6 +140,11 @@ public class CreateOperation extends Operation {
 		return true;
 	}
 
+	/**
+	 * It parse create primary key query and give result true or false according to that. 
+	 * @param statement
+	 * @return
+	 */
 	private boolean parseCreatePrimaryKeyQuery(String statement) {
 		int primarykeyIndex = statement.trim().indexOf("primary key");
 		int onIndex = statement.trim().indexOf("on");
@@ -195,6 +216,11 @@ public class CreateOperation extends Operation {
 		return true;
 	}
 
+	/**
+	 * It parse create index key query and give result true or false according to that. 
+	 * @param statement
+	 * @return
+	 */
 	private boolean parseCreateIndexQuery(String statement) {
 		int uniqueIndex = statement.indexOf("unique");
 		int index = statement.indexOf("index");
@@ -231,9 +257,6 @@ public class CreateOperation extends Operation {
 			}
 		}
 
-		// statement =
-		// statement.substring(statement.toUpperCase().indexOf("INDEX") +
-		// 5).trim();
 		Vector<String> parsedToken;
 		String attribtueName;
 		if (statement.contains(" ")) {
@@ -324,6 +347,11 @@ public class CreateOperation extends Operation {
 		return true;
 	}
 
+	/**
+	 * parser for create database query.
+	 * @param statement
+	 * @return
+	 */
 	private boolean parseCreateDBQuery(String statement) {
 		if (statement.length() >= 8) {
 			statement = statement.substring(8).trim();
@@ -337,6 +365,10 @@ public class CreateOperation extends Operation {
 		return false;
 	}
 
+	/**
+	 * This method will execute create query and will reply true if query
+	 * successfully executed. It evaluates according to query type whether it is create index or primary key.
+	 */
 	public boolean executeOperation() {
 		if (queryType == 0) {
 			return DatabaseManager.getSystemCatalog().createTable(relationName, parsedData);

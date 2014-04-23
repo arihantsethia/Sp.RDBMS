@@ -5,6 +5,12 @@ import java.util.Vector;
 import databaseManager.Attribute;
 import databaseManager.Relation;
 
+/**
+ * 
+ * The instance of "CondOperation" class is called whenever we want to execute
+ * Conditional Join query. it calls instance of Select Class to evaluate final expression.
+ * 
+ */
 public class CondJoin extends Operation {
 	protected int tableCount;
 	protected Vector<String> tableList;
@@ -18,6 +24,11 @@ public class CondJoin extends Operation {
 	protected Vector<Attribute.Type> commonAttributeType;
 	protected String newCondition, projectionPart, tablePart;
 
+	/**
+	 * This constructor will be called when we want to create object of class
+	 * CondOperation It takes input query as arguments and split it into
+	 * projectionPart , tablePart and newCondition. 
+	 */
 	public CondJoin(String statement) {
 		setType(QueryParser.OperationType.CONDJOIN);
 		Vector<String> stmtParts = QueryParser.statementParts(statement, "select");
@@ -32,6 +43,10 @@ public class CondJoin extends Operation {
 		}
 	}
 
+	/**
+	 * It create intermediate select query to evaluate operation and 
+	 * Execute operation of that new Intermediate Class.
+	 */
 	public boolean executeOperation() {
 		if (newCondition != null && !newCondition.equals("")) {
 			intermediateOP = Operation.makeOperation("select " + projectionPart + " from " + tablePart + " where " + newCondition);
