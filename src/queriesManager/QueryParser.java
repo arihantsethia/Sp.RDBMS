@@ -371,12 +371,12 @@ public class QueryParser {
 				return true;
 			}
 			else{
-				System.out.println("Not a valid join syntax");
+				System.out.println("Not a valid natural join syntax");
 				return false;
 			}
 		}
 		else{
-			System.out.println("Not a valid join syntax: keyword \'naturaljoin\' is missing");
+			System.out.println("Not a valid natural join syntax: keyword \'naturaljoin\' is missing");
 			return false;
 		}
 	}
@@ -394,7 +394,7 @@ public class QueryParser {
 			}
 		}
 		else{
-			System.out.println("Not a valid join syntax: keyword \'equijoin\' is missing");
+			System.out.println("Not a valid equi join syntax: keyword \'equijoin\' is missing");
 			return false;
 		}
 	}
@@ -424,7 +424,7 @@ public class QueryParser {
 				}
 			}
 			else{
-				statement = statement.replace("join", ",").trim();
+				statement = statement.replace(" join ", ",").trim();
 				statement = statement.replace("("," ").replace(")"," ").trim();
 				
 				if(isSelectStatementQuery(statement)){
