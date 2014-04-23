@@ -282,4 +282,8 @@ public class Relation {
 			}
 		}
 	}
+
+	public void setFileName(String _fileName) {
+		fileName = _fileName;
+	}
 }

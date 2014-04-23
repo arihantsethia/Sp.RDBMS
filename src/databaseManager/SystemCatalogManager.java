@@ -7,10 +7,12 @@
 
 package databaseManager;
 
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
+import java.io.File;
 import java.nio.ByteBuffer;
 
 import queriesManager.QueryParser;
@@ -31,13 +33,13 @@ public class SystemCatalogManager {
 	public static final String INDEX_CATALOG = "index_catalog.db";
 	public static final String INDEX_ATTRIBUTE_CATALOG = "index_attribute_catalog.db";
 	public static final int RELATION_RECORD_SIZE = 160;
-	public static final long RELATION_CATALOG_ID = 0;
+	public static final long RELATION_CATALOG_ID = 1;
 	public static final int ATTRIBUTE_RECORD_SIZE = 143;
-	public static final long ATTRIBUTE_CATALOG_ID = 1;
+	public static final long ATTRIBUTE_CATALOG_ID = 2;
 	public static final int INDEX_RECORD_SIZE = 196;
-	public static final long INDEX_CATALOG_ID = 2;
+	public static final long INDEX_CATALOG_ID = 3;
 	public static final int INDEX_ATTRIBUTE_RECORD_SIZE = 143;
-	public static final long INDEX_ATTRIBUTE_CATALOG_ID = 3;
+	public static final long INDEX_ATTRIBUTE_CATALOG_ID = 4;
 
 	private BufferManager bufferManager;
 	private ObjectHolder objectHolder;
@@ -48,7 +50,10 @@ public class SystemCatalogManager {
 	public SystemCatalogManager() {
 		bufferManager = BufferManager.getBufferManager();
 		objectHolder = ObjectHolder.getObjectHolder();
-		totalObjectsCount = 4;
+		objectHolder.clearAll();
+		totalAttributesCount = 0;
+		totalIndexAttributesCount = 0;
+		totalObjectsCount = 5;
 		loadRelationCatalog();
 		loadAttributeCatalog();
 		loadIndexCatalog();
@@ -144,7 +149,7 @@ public class SystemCatalogManager {
 			objectHolder.addObjectToRelation(currIndex, false);
 		}
 	}
-
+	
 	public void addAttributeToCatalog(Attribute newAttribute) {
 		int attributeRecordsPerPage = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * ATTRIBUTE_RECORD_SIZE));
 		long freePageNumber = bufferManager.getFreePageNumber(ATTRIBUTE_CATALOG_ID);
@@ -188,7 +193,7 @@ public class SystemCatalogManager {
 		bufferManager.writeRecordBitmap(INDEX_CATALOG_ID, freePageNumber, indexRecordsPerPage, recordNumber, true);
 		totalObjectsCount++;
 	}
-
+	
 	public boolean createTable(String relationName, Vector<Vector<String>> parsedData) {
 		if (objectHolder.getRelationId(relationName) == -1) {
 			Relation newRelation = new Relation(relationName, totalObjectsCount);
@@ -444,7 +449,7 @@ public class SystemCatalogManager {
 		int count = 0;
 		String s = "";
 		for (Map.Entry<Long, Object> entry : objectHolder.objects.entrySet()) {
-			if ((entry.getValue() instanceof Relation) && entry.getKey() > 3) {
+			if ((entry.getValue() instanceof Relation) && entry.getKey() > 4) {
 				count += 1;
 				s = s + count + ".\t" + ((Relation) entry.getValue()).getName() + "\n";
 			}
@@ -541,6 +546,5 @@ public class SystemCatalogManager {
 		}
 		QueryParser.print_error(9, "");
 		return false;
-
 	}
 }
