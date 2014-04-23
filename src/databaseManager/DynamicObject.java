@@ -1,7 +1,6 @@
 package databaseManager;
 
 import java.nio.ByteBuffer;
-import java.util.Arrays;
 import java.util.Vector;
 
 public class DynamicObject implements Comparable<Object> {

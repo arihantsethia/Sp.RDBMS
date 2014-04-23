@@ -18,63 +18,63 @@ public class SimpleCondition extends Condition {
 	private String leftValue, rightValue;
 
 	public SimpleCondition(String statement) {
-		statement = statement.trim().substring(1,statement.trim().length()-1).trim() ;
+		statement = statement.trim().substring(1, statement.trim().length() - 1).trim();
 		operator = QueryParser.getOperatorType(statement);
 		leftOperand = QueryParser.getLeftOperand(statement, operator);
 		rightOperand = QueryParser.getRightOperand(statement, operator);
 	}
 
 	public boolean compare(Vector<DynamicObject> recordObjects, Vector<String> tableList) {
-		getLeftOperandData(recordObjects,tableList) ;
-		getRightOperandData(recordObjects,tableList) ;
-		
-		if(leftData==rightData){
-			if(leftData==QueryParser.DataType.Int){
-				
-				int left = Integer.parseInt(leftValue) ;
-				int right = Integer.parseInt(rightValue) ;
-				
-				if(operator==OperatorType.EQUAL && left==right){
-					return true ;
-				}else if(operator==OperatorType.GREATEQUAL && left >= right){
-					return true ;
-				}else if(operator==OperatorType.LESS && left<right){
-					return true ;
-				}else if(operator==OperatorType.LESSEQUAL && left <= right){
-					return true ;
-				}else if(operator==OperatorType.GREATER && left > right){
-					return true ;
+		getLeftOperandData(recordObjects, tableList);
+		getRightOperandData(recordObjects, tableList);
+
+		if (leftData == rightData) {
+			if (leftData == QueryParser.DataType.Int) {
+
+				int left = Integer.parseInt(leftValue);
+				int right = Integer.parseInt(rightValue);
+
+				if (operator == OperatorType.EQUAL && left == right) {
+					return true;
+				} else if (operator == OperatorType.GREATEQUAL && left >= right) {
+					return true;
+				} else if (operator == OperatorType.LESS && left < right) {
+					return true;
+				} else if (operator == OperatorType.LESSEQUAL && left <= right) {
+					return true;
+				} else if (operator == OperatorType.GREATER && left > right) {
+					return true;
 				}
 
-			}else if(leftData==QueryParser.DataType.Char){
-				
-				if(operator==OperatorType.EQUAL && leftValue.compareTo(rightValue) == 0){
-					return true ;
-				}else if(operator==OperatorType.GREATEQUAL && leftValue.compareTo(rightValue) >= 0){
-					return true ;
-				}else if(operator==OperatorType.LESS && leftValue.compareTo(rightValue) < 0){
-					return true ;
-				}else if(operator==OperatorType.LESSEQUAL && leftValue.compareTo(rightValue) <= 0){
-					return true ;
-				}else if(operator==OperatorType.GREATER && leftValue.compareTo(rightValue) > 0){
-					return true ;
+			} else if (leftData == QueryParser.DataType.Char) {
+
+				if (operator == OperatorType.EQUAL && leftValue.compareTo(rightValue) == 0) {
+					return true;
+				} else if (operator == OperatorType.GREATEQUAL && leftValue.compareTo(rightValue) >= 0) {
+					return true;
+				} else if (operator == OperatorType.LESS && leftValue.compareTo(rightValue) < 0) {
+					return true;
+				} else if (operator == OperatorType.LESSEQUAL && leftValue.compareTo(rightValue) <= 0) {
+					return true;
+				} else if (operator == OperatorType.GREATER && leftValue.compareTo(rightValue) > 0) {
+					return true;
 				}
 			}
 		}
-		
+
 		return false;
 	}
 
 	void getLeftOperandData(Vector<DynamicObject> recordObjects, Vector<String> tableList) {
 		if (leftOperand.contains(".")) {
 			leftNickName = Utility.getRelationName(leftOperand).trim();
-			
-			for(int i=0 ; i<tableList.size();i++){
-				if(Utility.getNickName(tableList.get(i)).equals(leftNickName)){
-					objectIndexLeft = i ;
+
+			for (int i = 0; i < tableList.size(); i++) {
+				if (Utility.getNickName(tableList.get(i)).equals(leftNickName)) {
+					objectIndexLeft = i;
 				}
 			}
-			
+
 			for (int i = 0; i < recordObjects.get(objectIndexLeft).attributes.size(); i++) {
 				if (recordObjects.get(objectIndexLeft).attributes.get(i).getName().equals(Utility.getNickName(leftOperand).trim())) {
 					attributeIndexLeft = i;
@@ -83,33 +83,33 @@ public class SimpleCondition extends Condition {
 
 			if (recordObjects.get(objectIndexLeft).attributes.get(attributeIndexLeft).getType() == Attribute.Type.Char) {
 				leftData = QueryParser.DataType.Char;
-				leftValue = (String) recordObjects.get(objectIndexLeft).obj[attributeIndexLeft] ;
+				leftValue = (String) recordObjects.get(objectIndexLeft).obj[attributeIndexLeft];
 			} else if (recordObjects.get(objectIndexLeft).attributes.get(attributeIndexLeft).getType() == Attribute.Type.Int) {
 				leftData = QueryParser.DataType.Int;
 				leftValue = ((Integer) recordObjects.get(objectIndexLeft).obj[attributeIndexLeft]).toString();
 			}
-			
+
 		} else {
 			if (Utility.isSameType("int", leftOperand)) {
-				leftValue = leftOperand ;
-				leftData = QueryParser.DataType.Int ;
+				leftValue = leftOperand;
+				leftData = QueryParser.DataType.Int;
 			} else if (Utility.isSameType("char", leftOperand)) {
 				leftValue = leftOperand.replace("\'", "");
 				leftData = QueryParser.DataType.Char;
 			}
 		}
 	}
-	
+
 	void getRightOperandData(Vector<DynamicObject> recordObjects, Vector<String> tableList) {
 		if (rightOperand.contains(".")) {
 			rightNickName = Utility.getRelationName(rightOperand).trim();
-			
-			for(int i=0 ; i<tableList.size();i++){
-				if(Utility.getNickName(tableList.get(i)).equals(rightNickName)){
-					objectIndexRight = i ;
+
+			for (int i = 0; i < tableList.size(); i++) {
+				if (Utility.getNickName(tableList.get(i)).equals(rightNickName)) {
+					objectIndexRight = i;
 				}
 			}
-			
+
 			for (int i = 0; i < recordObjects.get(objectIndexRight).attributes.size(); i++) {
 				if (recordObjects.get(objectIndexRight).attributes.get(i).getName().equals(Utility.getNickName(rightOperand))) {
 					attributeIndexRight = i;

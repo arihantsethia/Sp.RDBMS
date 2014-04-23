@@ -325,9 +325,9 @@ public class CreateOperation extends Operation {
 	}
 
 	private boolean parseCreateDBQuery(String statement) {
-		if(statement.length() >=8){
+		if (statement.length() >= 8) {
 			statement = statement.substring(8).trim();
-			if (statement.length() > 0) {
+			if (statement.length() > 0 && !statement.contains(" ")) {
 				dbName = statement;
 				return true;
 			}
@@ -336,7 +336,6 @@ public class CreateOperation extends Operation {
 		System.out.println("Error : Undefined Syntax!");
 		return false;
 	}
-	
 
 	public boolean executeOperation() {
 		if (queryType == 0) {

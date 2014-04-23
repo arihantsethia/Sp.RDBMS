@@ -105,10 +105,10 @@ public class NaturalJoin extends Operation {
 			relationId = ObjectHolder.getObjectHolder().getRelationId(Utility.getRelationName(tableList.elementAt(i)));
 			relation = (Relation) ObjectHolder.getObjectHolder().getObject(relationId);
 			for (int j = 0; j < relation.getAttributesCount(); j++) {
-				int index = commonAttribute.indexOf(nickName + "." + relation.getAttributes().get(j).getName()) ;
-				if (index!=-1 && commonAttributeType.get(index).equals(relation.getAttributes().get(j).getType())
+				int index = commonAttribute.indexOf(nickName + "." + relation.getAttributes().get(j).getName());
+				if (index != -1 && commonAttributeType.get(index).equals(relation.getAttributes().get(j).getType())
 						&& commonAttributeSize.get(index).equals(relation.getAttributes().get(j).getAttributeSize())) {
-				}else{
+				} else {
 					restAttribute.addElement(Utility.getNickName(tableList.get(i)) + "." + relation.getAttributes().get(j).getName());
 				}
 			}

@@ -1,11 +1,7 @@
 package queriesManager;
 
 import java.util.Vector;
-
 import databaseManager.Attribute;
-import databaseManager.Attribute.Type;
-import databaseManager.DynamicObject;
-import databaseManager.Iterator;
 import databaseManager.ObjectHolder;
 import databaseManager.Relation;
 import databaseManager.Utility;
@@ -20,7 +16,7 @@ public class EquiJoin extends Operation {
 	protected Operation intermediateOP;
 	protected Vector<String> commonAttribute;
 	protected Vector<String> restAttribute;
-	protected Vector<Integer> commonAttributeSize ;
+	protected Vector<Integer> commonAttributeSize;
 	protected Vector<Attribute.Type> commonAttributeType;
 	protected String newCondition, projectionPart, tablePart;
 
@@ -35,13 +31,13 @@ public class EquiJoin extends Operation {
 
 		this.getCommonAttribute();
 		this.getRestAttribute();
-		
+
 		if (stmtParts.size() == 3) {
 			this.addCondition(stmtParts.elementAt(2));
 		} else {
 			this.addCondition(null);
 		}
-		
+
 		projection = new Projection();
 	}
 
@@ -74,7 +70,7 @@ public class EquiJoin extends Operation {
 				for (int j = 0; j < relation.getAttributesCount(); j++) {
 					commonAttribute.addElement(nickName + "." + relation.getAttributes().get(j).getName());
 					commonAttributeType.addElement(relation.getAttributes().get(j).getType());
-					commonAttributeSize.addElement(relation.getAttributes().get(j).getAttributeSize()) ;
+					commonAttributeSize.addElement(relation.getAttributes().get(j).getAttributeSize());
 				}
 			}
 
@@ -83,7 +79,7 @@ public class EquiJoin extends Operation {
 				for (int k = 0; k < relation.getAttributes().size(); k++) {
 					if (Utility.getNickName(commonAttribute.get(j)).equals(relation.getAttributes().get(k).getName())
 							&& commonAttributeType.get(j).equals(relation.getAttributes().get(k).getType())
-							&& commonAttributeSize.get(j).equals(relation.getAttributes().get(k).getAttributeSize()) ) {
+							&& commonAttributeSize.get(j).equals(relation.getAttributes().get(k).getAttributeSize())) {
 						isExist = true;
 					}
 				}

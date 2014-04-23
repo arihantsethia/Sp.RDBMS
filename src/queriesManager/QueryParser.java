@@ -2,7 +2,6 @@ package queriesManager;
 
 import java.util.Vector;
 import java.util.TreeMap;
-import java.io.File;
 
 import databaseManager.Attribute;
 import databaseManager.ObjectHolder;
@@ -15,11 +14,11 @@ public class QueryParser {
 	public static TreeMap<String, String> tableMap;
 
 	public static enum OperationType {
-		NATURALJOIN , CONDJOIN , EQUIJOIN, SELECT, UPDATE, CREATE, DROP, DELETE;
+		NATURALJOIN, CONDJOIN, EQUIJOIN, SELECT, UPDATE, CREATE, DROP, DELETE;
 		public static String toString(OperationType opType) {
 			if (opType == QueryParser.OperationType.NATURALJOIN) {
 				return "NATURALJOIN";
-			}else if (opType == QueryParser.OperationType.EQUIJOIN) {
+			} else if (opType == QueryParser.OperationType.EQUIJOIN) {
 				return "EQUIJOIN";
 			} else if (opType == QueryParser.OperationType.SELECT) {
 				return "SELECT";
@@ -138,42 +137,38 @@ public class QueryParser {
 					if (columnPartSplit.length == valuePartSplit.length) {
 						Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
 						Vector<Attribute> attributes = newRelation.getAttributes();
+
 						for (int i = 0; i < columnPartSplit.length; i++) {
 							boolean chk = true;
 							for (int k = 0; k < attributes.size(); k++) {
-								if (attributes.get(k).getName().equals(columnPartSplit[i])) {
-									Attribute.Type fieldType = newRelation.getAttributeType(columnPartSplit[i]);
+								if (attributes.get(k).getName().equals(columnPartSplit[i].trim())) {
+									Attribute.Type fieldType = newRelation.getAttributeType(columnPartSplit[i].trim());
 
-									if (!Utility.isSameType(fieldType, valuePartSplit[i])) {
-										print_error(5, fieldType + " " + valuePartSplit[i]);
+									if (!Utility.isSameType(fieldType, valuePartSplit[i].trim())) {
+										print_error(5, fieldType + " " + valuePartSplit[i].trim());
 										return false;
 									}
 									chk = false;
 								}
 							}
 							if (chk) {
-								System.out.println(columnPartSplit[i]) ;
-								print_error(8, columnPartSplit[i]);
+								print_error(8, columnPartSplit[i].trim());
 								return false;
 							}
 						}
-					}
-					else{
+					} else {
 						System.out.println("#columns and #values mismatch");
 						return false;
 					}
-				}
-				else{
+				} else {
 					System.out.println("Keyword \'values\' is missing");
 					return false;
 				}
-			}
-			else{
+			} else {
 				System.out.println(relationName + " is not a valid Relation Name");
 				return false;
 			}
-		}
-		else{
+		} else {
 			System.out.println("Not a valid Insert syntax");
 			return false;
 		}
@@ -509,7 +504,7 @@ public class QueryParser {
 					break;
 				}
 			}
-			
+
 			if (condition.substring(i + 1, i + 1 + condition.substring(i + 1).indexOf('(')).trim().toUpperCase().equals("AND")) {
 				return ConditionType.AND;
 			} else {
@@ -683,7 +678,7 @@ public class QueryParser {
 			System.out.println(" Not a valid update Syntax. \n");
 			break;
 		case 8:
-			System.out.println(" Column" + s + "does not exits. \n");
+			System.out.println(" Column " + s + "does not exits. \n");
 			break;
 		case 9:
 			System.out.println(" Keyword table does not exits. \n");
@@ -702,11 +697,11 @@ public class QueryParser {
 			break;
 		}
 	}
-	
-	static Vector<String> getJoinTableList(String statement,String JoinName) {
+
+	static Vector<String> getJoinTableList(String statement, String JoinName) {
 		Vector<String> result;
-		statement = statement.replace("join","").trim();
-		String[] tableList = statement.split(JoinName) ;
+		statement = statement.replace("join", "").trim();
+		String[] tableList = statement.split(JoinName);
 		result = new Vector<String>(tableList.length);
 		for (int i = 0; i < tableList.length; i++) {
 			result.add(i, tableList[i].trim());

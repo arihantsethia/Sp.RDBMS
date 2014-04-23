@@ -34,9 +34,8 @@ public class DiskSpaceManager {
 	public FileChannel openFile(final String fileName) {
 		RandomAccessFile file;
 		FileChannel fileChannel = null;
-		System.out.println("DS:"+System.getProperty("user.dir"));
 		try {
-			file = new RandomAccessFile(System.getProperty("user.dir")+"/"+fileName, "rw");
+			file = new RandomAccessFile(System.getProperty("user.dir") + "/" + fileName, "rw");
 			fileChannel = file.getChannel();
 		} catch (FileNotFoundException error) {
 			try {

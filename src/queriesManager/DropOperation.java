@@ -1,7 +1,6 @@
 package queriesManager;
 
 import java.util.StringTokenizer;
-import java.util.Vector;
 
 import databaseManager.DatabaseManager;
 
@@ -15,20 +14,31 @@ public class DropOperation extends Operation {
 	DropOperation(String statement) {
 		queryType = -1;
 		setType(QueryParser.OperationType.DROP);
-		statement = statement.substring(statement.indexOf("drop") + 4).trim();
-		if (statement.indexOf("table") == 0) {
-			queryType = parseDropTableQuery(statement) ? 0 : -1;
-		} else if (statement.indexOf("index") == 0) {
-			queryType = parseDropIndexQuery(statement) ? 1 : -1;
-		} else if (statement.indexOf("index") == 0) {
-		//	queryType = parseDropPrimaryQuery(statement) ? 2 : -1;
-		} else if (statement.indexOf("database") == 0) {
-			queryType = parseDropDBQuery(statement) ? 3 : -1;
+		int dropIndex = statement.trim().indexOf("drop");
+		if (dropIndex == 0) {
+			statement = statement.substring(statement.indexOf("drop") + 4).trim();
+			if (statement.indexOf("table") == 0) {
+				queryType = parseDropTableQuery(statement) ? 0 : -1;
+			} else if (statement.indexOf("index") == 0) {
+				queryType = parseDropIndexQuery(statement) ? 1 : -1;
+			} else if (statement.indexOf("primary key") == 0) {
+				queryType = parseDropPrimaryKeyQuery(statement) ? 2 : -1;
+			} else if (statement.indexOf("database") == 0) {
+				queryType = parseDropDBQuery(statement) ? 3 : -1;
+			}
 		}
 	}
 
-	private boolean parseDropIndexQuery(String statement) {
+	private boolean parseDropPrimaryKeyQuery(String statement) {
+		return true;
+	}
+
+	private boolean parseDropTableQuery(String statement) {
 		statement = statement.substring(statement.indexOf("table") + 5).trim();
+		if (statement.length() == 0) {
+			System.out.println("Table name is missing");
+			return false;
+		}
 		relationName = statement.substring(0, statement.indexOf(" ")).trim();
 		if (relationName.contentEquals(statement)) {
 			return true;
@@ -37,7 +47,7 @@ public class DropOperation extends Operation {
 		}
 	}
 
-	private boolean parseDropTableQuery(String statement) {
+	private boolean parseDropIndexQuery(String statement) {
 		statement = statement.substring(statement.indexOf("index") + 5).trim();
 		StringTokenizer tokens = new StringTokenizer(statement, " ");
 		if (tokens.countTokens() == 4) {
@@ -60,7 +70,7 @@ public class DropOperation extends Operation {
 	private boolean parseDropDBQuery(String statement) {
 		if (statement.length() >= 8) {
 			statement = statement.substring(8).trim();
-			if (statement.length() > 0) {
+			if (statement.length() > 0 && !statement.contains(" ")) {
 				dbName = statement;
 				return true;
 			}
@@ -77,9 +87,7 @@ public class DropOperation extends Operation {
 		} else if (queryType == 1) {
 			return DatabaseManager.getSystemCatalog().dropIndex(indexName, relationName);
 		} else if (queryType == 2) {
-			// return
-			// DatabaseManager.getSystemCatalog().addPrimaryKey(relationName,
-			// parsedData.get(0));
+			return DatabaseManager.getSystemCatalog().dropIndex(relationName + "_pk", relationName);
 		} else if (queryType == 3) {
 			return DatabaseManager.dropDatabase(dbName);
 		}

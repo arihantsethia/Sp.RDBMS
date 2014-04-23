@@ -7,12 +7,10 @@
 
 package databaseManager;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.Vector;
-import java.io.File;
 import java.nio.ByteBuffer;
 
 import queriesManager.QueryParser;
@@ -69,7 +67,7 @@ public class SystemCatalogManager {
 		while (relationIterator.hasNext()) {
 			ByteBuffer relationRecord = relationIterator.getNext();
 			if (relationRecord != null) {
-				bufferManager.pinPage(RELATION_CATALOG_ID,relationIterator.currentPage);
+				bufferManager.pinPage(RELATION_CATALOG_ID, relationIterator.currentPage);
 				relationRecord.position(0);
 				tempRelation = new Relation(relationRecord);
 				if (totalObjectsCount <= tempRelation.getId()) {
@@ -89,7 +87,7 @@ public class SystemCatalogManager {
 		while (attributeIterator.hasNext()) {
 			ByteBuffer attributeRecord = attributeIterator.getNext();
 			if (attributeRecord != null) {
-				bufferManager.pinPage(ATTRIBUTE_CATALOG_ID,attributeIterator.currentPage);
+				bufferManager.pinPage(ATTRIBUTE_CATALOG_ID, attributeIterator.currentPage);
 				attributeRecord.position(0);
 				tempAttribute = new Attribute(attributeRecord);
 				if (totalAttributesCount <= tempAttribute.getId()) {
@@ -109,7 +107,7 @@ public class SystemCatalogManager {
 		while (indexIterator.hasNext()) {
 			ByteBuffer indexRecord = indexIterator.getNext();
 			if (indexRecord != null) {
-				bufferManager.pinPage(INDEX_CATALOG_ID,indexIterator.currentPage);
+				bufferManager.pinPage(INDEX_CATALOG_ID, indexIterator.currentPage);
 				indexRecord.position(0);
 				tempIndex = new Index(indexRecord);
 				if (totalObjectsCount < tempIndex.getId()) {
@@ -130,7 +128,7 @@ public class SystemCatalogManager {
 		while (attributeIterator.hasNext()) {
 			ByteBuffer attributeRecord = attributeIterator.getNext();
 			if (attributeRecord != null) {
-				bufferManager.pinPage(INDEX_ATTRIBUTE_CATALOG_ID,attributeIterator.currentPage);
+				bufferManager.pinPage(INDEX_ATTRIBUTE_CATALOG_ID, attributeIterator.currentPage);
 				attributeRecord.position(0);
 				tempAttribute = new Attribute(attributeRecord);
 				if (totalIndexAttributesCount <= tempAttribute.getId()) {
@@ -149,7 +147,7 @@ public class SystemCatalogManager {
 			objectHolder.addObjectToRelation(currIndex, false);
 		}
 	}
-	
+
 	public void addAttributeToCatalog(Attribute newAttribute) {
 		int attributeRecordsPerPage = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * ATTRIBUTE_RECORD_SIZE));
 		long freePageNumber = bufferManager.getFreePageNumber(ATTRIBUTE_CATALOG_ID);
@@ -193,7 +191,7 @@ public class SystemCatalogManager {
 		bufferManager.writeRecordBitmap(INDEX_CATALOG_ID, freePageNumber, indexRecordsPerPage, recordNumber, true);
 		totalObjectsCount++;
 	}
-	
+
 	public boolean createTable(String relationName, Vector<Vector<String>> parsedData) {
 		if (objectHolder.getRelationId(relationName) == -1) {
 			Relation newRelation = new Relation(relationName, totalObjectsCount);
@@ -483,7 +481,7 @@ public class SystemCatalogManager {
 					Relation relation = (Relation) ObjectHolder.getObjectHolder().getObject(relationId);
 					int length = 28;
 					System.out.println("Table Description :-");
-					for(int i=0;i<length;i++){
+					for (int i = 0; i < length; i++) {
 						System.out.print("-");
 					}
 					System.out.println();
@@ -496,43 +494,43 @@ public class SystemCatalogManager {
 									+ (relation.getAttributes().get(i).getAttributeSize() + 1) / 2 + ")");
 						}
 					}
-					if(relation.getPrimaryKey().size()>0){
-						for(int i=0;i<length;i++){
+					if (relation.getPrimaryKey().size() > 0) {
+						for (int i = 0; i < length; i++) {
 							System.out.print("-");
 						}
 						System.out.println();
 						System.out.print("Primary Key : ( ");
-						for(int i=0;i<relation.getPrimaryKey().size();i++){
+						for (int i = 0; i < relation.getPrimaryKey().size(); i++) {
 							System.out.print(relation.getPrimaryKey().get(i).getName());
-							if(i!=relation.getPrimaryKey().size()-1){
+							if (i != relation.getPrimaryKey().size() - 1) {
 								System.out.print(" , ");
-							}else{
+							} else {
 								System.out.println(" )");
 							}
 						}
 					}
-					if(relation.getIndices().size() > 0){
-						for(int i=0;i<length;i++){
+					if (relation.getIndices().size() > 0) {
+						for (int i = 0; i < length; i++) {
 							System.out.print("-");
 						}
 						System.out.println();
 						int pos = 1;
-						System.out.println("Number of indices are : "+relation.getIndices().size());
+						System.out.println("Number of indices are : " + relation.getIndices().size());
 						java.util.Iterator<Long> indexIterator = relation.getIndices().iterator();
-						while(indexIterator.hasNext()){
-							Index currIndex = (Index)objectHolder.getObject(indexIterator.next());
-							System.out.print((pos++)+". "+currIndex.getName()+" ( ");
-							for(int i=0;i<currIndex.getAttributes().size();i++){
+						while (indexIterator.hasNext()) {
+							Index currIndex = (Index) objectHolder.getObject(indexIterator.next());
+							System.out.print((pos++) + ". " + currIndex.getName() + " ( ");
+							for (int i = 0; i < currIndex.getAttributes().size(); i++) {
 								System.out.print(currIndex.getAttributes().get(i).getName());
-								if(i!=currIndex.getAttributes().size()-1){
+								if (i != currIndex.getAttributes().size() - 1) {
 									System.out.print(" , ");
-								}else{
+								} else {
 									System.out.println(" )");
 								}
 							}
 						}
 					}
-					for(int i=0;i<length;i++){
+					for (int i = 0; i < length; i++) {
 						System.out.print("-");
 					}
 					System.out.println();

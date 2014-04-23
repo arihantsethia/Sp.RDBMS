@@ -62,12 +62,11 @@ public class DeleteOperation extends Operation {
 				if (a != null) {
 					recordObjects.set(i, recordObjects.get(i).deserialize(a.array()));
 					if (condition == null || condition.compare(recordObjects, tableList)) {
-						DynamicObject obj = recordObjects.get(i);
 						relationId = ObjectHolder.getObjectHolder().getRelationId(Utility.getRelationName(tableList.elementAt(i)));
 						relation = (Relation) ObjectHolder.getObjectHolder().getObject(relationId);
-						int recordsPerPage = relation.getRecordsPerPage(); 
+						int recordsPerPage = relation.getRecordsPerPage();
 						int recordNumber = ((iteratorList.get(i).position - relation.getRecordSize()) - (recordsPerPage + 7) / 8) / relation.getRecordSize();
-						DatabaseManager.getSystemCatalog().deleteRecord(relationId, iteratorList.get(i).currentPage, recordNumber,recordsPerPage);
+						DatabaseManager.getSystemCatalog().deleteRecord(relationId, iteratorList.get(i).currentPage, recordNumber, recordsPerPage);
 						relation.updateRecordsCount(-1);
 					}
 

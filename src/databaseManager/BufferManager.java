@@ -262,7 +262,7 @@ public class BufferManager {
 		}
 	}
 
-	private boolean isPinned(final long objectId, final long page) {
+	public boolean isPinned(final long objectId, final long page) {
 		return isPinned(getPhysicalAddress(objectId, page));
 	}
 

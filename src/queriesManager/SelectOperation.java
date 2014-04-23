@@ -2,8 +2,6 @@ package queriesManager;
 
 import java.nio.ByteBuffer;
 import java.util.Vector;
-
-import databaseManager.Attribute;
 import databaseManager.DynamicObject;
 import databaseManager.Iterator;
 import databaseManager.ObjectHolder;
@@ -12,9 +10,9 @@ import databaseManager.Utility;
 
 /**
  * 
- * The instance of "SelectOperation" class is called whenever we want to execute Select query.
- * it also called Condition to check Conditions.
- *
+ * The instance of "SelectOperation" class is called whenever we want to execute
+ * Select query. it also called instance of Condition Class to check Conditions.
+ * 
  */
 public class SelectOperation extends Operation {
 	protected Projection projection;
@@ -27,14 +25,14 @@ public class SelectOperation extends Operation {
 	protected Relation relation;
 	protected long relationId;
 	protected String projectionPart;
-	
+
 	int p = 0;
 
 	/**
-	 * This constructor will be called when we want to create object of class SelectOperation
-	 * It takes input query as arguments and split it into projectionPart , tablePart and 
-	 * conditionPart.
-	 * It also generates Condition and Projection class Instance.
+	 * This constructor will be called when we want to create object of class
+	 * SelectOperation It takes input query as arguments and split it into
+	 * projectionPart , tablePart and conditionPart. It also generates Condition
+	 * and Projection class Instance.
 	 */
 	public SelectOperation(String statement) {
 		setType(QueryParser.OperationType.SELECT);
@@ -56,9 +54,10 @@ public class SelectOperation extends Operation {
 	}
 
 	/**
-	 * This method will execute select query and will reply true if query successfully executed.
-	 * It takes records of each table by using iterator of corresponding class 
-	 * IncrementCounter function increment recordCounterList. 
+	 * This method will execute select query and will reply true if query
+	 * successfully executed. It takes records of each table by using iterator
+	 * of corresponding class IncrementCounter function increment
+	 * recordCounterList.
 	 */
 	@Override
 	public boolean executeOperation() {
@@ -67,7 +66,7 @@ public class SelectOperation extends Operation {
 			relationId = ObjectHolder.getObjectHolder().getRelationId(Utility.getRelationName(tableList.elementAt(i)));
 			relation = (Relation) ObjectHolder.getObjectHolder().getObject(relationId);
 			recordCountList.addElement(relation.getRecordsCount());
-			recordCounterList.addElement((long)1);
+			recordCounterList.addElement((long) 1);
 			count = count * recordCountList.get(i);
 			iteratorList.addElement(new Iterator(relation));
 			recordObjects.addElement(new DynamicObject(relation.getAttributes()));
@@ -100,10 +99,10 @@ public class SelectOperation extends Operation {
 	}
 
 	/**
-	 * IncrementCounter function increment recordCounterList.
-	 * Suppose total no. of records corresponding to tables (a,b,c) are (1,3,2) then 
-	 * The sequence of records retrieval will be like that :-
-	 * (1,1,1) -> (1,1,2) -> (1,2,1) -> (1,2,2) -> (1,3,1) -> (1,3,2).
+	 * IncrementCounter function increment recordCounterList. Suppose total no.
+	 * of records corresponding to tables (a,b,c) are (1,3,2) then The sequence
+	 * of records retrieval will be like that :- (1,1,1) -> (1,1,2) -> (1,2,1)
+	 * -> (1,2,2) -> (1,3,1) -> (1,3,2).
 	 */
 	void incrementCounter() {
 		int i = tableList.size() - 1;
@@ -117,7 +116,7 @@ public class SelectOperation extends Operation {
 				}
 			}
 			recordObjects.set(i, recordObjects.get(i).deserialize(buffer.array()));
-			recordCounterList.set(i, (long)1);
+			recordCounterList.set(i, (long) 1);
 			i--;
 		}
 		if (i >= 0) {
