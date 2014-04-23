@@ -89,22 +89,22 @@ public class DynamicObject implements Comparable<Object> {
 		}
 	}
 
-	public void printRecords() {	
+	public void printRecords() {
 		for (int i = 0; i < attributes.size(); i++) {
 			if (attributes.get(i).getType() == Attribute.Type.Char) {
-				System.out.printf("%-" + ( attributes.get(i).getAttributeSize() + 1 )/ 2 +"s | ", (String) obj[i] ) ;
-			}else if (attributes.get(i).getType() == Attribute.Type.Int) {
-				System.out.printf("%-10s | ", ((Integer) obj[i]).toString()) ;
+				System.out.printf("%-" + (attributes.get(i).getAttributeSize() + 1) / 2 + "s | ", (String) obj[i]);
+			} else if (attributes.get(i).getType() == Attribute.Type.Int) {
+				System.out.printf("%-10s | ", ((Integer) obj[i]).toString());
 			}
 		}
 	}
-	
-	public void printRecords(String s) {	
+
+	public void printRecords(String s) {
 		for (int i = 0; i < attributes.size(); i++) {
 			if (attributes.get(i).getType() == Attribute.Type.Char && attributes.get(i).getName().equals(s)) {
-				System.out.printf("%-" + ( attributes.get(i).getAttributeSize() + 1 )/ 2 +"s | ", (String) obj[i] ) ;
+				System.out.printf("%-" + (attributes.get(i).getAttributeSize() + 1) / 2 + "s | ", (String) obj[i]);
 			} else if (attributes.get(i).getType() == Attribute.Type.Int && attributes.get(i).getName().equals(s)) {
-				System.out.printf("%-10s | ", ((Integer) obj[i]).toString()) ;
+				System.out.printf("%-10s | ", ((Integer) obj[i]).toString());
 			}
 		}
 	}
@@ -129,7 +129,7 @@ public class DynamicObject implements Comparable<Object> {
 		}
 		return 0;
 	}
-	
+
 	@Override
 	public boolean equals(Object o) {
 		DynamicObject newObj = (DynamicObject) o;

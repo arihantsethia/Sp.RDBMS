@@ -29,7 +29,7 @@ public class Utility {
 		} else if (type1.equals("char")) {
 			if (Type2.startsWith("'") && Type2.endsWith("'")) {
 				return true;
-			}else if (Type2.startsWith("\"") && Type2.endsWith("\"")) {
+			} else if (Type2.startsWith("\"") && Type2.endsWith("\"")) {
 				return true;
 			}
 		} else if (type1.equals("float")) {
@@ -49,41 +49,36 @@ public class Utility {
 		}
 		return false;
 	}
+
 	public static boolean isSameType(Attribute.Type type1, String type2) {
-		if (type1 == Attribute.Type.Int){
-			if(isSameType("int", type2)){
+		if (type1 == Attribute.Type.Int) {
+			if (isSameType("int", type2)) {
 				return true;
-			}
-			else{
+			} else {
 				return false;
 			}
-		}
-		else if(type1 == Attribute.Type.Char){
-			if(isSameType("char", type2)){
+		} else if (type1 == Attribute.Type.Char) {
+			if (isSameType("char", type2)) {
 				return true;
-			}
-			else{
+			} else {
 				return false;
 			}
-		}
-		else if(type1 == Attribute.Type.Float){
-			if(isSameType("float", type2)){
+		} else if (type1 == Attribute.Type.Float) {
+			if (isSameType("float", type2)) {
 				return true;
-			}
-			else{
+			} else {
 				return false;
 			}
-		}
-		else if(type1 == Attribute.Type.Double){
-			if(isSameType("double", type2)){
+		} else if (type1 == Attribute.Type.Double) {
+			if (isSameType("double", type2)) {
 				return true;
-			}
-			else{
-				return  false;
+			} else {
+				return false;
 			}
 		}
 		return false;
 	}
+
 	public int stringToInt(String s) {
 		return Integer.parseInt(s);
 	}
@@ -128,7 +123,7 @@ public class Utility {
 		}
 		return false;
 	}
-	
+
 	public static DynamicObject toDynamicObject(String[] columnList, String[] valueList, Vector<Attribute> attributes) {
 		Map<String, Integer> columnMap = new HashMap<String, Integer>();
 		DynamicObject dObject = new DynamicObject(attributes);
@@ -141,8 +136,8 @@ public class Utility {
 				int pos = columnMap.get(attributes.get(i).getName());
 				if (attributes.get(i).getType() == Attribute.Type.Int) {
 					dObject.obj[i] = Integer.parseInt(valueList[pos]);
-				}else if (attributes.get(i).getType() == Attribute.Type.Char) {
-					dObject.obj[i] = (String)valueList[pos].substring(1, valueList[pos].length()-1);
+				} else if (attributes.get(i).getType() == Attribute.Type.Char) {
+					dObject.obj[i] = (String) valueList[pos].substring(1, valueList[pos].length() - 1);
 				}
 			}
 		}
@@ -253,12 +248,10 @@ public class Utility {
 
 			if (newRelation1.getAttributeType(field1).equals(newRelation2.getAttributeType(field2))) {
 				return true;
-			} 
-			else {
+			} else {
 				return false;
 			}
-		} 
-		else {
+		} else {
 			return false;
 		}
 	}
@@ -323,28 +316,25 @@ public class Utility {
 				if (newRelationId != -1) {
 					Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
 					Vector<Attribute> attributes = newRelation.getAttributes();
-					boolean chk = true ;
-				    for(int k = 0 ; k < attributes.size() ; k++ ){
-				    
-				    	if(attributes.get(k).getName().equals(field)){
-				    		chk = false ;
-				    	}
-				    }
-				    if(chk){
-				    	return false ;
-				    }else{
-				    	return true ;
-				    }
-				} 
-				else {
+					boolean chk = true;
+					for (int k = 0; k < attributes.size(); k++) {
+
+						if (attributes.get(k).getName().equals(field)) {
+							chk = false;
+						}
+					}
+					if (chk) {
+						return false;
+					} else {
+						return true;
+					}
+				} else {
 					return false;
 				}
-			} 
-			else {
+			} else {
 				return false;
 			}
-		} 
-		else {
+		} else {
 			return false;
 		}
 	}

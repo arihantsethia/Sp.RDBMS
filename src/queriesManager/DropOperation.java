@@ -1,7 +1,6 @@
 package queriesManager;
 
 import java.util.StringTokenizer;
-import java.util.Vector;
 
 import databaseManager.DatabaseManager;
 
@@ -9,9 +8,11 @@ public class DropOperation extends Operation {
 
 	protected String indexName;
 	protected String relationName;
+	protected String dbName;
 	protected int queryType;
 
 	DropOperation(String statement) {
+		queryType = -1;
 		setType(QueryParser.OperationType.DROP);
 		int dropIndex = statement.trim().indexOf("drop");
 		if(dropIndex == 0) {
@@ -24,6 +25,8 @@ public class DropOperation extends Operation {
 			}
 			else if (statement.indexOf("primary key") == 0) {
 				queryType = parseDropPrimaryKeyQuery(statement) ? 2 : -1;
+			} else if (statement.indexOf("database") == 0) {
+				queryType = parseDropDBQuery(statement) ? 3 : -1;
 			}
 		}
 	}
@@ -50,26 +53,44 @@ public class DropOperation extends Operation {
 		StringTokenizer tokens = new StringTokenizer(statement, " ");
 		if (tokens.countTokens() == 4) {
 			indexName = tokens.nextToken().trim();
-			if(tokens.nextToken().trim().equalsIgnoreCase("ON")){
-				if(tokens.nextToken().trim().equalsIgnoreCase("TABLE")){
+			if (tokens.nextToken().trim().equalsIgnoreCase("ON")) {
+				if (tokens.nextToken().trim().equalsIgnoreCase("TABLE")) {
 					relationName = tokens.nextToken().trim();
 					return true;
-				}else{
+				} else {
 					return false;
 				}
-			}else{
+			} else {
 				return false;
 			}
 		} else {
 			return false;
 		}
 	}
-	
+
+	private boolean parseDropDBQuery(String statement) {
+		if (statement.length() >= 8) {
+			statement = statement.substring(8).trim();
+			if (statement.length() > 0) {
+				dbName = statement;
+				return true;
+			}
+			System.out.println("Error : database name not specified");
+			return false;
+		}
+		System.out.println("Error : Undefined Syntax!");
+		return false;
+	}
+
 	public boolean executeOperation() {
 		if (queryType == 0) {
 			return DatabaseManager.getSystemCatalog().dropTable(relationName);
 		} else if (queryType == 1) {
 			return DatabaseManager.getSystemCatalog().dropIndex(indexName, relationName);
+		} else if (queryType == 2) {
+			return DatabaseManager.getSystemCatalog().dropIndex(relationName + "_pk",relationName);
+		} else if (queryType == 3) {
+			return DatabaseManager.dropDatabase(dbName);
 		}
 		return false;
 	}

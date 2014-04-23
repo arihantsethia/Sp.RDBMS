@@ -34,7 +34,7 @@ public class BPlusTree {
 	}
 
 	public void openIndex() {
-		if (index.getRootPageAddress() == null ||index.getRootPageAddress().id == -1) {
+		if (index.getRootPageAddress() == null || index.getRootPageAddress().id == -1) {
 			rootNode = new Node();
 			rootNode.isLeaf = true;
 			updateIndexHead(rootNode);
@@ -54,6 +54,9 @@ public class BPlusTree {
 		while (true) {
 			currentLocation = node.getLocation(key);
 			if (node.isLeaf) {
+				if (!node.keys[currentLocation].equals(key)) {
+					currentLocation = 0;
+				}
 				break;
 			}
 			ByteBuffer serializedBuffer = bufferManager.read(node.childrens[currentLocation].id, node.childrens[currentLocation].offset);
@@ -75,7 +78,7 @@ public class BPlusTree {
 			Bucket bucket = new Bucket();
 			PhysicalAddress nextAddress = node.childrens[currentLocation];
 			int offset = node.offset[currentLocation];
-			for (int i = 0; i < bucketNumber; i++) {
+			for (int i = 0; i <= bucketNumber; i++) {
 				ByteBuffer serialData = bufferManager.read(nextAddress.id, nextAddress.offset);
 				bucket = new Bucket(serialData, offset);
 				nextAddress = bucket.nextBucket;
@@ -107,8 +110,8 @@ public class BPlusTree {
 
 	public boolean insert(DynamicObject key, PhysicalAddress value, int recordOffset) {
 		Split result = insert(rootAddress, rootOffset, key, value, recordOffset);
-		
-		if(result.error==1){
+
+		if (result.error == 1) {
 			return false;
 		}
 		if (result.hasSplit) {
@@ -406,12 +409,12 @@ public class BPlusTree {
 			pointers = new PhysicalAddress[N];
 			offset = new int[N];
 			for (int i = 0; i < N; i++) {
-				pointers[i] = new PhysicalAddress(serialData.getLong(),serialData.getLong());
+				pointers[i] = new PhysicalAddress(serialData.getLong(), serialData.getLong());
 			}
 			for (int i = 0; i < N; i++) {
 				offset[i] = serialData.getInt();
 			}
-			nextBucket = new PhysicalAddress(serialData.getLong(),serialData.getLong());
+			nextBucket = new PhysicalAddress(serialData.getLong(), serialData.getLong());
 			nextBucketOffset = serialData.getInt();
 		}
 

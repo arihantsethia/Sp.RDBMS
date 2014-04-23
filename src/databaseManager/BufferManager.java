@@ -75,13 +75,16 @@ public class BufferManager {
 	/**
 	 * initializes all the attributes of bufferManager to its default values.
 	 */
-	private void initializeTable() {
+	public void initializeTable() {
 		for (int i = 0; i < MAX_PAGE_COUNT; i++) {
 			isDirty[i] = false;
 			lookUpTable[i] = new PhysicalAddress(-1, -1);
 			clockTick[i] = 0;
 		}
 		lookUpMap.clear();
+		for (Map.Entry<Long, FileChannel> entry : openFiles.entrySet()) {
+			diskSpaceManager.closeFile(openFiles.get(entry.getKey()));
+		}
 		openFiles.clear();
 	}
 
@@ -191,7 +194,7 @@ public class BufferManager {
 	}
 
 	// PIN the page in main memory if it is not already PINNED.
-	private boolean pinPage(final long logicalAddress) {
+	public boolean pinPage(final long logicalAddress) {
 		if (clockTick[(int) logicalAddress] == -1) {
 			return false;
 		} else {
@@ -202,7 +205,7 @@ public class BufferManager {
 
 	// PIN the page in main memory if it is not already PINNED given object id
 	// and page no. as argument.
-	private boolean pinPage(final long objectId, final long page) {
+	public boolean pinPage(final long objectId, final long page) {
 		PhysicalAddress physicalAddress = getPhysicalAddress(objectId, page);
 		if (lookUpMap.containsKey(physicalAddress)) {
 			return pinPage(lookUpMap.get(physicalAddress));
@@ -223,12 +226,19 @@ public class BufferManager {
 
 	// UNPIN the page in main memory if it is PINNED given object id and page
 	// no. as arguments.
-	private boolean unPinPage(final long objectId, final long page) {
+	public boolean unPinPage(final long objectId, final long page) {
 		PhysicalAddress physicalAddress = getPhysicalAddress(objectId, page);
 		if (lookUpMap.containsKey(physicalAddress)) {
 			return unPinPage(lookUpMap.get(physicalAddress));
 		} else {
 			return false;
+		}
+	}
+
+	// UNPIN all the pages in main memory which are PINNED.
+	public void unPinAll() {
+		for (int i = 0; i < MAX_PAGE_COUNT; i++) {
+			unPinPage((long) i);
 		}
 	}
 
