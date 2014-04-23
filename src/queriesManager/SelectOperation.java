@@ -10,6 +10,12 @@ import databaseManager.ObjectHolder;
 import databaseManager.Relation;
 import databaseManager.Utility;
 
+/**
+ * 
+ * The instance of "SelectOperation" class is called whenever we want to execute Select query.
+ * it also called Condition to check Conditions.
+ *
+ */
 public class SelectOperation extends Operation {
 	protected Projection projection;
 	protected int tableCount;
@@ -24,6 +30,12 @@ public class SelectOperation extends Operation {
 	
 	int p = 0;
 
+	/**
+	 * This constructor will be called when we want to create object of class SelectOperation
+	 * It takes input query as arguments and split it into projectionPart , tablePart and 
+	 * conditionPart.
+	 * It also generates Condition and Projection class Instance.
+	 */
 	public SelectOperation(String statement) {
 		setType(QueryParser.OperationType.SELECT);
 		Vector<String> stmtParts = QueryParser.statementParts(statement, "select");
@@ -43,6 +55,12 @@ public class SelectOperation extends Operation {
 		recordObjects = new Vector<DynamicObject>();
 	}
 
+	/**
+	 * This method will execute select query and will reply true if query successfully executed.
+	 * It takes records of each table by using iterator of corresponding class 
+	 * IncrementCounter function increment recordCounterList. 
+	 */
+	@Override
 	public boolean executeOperation() {
 		long count = 1;
 		for (int i = 0; i < tableList.size(); i++) {
@@ -81,6 +99,12 @@ public class SelectOperation extends Operation {
 		return true;
 	}
 
+	/**
+	 * IncrementCounter function increment recordCounterList.
+	 * Suppose total no. of records corresponding to tables (a,b,c) are (1,3,2) then 
+	 * The sequence of records retrieval will be like that :-
+	 * (1,1,1) -> (1,1,2) -> (1,2,1) -> (1,2,2) -> (1,3,1) -> (1,3,2).
+	 */
 	void incrementCounter() {
 		int i = tableList.size() - 1;
 		ByteBuffer buffer = null;

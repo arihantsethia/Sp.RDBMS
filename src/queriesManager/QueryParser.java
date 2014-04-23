@@ -125,14 +125,14 @@ public class QueryParser {
 		if (insertIndex == 0 && intoIndex != -1) {
 			if (newRelationId != -1) {
 				String columnPart = "";
-				columnPart = statement.substring(statement.indexOf("(")+1, valueIndex).trim();
+				columnPart = statement.substring(statement.indexOf("(") + 1, valueIndex).trim();
 				columnPart = columnPart.replace(")", " ").trim();
 				String[] columnPartSplit = columnPart.split(",");
 
 				if (valueIndex != -1) {
 					String valuePart = "";
-					valuePart = statement.substring(valueIndex + 5).trim();
-					valuePart = statement.replace("(", " ").replace(")", " ").trim();
+					valuePart = statement.substring(valueIndex + 6).trim();
+					valuePart = valuePart.replace("(", " ").replace(")", " ").trim();
 					String[] valuePartSplit = valuePart.split(",");
 
 					if (columnPartSplit.length == valuePartSplit.length) {
@@ -158,8 +158,24 @@ public class QueryParser {
 							}
 						}
 					}
+					else{
+						System.out.println("#columns and #values mismatch");
+						return false;
+					}
+				}
+				else{
+					System.out.println("Keyword \'values\' is missing");
+					return false;
 				}
 			}
+			else{
+				System.out.println(relationName + " is not a valid Relation Name");
+				return false;
+			}
+		}
+		else{
+			System.out.println("Not a valid Insert syntax");
+			return false;
 		}
 
 		return true;
@@ -646,7 +662,7 @@ public class QueryParser {
 		String[] t = s.split(" ");
 		switch (i) {
 		case 1:
-			System.out.println("Attribute " + s + "is not a valid attribute. \n");
+			System.out.println("Attribute " + s + " is not a valid attribute. \n");
 			break;
 		case 2:
 			System.out.println(s + " is not a valid Relation Name. \n");

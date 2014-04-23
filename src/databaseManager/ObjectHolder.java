@@ -116,6 +116,10 @@ public class ObjectHolder {
 		return false;
 	}
 
+	public void clearAll() {
+		objects.clear();
+	}
+
 	// Deprecated
 	public long getNewId() {
 		long id = 2;

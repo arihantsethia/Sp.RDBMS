@@ -24,6 +24,7 @@ public class BPlusTree {
 
 	public BPlusTree(Index _index, DynamicObject _tempObject) {
 		index = _index;
+		recordSize = index.getRecordSize();
 		M = index.getNumberOfKeys();
 		N = recordSize / 20 - 1;
 		recordSize = index.getRecordSize();
@@ -33,11 +34,13 @@ public class BPlusTree {
 	}
 
 	public void openIndex() {
-		if (index.getFileSize() == 0) {
+		if (index.getRootPageAddress() == null || index.getRootPageAddress().id == -1) {
 			rootNode = new Node();
 			rootNode.isLeaf = true;
 			updateIndexHead(rootNode);
 		} else {
+			rootAddress = index.getRootPageAddress();
+			rootOffset = index.getRootOffset();
 			readHead();
 		}
 	}
@@ -51,6 +54,9 @@ public class BPlusTree {
 		while (true) {
 			currentLocation = node.getLocation(key);
 			if (node.isLeaf) {
+				if (!node.keys[currentLocation].equals(key)) {
+					currentLocation = 0;
+				}
 				break;
 			}
 			ByteBuffer serializedBuffer = bufferManager.read(node.childrens[currentLocation].id, node.childrens[currentLocation].offset);
@@ -72,7 +78,7 @@ public class BPlusTree {
 			Bucket bucket = new Bucket();
 			PhysicalAddress nextAddress = node.childrens[currentLocation];
 			int offset = node.offset[currentLocation];
-			for (int i = 0; i < bucketNumber; i++) {
+			for (int i = 0; i <= bucketNumber; i++) {
 				ByteBuffer serialData = bufferManager.read(nextAddress.id, nextAddress.offset);
 				bucket = new Bucket(serialData, offset);
 				nextAddress = bucket.nextBucket;
@@ -104,8 +110,8 @@ public class BPlusTree {
 
 	public boolean insert(DynamicObject key, PhysicalAddress value, int recordOffset) {
 		Split result = insert(rootAddress, rootOffset, key, value, recordOffset);
-		
-		if(result.error==1){
+
+		if (result.error == 1) {
 			return false;
 		}
 		if (result.hasSplit) {
@@ -293,9 +299,6 @@ public class BPlusTree {
 				bucket.pointers[i] = new PhysicalAddress(-1, -1);
 				bucket.offset[i] = -1;
 				return;
-			} else {
-				value = new PhysicalAddress(-1, 1);
-				bucket.offset[i] = -1;
 			}
 		}
 		Bucket _bucket = new Bucket();
@@ -403,25 +406,25 @@ public class BPlusTree {
 
 		public Bucket(ByteBuffer serialData, int position) {
 			serialData.position(position);
-			for (int i = 0; i < M; i++) {
-				pointers[i].id = serialData.getLong();
-				pointers[i].offset = serialData.getLong();
+			pointers = new PhysicalAddress[N];
+			offset = new int[N];
+			for (int i = 0; i < N; i++) {
+				pointers[i] = new PhysicalAddress(serialData.getLong(), serialData.getLong());
 			}
-			for (int i = 0; i < M; i++) {
+			for (int i = 0; i < N; i++) {
 				offset[i] = serialData.getInt();
 			}
-			nextBucket.id = serialData.getLong();
-			nextBucket.offset = serialData.getLong();
+			nextBucket = new PhysicalAddress(serialData.getLong(), serialData.getLong());
 			nextBucketOffset = serialData.getInt();
 		}
 
 		public ByteBuffer serialize() {
 			ByteBuffer serialData = ByteBuffer.allocate(recordSize);
-			for (int i = 0; i < M; i++) {
+			for (int i = 0; i < N; i++) {
 				serialData.putLong(pointers[i].id);
 				serialData.putLong(pointers[i].offset);
 			}
-			for (int i = 0; i < M; i++) {
+			for (int i = 0; i < N; i++) {
 				serialData.putInt(offset[i]);
 			}
 			serialData.putLong(nextBucket.id);
