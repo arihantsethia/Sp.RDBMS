@@ -71,7 +71,6 @@ public class DatabaseManager {
 				}
 			
 			}
-		
 		}else if(splitCommand[0].equals("delete")){
 			if(QueryParser.isDeleteStatementQuery(query)){
 				Operation operation = Operation.makeOperation(query.trim());
