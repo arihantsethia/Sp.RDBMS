@@ -165,7 +165,7 @@ public class Relation {
 	}
 
 	public long getFileSize() {
-		File file = new File(fileName);
+		File file = new File(System.getProperty("user.dir") + "/" + fileName);
 		return file.length();
 	}
 

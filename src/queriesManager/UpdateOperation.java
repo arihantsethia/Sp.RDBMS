@@ -11,6 +11,12 @@ import databaseManager.ObjectHolder;
 import databaseManager.Relation;
 import databaseManager.Utility;
 
+/**
+ * 
+ * The instance of "UpdateOperation" class is called whenever we want to execute
+ * Update query. it also called instance of Condition Class to check Conditions.
+ * 
+ */
 public class UpdateOperation extends Operation {
 
 	protected int tableCount;
@@ -22,6 +28,13 @@ public class UpdateOperation extends Operation {
 	protected Vector<DynamicObject> recordObjects;
 	protected Relation relation;
 	protected long relationId;
+
+	/**
+	 * This constructor will be called when we want to create object of class
+	 * SelectOperation It takes input query as arguments and split it into
+	 * projectionPart , tablePart and conditionPart. It also generates Condition
+	 * and Projection class Instance.
+	 */
 
 	UpdateOperation(String statement) {
 		setType(QueryParser.OperationType.UPDATE);

@@ -16,15 +16,13 @@ public class DropOperation extends Operation {
 		queryType = -1;
 		setType(QueryParser.OperationType.DROP);
 		int dropIndex = statement.trim().indexOf("drop");
-		if(dropIndex == 0) {
+		if (dropIndex == 0) {
 			statement = statement.substring(statement.indexOf("drop") + 4).trim();
 			if (statement.indexOf("table") == 0) {
 				queryType = parseDropTableQuery(statement) ? 0 : -1;
-			}
-			else if (statement.indexOf("index") == 0) {
+			} else if (statement.indexOf("index") == 0) {
 				queryType = parseDropIndexQuery(statement) ? 1 : -1;
-			}
-			else if (statement.indexOf("primary key") == 0) {
+			} else if (statement.indexOf("primary key") == 0) {
 				queryType = parseDropPrimaryKeyQuery(statement) ? 2 : -1;
 			} else if (statement.indexOf("database") == 0) {
 				queryType = parseDropDBQuery(statement) ? 3 : -1;
@@ -61,9 +59,10 @@ public class DropOperation extends Operation {
 		
 		return true;
 	}
+
 	private boolean parseDropTableQuery(String statement) {
 		statement = statement.substring(statement.indexOf("table") + 5).trim();
-		if(statement.length() == 0) {
+		if (statement.length() == 0) {
 			System.out.println("Table name is missing");
 			return false;
 		}
@@ -160,7 +159,7 @@ public class DropOperation extends Operation {
 	private boolean parseDropDBQuery(String statement) {
 		if (statement.length() >= 8) {
 			statement = statement.substring(8).trim();
-			if (statement.length() > 0) {
+			if (statement.length() > 0 && !statement.contains(" ")) {
 				dbName = statement;
 				return true;
 			}
@@ -177,7 +176,7 @@ public class DropOperation extends Operation {
 		} else if (queryType == 1) {
 			return DatabaseManager.getSystemCatalog().dropIndex(indexName, relationName);
 		} else if (queryType == 2) {
-			return DatabaseManager.getSystemCatalog().dropIndex(relationName + "_pk",relationName);
+			return DatabaseManager.getSystemCatalog().dropIndex(relationName + "_pk", relationName);
 		} else if (queryType == 3) {
 			return DatabaseManager.dropDatabase(dbName);
 		}

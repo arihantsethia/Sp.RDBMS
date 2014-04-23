@@ -1,7 +1,7 @@
 package queriesManager;
 
 public class InsertOperation extends Operation {
-    InsertOperation(String statement){
-	
-    }
+	InsertOperation(String statement) {
+
+	}
 }

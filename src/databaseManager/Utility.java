@@ -5,7 +5,6 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Vector;
 import queriesManager.QueryParser;
-import databaseManager.Attribute.Type;
 
 public class Utility {
 	private static Utility uty;
@@ -256,46 +255,9 @@ public class Utility {
 		}
 	}
 
-	public static boolean getDataType(String s) {
-		String field = "";
-		String key = "";
-		String relationName = "";
-
-		// String key1 = getAlias(s1);
-		// String key2 = getAlias(s2);
-		// String field1 = getFieldName(s1);
-		// String field2 = getFieldName(s2);
-		// String relationName1 = QueryParser.tableMap.get(key1);
-		// String relationName2 = QueryParser.tableMap.get(key2);
-		//
-		// long newRelationId1 =
-		// ObjectHolder.getObjectHolder().getRelationIdByRelationName(relationName1);
-		// long newRelationId2 =
-		// ObjectHolder.getObjectHolder().getRelationIdByRelationName(relationName2);
-		//
-		// if (newRelationId1 != -1 && newRelationId2 != -1) {
-		// Relation newRelation1 = (Relation)
-		// ObjectHolder.getObjectHolder().getObject(newRelationId1);
-		// Relation newRelation2 = (Relation)
-		// ObjectHolder.getObjectHolder().getObject(newRelationId2);
-		//
-		// if(newRelation1.attributeType(field1).equals(newRelation2.attributeType(field2))){
-		// return true;
-		// }
-		// else{
-		// return false;
-		// }
-		// }
-		// else{
-		// return false;
-		// }
-
-		return false;
-	}
-
 	public static boolean isNum(String s) {
 		try {
-			int num = Integer.parseInt(s);
+			Integer.parseInt(s);
 		} catch (NumberFormatException nfe) {
 			return false;
 		}

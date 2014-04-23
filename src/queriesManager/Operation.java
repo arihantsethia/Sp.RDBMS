@@ -12,7 +12,13 @@ public abstract class Operation {
 	}
 
 	public static Operation makeOperation(String statement) {
-		if (statement.toUpperCase().contains("SELECT")) {
+		if (statement.toUpperCase().contains("NATURAL")) {
+			return new NaturalJoin(statement);
+		} else if (statement.toUpperCase().contains("EQUI")) {
+			return new EquiJoin(statement);
+		} else if (statement.toUpperCase().contains("JOIN")) {
+			return new CondJoin(statement);
+		} else if (statement.toUpperCase().contains("SELECT")) {
 			return new SelectOperation(statement);
 		} else if (statement.toUpperCase().contains("UPDATE")) {
 			return new UpdateOperation(statement);

@@ -2,7 +2,6 @@ package queriesManager;
 
 import java.util.Vector;
 import java.util.TreeMap;
-import java.io.File;
 
 import databaseManager.Attribute;
 import databaseManager.ObjectHolder;
@@ -15,10 +14,12 @@ public class QueryParser {
 	public static TreeMap<String, String> tableMap;
 
 	public static enum OperationType {
-		JOIN, SELECT, UPDATE, CREATE, DROP, DELETE;
+		NATURALJOIN, CONDJOIN, EQUIJOIN, SELECT, UPDATE, CREATE, DROP, DELETE;
 		public static String toString(OperationType opType) {
-			if (opType == QueryParser.OperationType.JOIN) {
-				return "JOIN";
+			if (opType == QueryParser.OperationType.NATURALJOIN) {
+				return "NATURALJOIN";
+			} else if (opType == QueryParser.OperationType.EQUIJOIN) {
+				return "EQUIJOIN";
 			} else if (opType == QueryParser.OperationType.SELECT) {
 				return "SELECT";
 			} else if (opType == QueryParser.OperationType.UPDATE) {
@@ -130,16 +131,13 @@ public class QueryParser {
 				if (valueIndex != -1) {
 					String valuePart = "";
 					valuePart = statement.substring(valueIndex + 6).trim();
-					
-					valuePart = valuePart.replace("(", " ").trim();
-					valuePart = valuePart.replace(")", " ").trim();
-
+					valuePart = valuePart.replace("(", " ").replace(")", " ").trim();
 					String[] valuePartSplit = valuePart.split(",");
-					
+
 					if (columnPartSplit.length == valuePartSplit.length) {
 						Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
 						Vector<Attribute> attributes = newRelation.getAttributes();
-						
+
 						for (int i = 0; i < columnPartSplit.length; i++) {
 							boolean chk = true;
 							for (int k = 0; k < attributes.size(); k++) {
@@ -158,23 +156,19 @@ public class QueryParser {
 								return false;
 							}
 						}
-					}
-					else{
+					} else {
 						System.out.println("#columns and #values mismatch");
 						return false;
 					}
-				}
-				else{
+				} else {
 					System.out.println("Keyword \'values\' is missing");
 					return false;
 				}
-			}
-			else{
+			} else {
 				System.out.println(relationName + " is not a valid Relation Name");
 				return false;
 			}
-		}
-		else{
+		} else {
 			System.out.println("Not a valid Insert syntax");
 			return false;
 		}
@@ -519,6 +513,10 @@ public class QueryParser {
 				tableMap.clear();
 
 				for (int i = 0; i < fromPartSplit.length; i++) {
+					if (!fromPartSplit[i].contains("as")) {
+						print_error(10, "");
+						return false;
+					}
 					tableMap.put(Utility.getNickName(fromPartSplit[i]), Utility.getRelationName(fromPartSplit[i]));
 				}
 
@@ -585,6 +583,7 @@ public class QueryParser {
 					break;
 				}
 			}
+
 			if (condition.substring(i + 1, i + 1 + condition.substring(i + 1).indexOf('(')).trim().toUpperCase().equals("AND")) {
 				return ConditionType.AND;
 			} else {
@@ -776,5 +775,16 @@ public class QueryParser {
 			System.out.println("undefined, see error message ");
 			break;
 		}
+	}
+
+	static Vector<String> getJoinTableList(String statement, String JoinName) {
+		Vector<String> result;
+		statement = statement.replace("join", "").trim();
+		String[] tableList = statement.split(JoinName);
+		result = new Vector<String>(tableList.length);
+		for (int i = 0; i < tableList.length; i++) {
+			result.add(i, tableList[i].trim());
+		}
+		return result;
 	}
 }
