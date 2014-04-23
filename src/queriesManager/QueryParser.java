@@ -363,6 +363,85 @@ public class QueryParser {
 		return true;
 	}
 
+	public static boolean isNaturalJoinQuery(String statement){
+		int naturalJoinIndex = statement.indexOf(" naturaljoin ");
+		if(naturalJoinIndex != -1){
+			statement = statement.replaceAll(" naturaljoin "," , ");
+			if(isSelectStatementQuery(statement)){
+				return true;
+			}
+			else{
+				System.out.println("Not a valid join syntax");
+				return false;
+			}
+		}
+		else{
+			System.out.println("Not a valid join syntax: keyword \'naturaljoin\' is missing");
+			return false;
+		}
+	}
+	
+	public static boolean isEquiJoinQuery(String statement){
+		int equiJoinIndex = statement.indexOf(" equijoin ");
+		if(equiJoinIndex != -1){
+			statement = statement.replaceAll(" equijoin ", " , ").trim();
+			if(isSelectStatementQuery(statement)){
+				return true;
+			}
+			else{
+				System.out.println("Not a valid equi join syntax");
+				return false;
+			}
+		}
+		else{
+			System.out.println("Not a valid join syntax: keyword \'equijoin\' is missing");
+			return false;
+		}
+	}
+	
+	public static boolean isConditionalJoinQuery(String statement){
+		int joinIndex = statement.indexOf(" join ");
+		if(joinIndex != -1){
+			int whereIndex = statement.indexOf("where");
+			if(whereIndex != -1){
+				int lp = statement.indexOf("(");
+				int rp = statement.indexOf(")");
+				
+				if(lp < rp && rp < whereIndex){
+					statement = statement.replace(" join ", " , ") ;
+					statement = statement.replaceFirst("("," ").replaceFirst(")"," ").trim();
+					if(isSelectStatementQuery(statement)){
+						return true;
+					}
+					else{
+						System.out.println("Not a valid join syntax");
+						return false;
+					}
+				}
+				else{
+					System.out.println("Improper positioning of parenthesis");
+					return false;
+				}
+			}
+			else{
+				statement = statement.replace("join", ",").trim();
+				statement = statement.replace("("," ").replace(")"," ").trim();
+				
+				if(isSelectStatementQuery(statement)){
+					return true;
+				}
+				else{
+					System.out.println("Not a valid join syntax");
+					return false;
+				}
+			}
+		}
+		else{
+			System.out.println("Not a valid join syntax: keyword \'join\' is missing");
+			return false;
+		}
+	}
+	
 	public static boolean isSelectStatementQuery(String statement) {
 		int selectIndex = statement.trim().indexOf("select");
 		int fromIndex = statement.trim().indexOf("from");

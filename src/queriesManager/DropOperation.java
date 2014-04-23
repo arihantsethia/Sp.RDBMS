@@ -3,6 +3,7 @@ package queriesManager;
 import java.util.StringTokenizer;
 
 import databaseManager.DatabaseManager;
+import databaseManager.ObjectHolder;
 
 public class DropOperation extends Operation {
 
@@ -32,6 +33,32 @@ public class DropOperation extends Operation {
 	}
 
 	private boolean parseDropPrimaryKeyQuery(String statement) {
+		statement = statement.substring(statement.indexOf("primary key") + 11).trim();
+		if(statement.length() == 0){
+			System.out.println("Keyword \'on\' is missing");
+			return false;
+		}
+		int onIndex = statement.indexOf("on");
+		if(onIndex == 0){
+			statement = statement.substring(onIndex + 2).trim();
+			if(statement.length() == 0){
+				System.out.println("table name is missing");
+				return false;
+			}
+			relationName = statement.substring(0);
+			long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
+			if(newRelationId != -1){
+				return true;
+			}
+			else{
+				System.out.println("Not a valid relation name");
+				return false;
+			}
+		}
+		else{
+			System.out.println("Not a valid drop primary key syntax");
+		}
+		
 		return true;
 	}
 	private boolean parseDropTableQuery(String statement) {
@@ -40,32 +67,94 @@ public class DropOperation extends Operation {
 			System.out.println("Table name is missing");
 			return false;
 		}
-		relationName = statement.substring(0, statement.indexOf(" ")).trim();
-		if (relationName.contentEquals(statement)) {
+		relationName = statement.substring(0).trim();
+		long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
+		if(newRelationId != -1){
+			System.out.println("relation name is valid");
 			return true;
-		} else {
+		}
+		else{
+			System.out.println("Not a valid relation name");
 			return false;
 		}
+		//relationName = statement.substring(0, statement.indexOf(" ")).trim();
+		/*if (relationName.contentEquals(statement)) {
+			System.out.println("Relation name matched");
+			return true;
+		} else {
+			System.out.println("Not a valid Relation Name");
+			return false;
+		}*/
 	}
 
 	private boolean parseDropIndexQuery(String statement) {
 		statement = statement.substring(statement.indexOf("index") + 5).trim();
-		StringTokenizer tokens = new StringTokenizer(statement, " ");
-		if (tokens.countTokens() == 4) {
-			indexName = tokens.nextToken().trim();
-			if (tokens.nextToken().trim().equalsIgnoreCase("ON")) {
-				if (tokens.nextToken().trim().equalsIgnoreCase("TABLE")) {
-					relationName = tokens.nextToken().trim();
-					return true;
-				} else {
+		if(statement.length() == 0){
+			System.out.println("index name is missing");
+			return false;
+		}
+		
+		if(statement.contains(" ")){
+			indexName = statement.substring(0,statement.indexOf(" ")).trim();
+			//System.out.println("indexName->"+indexName);
+			statement = statement.substring(statement.indexOf(indexName) + indexName.length()).trim();
+			if(statement.length() == 0){
+				System.out.println("Keyword \'on\' is missing");
+				return false;
+			}
+			int onIndex = statement.indexOf("on");
+			if(onIndex == 0){
+				statement = statement.substring(onIndex + 2).trim();
+				if(statement.length() == 0){
+					System.out.println("table name is missing");
 					return false;
 				}
+				relationName = statement.substring(0);
+				long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
+				if(newRelationId != -1){
+					return true;
+				}
+				else{
+					System.out.println("Not a valid relation name");
+					return false;
+				}
+			}
+			else{
+				System.out.println("Not a valid drop index syntax");
+				return false;
+			}
+		}
+		else{
+			System.out.println("Not a valid drop index syntax");
+			return false;
+		}
+		
+		/*StringTokenizer tokens = new StringTokenizer(statement, " ");
+		if (tokens.countTokens() == 3) {
+			indexName = tokens.nextToken().trim();
+			if (tokens.nextToken().trim().equalsIgnoreCase("ON")) {
+				//if (tokens.nextToken().trim().equalsIgnoreCase("TABLE")) {
+					relationName = tokens.nextToken().trim();
+					long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
+					if(newRelationId != -1){
+						return true;
+					}
+					else{
+						System.out.println("Not a valid relation name");
+						return false;
+					}
+					
+				//} else {
+					//return false;
+				//}
 			} else {
+				System.out.println("keyword \'on\' is missing");
 				return false;
 			}
 		} else {
+			System.out.println("Not a valid drop index query");
 			return false;
-		}
+		}*/
 	}
 
 	private boolean parseDropDBQuery(String statement) {
