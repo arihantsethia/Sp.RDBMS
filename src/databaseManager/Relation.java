@@ -278,6 +278,10 @@ public class Relation {
 	public Vector<Attribute> getPrimaryKey() {
 		return primaryKey;
 	}
+	
+	public void emptyPrimaryKey() {
+		primaryKey = new Vector<Attribute>();
+	}
 
 	public void addPrimaryKey(Vector<String> attrs) {
 		for (int i = 0; i < attributes.size(); i++) {

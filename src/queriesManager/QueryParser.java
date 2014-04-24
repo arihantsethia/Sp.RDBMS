@@ -918,10 +918,10 @@ public class QueryParser {
 			System.out.println("Error:  Keyword table does not exits. \n");
 			break;
 		case 10:
-			System.out.println("Error:  \'as\' Expected \n");
+			System.out.println("Error: \'as\' Expected \n");
 			break;
 		case 11:
-			System.out.println("Error:   \'.\' or \'*\' Expected. \n");
+			System.out.println("Error:  \'.\' or \'*\' Expected. \n");
 			break;
 		case 12:
 			System.out.println("Error:  Not a valid create Syntax. \n");

@@ -8,7 +8,7 @@ import databaseManager.ObjectHolder;
 /**
  * 
  * The instance of "DropOperation" class is called whenever we want to execute
- * Create query. 
+ * Create query.
  */
 public class DropOperation extends Operation {
 
@@ -19,8 +19,8 @@ public class DropOperation extends Operation {
 
 	/**
 	 * 
-	 * The instance of "DropOperation" class is called whenever we want to execute
-	 * Drop query.
+	 * The instance of "DropOperation" class is called whenever we want to
+	 * execute Drop query.
 	 * 
 	 */
 	DropOperation(String statement) {
@@ -42,43 +42,44 @@ public class DropOperation extends Operation {
 	}
 
 	/**
-	 * It parse drop primary key query and give result true or false according to that. 
+	 * It parse drop primary key query and give result true or false according
+	 * to that.
+	 * 
 	 * @param statement
 	 * @return
 	 */
 	private boolean parseDropPrimaryKeyQuery(String statement) {
 		statement = statement.substring(statement.indexOf("primary key") + 11).trim();
-		if(statement.length() == 0){
+		if (statement.length() == 0) {
 			System.out.println("Error: Keyword \'on\' is missing");
 			return false;
 		}
 		int onIndex = statement.indexOf("on");
-		if(onIndex == 0){
+		if (onIndex == 0) {
 			statement = statement.substring(onIndex + 2).trim();
-			if(statement.length() == 0){
+			if (statement.length() == 0) {
 				System.out.println("Error: table name is missing");
 				return false;
 			}
 			relationName = statement.substring(0);
 			long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
-			if(newRelationId != -1){
-				//System.out.println("primary key dropped successfully!");
+			if (newRelationId != -1) {
 				return true;
-			}
-			else{
+			} else {
 				System.out.println("Error: Not a valid relation name");
 				return false;
 			}
-		}
-		else{
+		} else {
 			System.out.println("Error: Not a valid drop primary key syntax");
 		}
-		
+
 		return true;
 	}
 
 	/**
-	 * It parse the drop statement query given as input and return true or false according to that.
+	 * It parse the drop statement query given as input and return true or false
+	 * according to that.
+	 * 
 	 * @param statement
 	 * @return
 	 */
@@ -89,70 +90,65 @@ public class DropOperation extends Operation {
 			return false;
 		}
 		relationName = statement.trim();
-		if(relationName.length()>0){
-			if(relationName.contains(" ")){
+		if (relationName.length() > 0) {
+			if (relationName.contains(" ")) {
 				System.out.println("Error: Rubbish stuff after Relation Name");
 				return false;
 			}
 			long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
-			if(newRelationId != -1){
-				System.out.println("Error:  name is valid");
+			if (newRelationId != -1) {
 				return true;
-			}
-			else{
-				System.out.println("Error: Relation Name not present");
+			} else {
+				System.out.println("Error: Not a valid relation name");
 				return false;
 			}
-		}
-		else{
+		} else {
 			System.out.println("Error: Relation Name not present");
 			return false;
 		}
 	}
 
 	/**
-	 * It parse drop index key query and give result true or false according to that. 
+	 * It parse drop index key query and give result true or false according to
+	 * that.
+	 * 
 	 * @param statement
 	 * @return
 	 */
 	private boolean parseDropIndexQuery(String statement) {
 		statement = statement.substring(statement.indexOf("index") + 5).trim();
-		if(statement.length() == 0){
+		if (statement.length() == 0) {
 			System.out.println("Error: index name is missing");
 			return false;
 		}
-		
-		if(statement.contains(" ")){
-			indexName = statement.substring(0,statement.indexOf(" ")).trim();
+
+		if (statement.contains(" ")) {
+			indexName = statement.substring(0, statement.indexOf(" ")).trim();
 			statement = statement.substring(statement.indexOf(indexName) + indexName.length()).trim();
-			if(statement.length() == 0){
+			if (statement.length() == 0) {
 				System.out.println("Error: Keyword \'on\' is missing");
 				return false;
 			}
 			int onIndex = statement.indexOf("on ");
-			if(onIndex == 0){
+			if (onIndex == 0) {
 				statement = statement.substring(onIndex + 2).trim();
-				if(statement.length() == 0){
+				if (statement.length() == 0) {
 					System.out.println("Error: table name is missing");
 					return false;
 				}
 				relationName = statement.substring(0);
 				long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
-				if(newRelationId != -1){
-					//System.out.println("index dropped successfully!");
+				if (newRelationId != -1) {
 					return true;
-				}
-				else{
+				} else {
 					System.out.println("Error: Not a valid relation name");
 					return false;
 				}
-			}
-			else{
+			} else {
 				System.out.println("Error: Not a valid drop index syntax");
 				return false;
 			}
-		}
-		else{
+		} else {
 			System.out.println("Error: Not a valid drop index syntax");
 			return false;
 		}
@@ -160,6 +156,7 @@ public class DropOperation extends Operation {
 
 	/**
 	 * parser for delete database query.
+	 * 
 	 * @param statement
 	 * @return
 	 */
@@ -179,7 +176,8 @@ public class DropOperation extends Operation {
 
 	/**
 	 * This method will execute delete query and will reply true if query
-	 * successfully executed. It evaluates according to query type whether it is delete index or primary key.
+	 * successfully executed. It evaluates according to query type whether it is
+	 * delete index or primary key.
 	 */
 	public boolean executeOperation() {
 		if (queryType == 0) {
@@ -187,7 +185,7 @@ public class DropOperation extends Operation {
 		} else if (queryType == 1) {
 			return DatabaseManager.getSystemCatalog().dropIndex(indexName, relationName);
 		} else if (queryType == 2) {
-			return DatabaseManager.getSystemCatalog().dropIndex(relationName + "_pk", relationName);
+			return DatabaseManager.getSystemCatalog().dropPrimaryKey(relationName);
 		} else if (queryType == 3) {
 			return DatabaseManager.dropDatabase(dbName);
 		}

@@ -315,7 +315,6 @@ public class SystemCatalogManager {
 				updateRelationCatalog(relation);
 				addIndexToCatalog(index);
 				index.setTree();
-				System.out.println("Index : " + indexName + " created successfully!");
 				// Add all records to index
 				DynamicObject recordObject = new DynamicObject(relation.getAttributes());
 				DynamicObject iteratorKey = new DynamicObject(attributes);
@@ -373,7 +372,7 @@ public class SystemCatalogManager {
 			}
 			recordsPerPage = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * RELATION_RECORD_SIZE));
 			recordNumber = (relation.getRecordOffset() - (recordsPerPage + 7) / 8) / RELATION_RECORD_SIZE;
-			deleteRecord(RELATION_CATALOG_ID, relation.getPageNumber(), recordsPerPage, recordNumber);
+			deleteRecord(RELATION_CATALOG_ID, relation.getPageNumber(), recordNumber, recordsPerPage);
 			bufferManager.closeFile(relationId);
 			bufferManager.deleteFile(relation.getFileName());
 			objectHolder.removeObject(relationId);
@@ -399,11 +398,32 @@ public class SystemCatalogManager {
 			Relation relation = (Relation) objectHolder.getObject(relationId);
 			Index index = (Index) objectHolder.getObject(indexId);
 			relation.removeIndex(indexId);
-			int recordNumber = (index.getRecordOffset() - (indexRecordsPerPage + 7) / 8) / RELATION_RECORD_SIZE;
-			deleteRecord(INDEX_CATALOG_ID, index.getPageNumber(), index.getRecordsPerPage(), recordNumber);
+			Vector<Attribute> attributes = index.getAttributes();
+			int recordsPerPage = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * ATTRIBUTE_RECORD_SIZE));
+			for (int i = 0; i < attributes.size(); i++) {
+				int recordNumber = (attributes.get(i).getRecordOffset() - (recordsPerPage + 7) / 8) / ATTRIBUTE_RECORD_SIZE;
+				bufferManager.writeRecordBitmap(INDEX_ATTRIBUTE_CATALOG_ID, attributes.get(i).getPageNumber(), recordsPerPage, recordNumber, false);
+			}
+			int recordNumber = (index.getRecordOffset() - (indexRecordsPerPage + 7) / 8) / INDEX_RECORD_SIZE;
+			deleteRecord(INDEX_CATALOG_ID, index.getPageNumber() , recordNumber, index.getRecordsPerPage());
 			bufferManager.closeFile(indexId);
 			bufferManager.deleteFile(index.getFileName());
 			objectHolder.removeObject(indexId);
+			return true;
+		}
+		return false;
+	}
+
+	public boolean dropPrimaryKey(String relationName) {
+		if (dropIndex(relationName + "_pk", relationName)) {
+			long relationId = objectHolder.getRelationId(relationName);
+			Relation relation = (Relation) objectHolder.getObject(relationId);
+			for (int i = 0; i < relation.getPrimaryKey().size(); i++) {
+				Attribute attribute = relation.getPrimaryKey().get(i);
+				attribute.partPK(false);
+				updateAttributeCatalog(attribute);
+			}
+			relation.emptyPrimaryKey();
 			return true;
 		}
 		return false;
@@ -518,7 +538,6 @@ public class SystemCatalogManager {
 	 */
 	public boolean deleteRecord(long id, long pageNumber, int recordOffset, DynamicObject dObj) {
 		Relation relation = (Relation) objectHolder.getObject(id);
-		relation.updateRecordsCount(-1);
 		java.util.Iterator<Long> indices = relation.getIndices().iterator();
 		PhysicalAddress deleteAddress = new PhysicalAddress(id, pageNumber, recordOffset);
 		int recordsPerPage = relation.getRecordsPerPage();
