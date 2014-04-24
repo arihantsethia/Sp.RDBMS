@@ -305,9 +305,9 @@ public class SystemCatalogManager {
 
 				}
 				boolean distinct = Boolean.valueOf(parsedData.get(1).get(0));
-				Index index = new Index(indexName, totalObjectsCount + 1, relationId, distinct, attributes);
+				Index index = new Index(indexName, totalObjectsCount, relationId, distinct, attributes);
 				for (int i = 0; i < attributes.size(); i++) {
-					attributes.get(i).setParentId(totalObjectsCount + 1);
+					attributes.get(i).setParentId(totalObjectsCount);
 					attributes.get(i).setId(totalIndexAttributesCount);
 					addIndexAttributeToCatalog(attributes.get(i));
 				}
