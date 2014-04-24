@@ -56,19 +56,19 @@ public class CreateOperation extends Operation {
 		statement = statement.substring(tableIndex + 5).trim();
 
 		if (statement.length() == 0) {
-			System.out.println("table name is missing");
+			System.out.println("Error: Table name is missing");
 			return false;
 		}
 		int lpIndex = statement.indexOf("(");
 		int rpIndex = statement.lastIndexOf(")");
 		if (lpIndex == -1 || rpIndex != statement.length() - 1) {
-			System.out.println("parenthesis are missing");
+			System.out.println("Error: parenthesis are missing");
 			return false;
 		}
 		relationName = statement.substring(0, statement.indexOf("(")).trim();
 
 		if (relationName.contains(" ")) {
-			System.out.println("Rubbish between table name and opening parenthesis");
+			System.out.println("Error: Rubbish between table name and opening parenthesis");
 			return false;
 		}
 
@@ -76,7 +76,7 @@ public class CreateOperation extends Operation {
 
 		StringTokenizer tokens = new StringTokenizer(statement.substring(statement.indexOf("(") + 1, statement.lastIndexOf(")")).trim(), ",");
 		if (tokens.countTokens() == 0) {
-			System.out.println("Attributes are missing");
+			System.out.println("Error: Attributes are missing");
 			return false;
 		}
 		Vector<String> parsedToken;
@@ -84,13 +84,13 @@ public class CreateOperation extends Operation {
 			parsedToken = new Vector<String>();
 			StringTokenizer attributeTokens = new StringTokenizer(tokens.nextToken().trim(), " ");
 			if (attributeTokens.countTokens() < 2) {
-				System.out.println("Name and type of attribute needs to be specified!");
+				System.out.println("Error: Name and type of attribute needs to be specified!");
 				return false;
 			}
 			parsedToken.add(attributeTokens.nextToken().trim());
 			parsedToken.add(attributeTokens.nextToken().trim());
 			if (Attribute.stringToType(parsedToken.get(1)) == Attribute.Type.Undeclared) {
-				System.out.println("Not a valid data type!");
+				System.out.println("Error: Not a valid data type!");
 				return false;
 			} else if (Attribute.stringToType(parsedToken.get(1)) == Attribute.Type.Char) {
 				int size = 2;
@@ -100,11 +100,11 @@ public class CreateOperation extends Operation {
 						size = size * Integer.parseInt(temp);
 						parsedToken.add(String.valueOf(size));
 					} catch (NumberFormatException e) {
-						System.out.println("Integer length needs to be specified for char data type as \"(length)\" !");
+						System.out.println("Error: Integer length needs to be specified for char data type as \"(length)\" !");
 						return false;
 					}
 				} else {
-					System.out.println("Length needs to be specified for char data type as \"(length)\" !");
+					System.out.println("Error: Length needs to be specified for char data type as \"(length)\" !");
 					return false;
 				}
 			} else {
@@ -127,7 +127,7 @@ public class CreateOperation extends Operation {
 				parsedToken.add(properties[0].toString());
 				parsedToken.add(properties[1].toString());
 			} else {
-				System.out.println("Only 4 properties per attribute i.e name , type , null/not_null , unique are allowed");
+				System.out.println("Error: Only 4 properties per attribute i.e name , type , null/not_null , unique are allowed");
 				return false;
 			}
 			parsedData.add(parsedToken);
@@ -148,7 +148,7 @@ public class CreateOperation extends Operation {
 			if (primarykeyIndex <= onIndex) {
 				statement = statement.substring(onIndex + 2).trim();
 				if (statement.length() == 0) {
-					System.out.println("table name is missing");
+					System.out.println("Error: table name is missing");
 					return false;
 				}
 				int lp = statement.indexOf("(");
@@ -163,7 +163,7 @@ public class CreateOperation extends Operation {
 				if (newRelationId != -1) {
 					statement = statement.substring(statement.indexOf(relationName) + relationName.length()).trim();
 					if (statement.length() == 0) {
-						System.out.println("Parenthesis are missing");
+						System.out.println("Error: Parenthesis are missing");
 						return false;
 					}
 					String primarykeyPart = "";
@@ -188,19 +188,19 @@ public class CreateOperation extends Operation {
 							attributeList.add(primarykeyPartSplit[i].trim());
 						}
 					} else {
-						System.out.println("Primary key attribute is missing");
+						System.out.println("Error: Primary key attribute is missing");
 						return false;
 					}
 				} else {
-					System.out.println(relationName + " is not a valid Relation Name");
+					System.out.println("Error: "+relationName + " is not a valid Relation Name");
 					return false;
 				}
 			} else {
-				System.out.println("Keyword \'on\' appears before keyword \'primary key\'");
+				System.out.println("Error: Keyword \'on\' appears before keyword \'primary key\'");
 				return false;
 			}
 		} else {
-			System.out.println("Not a valid Primary Key syntax");
+			System.out.println("Error: Not a valid Primary Key syntax");
 			return false;
 		}
 		parsedData.add(attributeList);
@@ -223,11 +223,11 @@ public class CreateOperation extends Operation {
 		if (statement.indexOf("index ") == 0) {
 			statement = statement.substring(5).trim();
 		} else {
-			System.out.println("Keyword index is missing");
+			System.out.println("Error: Keyword index is missing");
 			return false;
 		}
 		if (statement.length() == 0 || statement.startsWith("on ") || statement.indexOf(" ") <= 0) {
-			System.out.println("Index name is missing");
+			System.out.println("Error: Index name is missing");
 			return false;
 		}
 		indexName = statement.substring(0, statement.indexOf(" ")).trim();
@@ -235,7 +235,7 @@ public class CreateOperation extends Operation {
 		if (statement.indexOf("on ") == 0) {
 			statement = statement.substring(2).trim();
 			if (statement.length() == 0) {
-				System.out.println("table name is missing");
+				System.out.println("Error: table name is missing");
 				return false;
 			}
 			if (statement.indexOf("(") != -1) {
@@ -253,7 +253,7 @@ public class CreateOperation extends Operation {
 							while (attribtueNames.hasMoreTokens()) {
 								attribtueName = attribtueNames.nextToken().trim();
 								if (attribtueName.indexOf(" ") != -1) {
-									System.out.println("All attributes must be seperated by ','. Error near : " + attribtueName);
+									System.out.println("Error: All attributes must be seperated by ','. Error near : " + attribtueName);
 									return false;
 								}
 								if (relationAttributes.containsKey(attribtueName)) {
@@ -265,11 +265,11 @@ public class CreateOperation extends Operation {
 							}
 							parsedData.add(parsedToken);
 						} else {
-							System.out.println("Atleat one attribute should be specified. Error near : " + statement);
+							System.out.println("Error: Atleat one attribute should be specified. Error near : " + statement);
 							return false;
 						}
 					} else {
-						System.out.println("Closing Parenthesis are missing at the end");
+						System.out.println("Error: Closing Parenthesis are missing at the end");
 						return false;
 					}
 				} else {
@@ -277,11 +277,11 @@ public class CreateOperation extends Operation {
 					return false;
 				}
 			} else {
-				System.out.println("Parenthesis are missing");
+				System.out.println("Error: Parenthesis are missing");
 				return false;
 			}
 		} else {
-			System.out.println("Keyword on is missing");
+			System.out.println("Error: Keyword on is missing");
 			return false;
 		}
 		parsedToken = new Vector<String>();

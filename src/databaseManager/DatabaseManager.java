@@ -128,27 +128,37 @@ public class DatabaseManager {
 		if (query.contains(" database ") || query.contains(" databases ") || inDb) {
 			if (splitCommand[0].equals("create")) {
 				Operation operation = Operation.makeOperation(query.trim());
-				operation.executeOperation();
+				if(operation.executeOperation()){
+					System.out.println("Operation Successfully Executed.");
+				}
 			} else if (splitCommand[0].equals("drop")) {
 				Operation operation = Operation.makeOperation(query.trim());
-				operation.executeOperation();
+				if(operation.executeOperation()){
+					System.out.println("Operation Successfully Executed.");
+				}
 			} else if (query.contains("equi")) {
 				Operation operation = Operation.makeOperation(query.trim());
-				operation.executeOperation();
+				if(operation.executeOperation()){
+					System.out.println("Operation Successfully Executed.");
+				}
 			} else if (query.contains("join")) {
 				Operation operation = Operation.makeOperation(query.trim());
-				operation.executeOperation();
+				if(operation.executeOperation()){
+					System.out.println("Operation Successfully Executed.");
+				}
 			} else if (splitCommand[0].equals("select")) {
 				if (QueryParser.isSelectStatementQuery(query)) {
 					Operation operation = Operation.makeOperation(query.trim());
-					operation.executeOperation();
+					if(operation.executeOperation()){
+						System.out.println("Operation Successfully Executed.");
+					}
 				}
 			} else if (splitCommand[0].equals("insert")) {
 				if (QueryParser.isInsertStatementQuery(query)) {
 					if (systemCatalog.insertRecord(query) == true) {
-						System.out.println(" Successfully inserted into Table :" + splitCommand[2].trim());
+						System.out.println(" Successfully inserted into table : " + splitCommand[2].trim());
 					} else {
-						System.out.println("Can not insert Table :" + splitCommand[2].trim());
+						System.out.println("Can not insert table : " + splitCommand[2].trim());
 					}
 				}
 			} else if (splitCommand[0].equals("show")) {
@@ -168,15 +178,14 @@ public class DatabaseManager {
 				if (QueryParser.isUpdateStatementQuery(query)) {
 					Operation operation = Operation.makeOperation(query.trim());
 					if (operation.executeOperation()) {
-						System.out.println(" Successfully updated values ");
+						System.out.println("Successfully updated values ");
 					}
-
 				}
 			} else if (splitCommand[0].equals("delete")) {
 				if (QueryParser.isDeleteStatementQuery(query)) {
 					Operation operation = Operation.makeOperation(query.trim());
 					if (operation.executeOperation()) {
-						System.out.println(" Data successfully deleted ");
+						System.out.println("Records successfully deleted ");
 					}
 				}
 			} else if (splitCommand[0].equals("desc")) {
@@ -194,10 +203,10 @@ public class DatabaseManager {
 					System.out.println("Error : Undefined Syntax.");
 				}
 			} else {
-				System.out.println("undefined Syntax\n");
+				System.out.println("Error: undefined Syntax\n");
 			}
 		} else {
-			System.out.println("No Database Selected");
+			System.out.println("Error: No Database Selected");
 		}
 	}
 

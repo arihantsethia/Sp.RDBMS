@@ -196,19 +196,19 @@ public class QueryParser {
 							}
 						}
 					} else {
-						System.out.println("#columns and #values mismatch");
+						System.out.println("Error: #columns and #values mismatch");
 						return false;
 					}
 				} else {
-					System.out.println("Keyword \'values\' is missing");
+					System.out.println("Error: Keyword \'values\' is missing");
 					return false;
 				}
 			} else {
-				System.out.println(relationName + " is not a valid Relation Name");
+				System.out.println("Error: "+relationName + " is not a valid Relation Name");
 				return false;
 			}
 		} else {
-			System.out.println("Not a valid Insert syntax");
+			System.out.println("Error: Not a valid Insert syntax");
 			return false;
 		}
 
@@ -439,12 +439,12 @@ public class QueryParser {
 				return true;
 			}
 			else{
-				System.out.println("Not a valid natural join syntax");
+				System.out.println("Error: Not a valid natural join syntax");
 				return false;
 			}
 		}
 		else{
-			System.out.println("Not a valid natural join syntax: keyword \'naturaljoin\' is missing");
+			System.out.println("Error: Not a valid natural join syntax: keyword \'naturaljoin\' is missing");
 			return false;
 		}
 	}
@@ -464,12 +464,12 @@ public class QueryParser {
 				return true;
 			}
 			else{
-				System.out.println("Not a valid equi join syntax");
+				System.out.println("Error: Not a valid equi join syntax");
 				return false;
 			}
 		}
 		else{
-			System.out.println("Not a valid equi join syntax: keyword \'equijoin\' is missing");
+			System.out.println("Error: Not a valid equi join syntax: keyword \'equijoin\' is missing");
 			return false;
 		}
 	}
@@ -508,12 +508,12 @@ public class QueryParser {
 						return true;
 					}
 					else{
-						System.out.println("Not a valid join syntax");
+						System.out.println("Error: Not a valid join syntax");
 						return false;
 					}
 				}
 				else{
-					System.out.println("Improper positioning of parenthesis");
+					System.out.println("Error: Improper positioning of parenthesis");
 					return false;
 				}
 			}
@@ -531,13 +531,13 @@ public class QueryParser {
 					return true;
 				}
 				else{
-					System.out.println("Not a valid join syntax");
+					System.out.println("Error: Not a valid join syntax");
 					return false;
 				}
 			}
 		}
 		else{
-			System.out.println("Not a valid join syntax: keywords are missing");
+			System.out.println("Error: Not a valid join syntax: keyword \'join\' is missing");
 			return false;
 		}
 	}
@@ -891,43 +891,43 @@ public class QueryParser {
 		String[] t = s.split(" ");
 		switch (i) {
 		case 1:
-			System.out.println("Attribute " + s + " is not a valid attribute. \n");
+			System.out.println("Error: Attribute " + s + " is not a valid attribute. \n");
 			break;
 		case 2:
-			System.out.println(s + " is not a valid Relation Name. \n");
+			System.out.println("Error: "+s + " is not a valid Relation Name. \n");
 			break;
 		case 3:
-			System.out.println(s + " is not a valid Relation Instance. \n");
+			System.out.println("Error: "+s + " is not a valid Relation Instance. \n");
 			break;
 		case 4:
-			System.out.println(" Not a valid select Syntax. \n");
+			System.out.println("Error:  Not a valid select Syntax. \n");
 			break;
 		case 5:
 			System.out.println(t[0] + " and " + t[1] + " are not of Same Type. \n");
 			break;
 		case 6:
-			System.out.println(" ( or ) brackets expected. \n");
+			System.out.println("Error:  ( or ) brackets expected. \n");
 			break;
 		case 7:
-			System.out.println(" Not a valid update Syntax. \n");
+			System.out.println("Error:  Not a valid update Syntax. \n");
 			break;
 		case 8:
-			System.out.println(" Column " + s + " does not exits. \n");
+			System.out.println("Error:  Column " + s + "does not exits. \n");
 			break;
 		case 9:
-			System.out.println(" Keyword table does not exits. \n");
+			System.out.println("Error:  Keyword table does not exits. \n");
 			break;
 		case 10:
-			System.out.println(" \'as\' Expected \n");
+			System.out.println("Error:  \'as\' Expected \n");
 			break;
 		case 11:
-			System.out.println("  \'.\' or \'*\' Expected. \n");
+			System.out.println("Error:   \'.\' or \'*\' Expected. \n");
 			break;
 		case 12:
-			System.out.println(" Not a valid create Syntax. \n");
+			System.out.println("Error:  Not a valid create Syntax. \n");
 			break;
 		default:
-			System.out.println("undefined, see error message ");
+			System.out.println("Error: undefined, see error message ");
 			break;
 		}
 	}
