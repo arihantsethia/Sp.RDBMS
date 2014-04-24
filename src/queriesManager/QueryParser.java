@@ -169,13 +169,13 @@ public class QueryParser {
 						Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
 						Vector<Attribute> attributes = newRelation.getAttributes();
 
-						for(int i=0;i<columnPartSplit.length;i++){
+						/*for(int i=0;i<columnPartSplit.length;i++){
 							System.out.println("columnPartSplit["+i+"]->"+columnPartSplit[i].trim());
-						}
+						}*/
 						
-						for(int i=0;i<valuePartSplit.length;i++){
+						/*for(int i=0;i<valuePartSplit.length;i++){
 							System.out.println("valuePartSplit["+i+"]->"+valuePartSplit[i].trim());
-						}
+						}*/
 						
 						for (int i = 0; i < columnPartSplit.length; i++) {
 							boolean chk = true;
@@ -485,7 +485,7 @@ public class QueryParser {
 	 */
 	public static boolean isConditionalJoinQuery(String statement){
 		int joinIndex = statement.indexOf(" join ");
-		int onIndex = statement.indexOf("on");
+		int onIndex = statement.indexOf(" on ");
 		if(joinIndex != -1 && onIndex != -1){
 			int whereIndex = statement.indexOf("where");
 			if(whereIndex != -1){
