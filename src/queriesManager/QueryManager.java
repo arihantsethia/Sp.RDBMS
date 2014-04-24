@@ -17,10 +17,11 @@ public class QueryManager {
 			System.out.print("Sp.Sql-> ");
 			input = inputScanner.next().trim();
 			if (!input.equals("exit")) {
-				databaseManager.parseCommand(input);
+				databaseManager.parseCommand(input+" ");
 			} else {
+				System.out.println("Byee!");
 				databaseManager.close();
-				System.exit(1);
+				break;
 			}
 			System.out.println();
 		}

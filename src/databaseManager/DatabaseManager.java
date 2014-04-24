@@ -123,9 +123,9 @@ public class DatabaseManager {
 	 * @param query is the query statement executed by the user.
 	 */
 	public void parseCommand(String query) {
-		String[] splitCommand = query.split(" ");
-
 		if (query.contains(" database ") || query.contains(" databases ") || inDb) {
+			query=query.trim();
+			String[] splitCommand = query.split(" ");
 			if (splitCommand[0].equals("create")) {
 				Operation operation = Operation.makeOperation(query.trim());
 				if(operation.executeOperation()){
