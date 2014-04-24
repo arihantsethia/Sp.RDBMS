@@ -21,13 +21,13 @@ public class SystemCatalogManager {
 	public static final String ATTRIBUTE_CATALOG = "attribute_catalog.db";
 	public static final String INDEX_CATALOG = "index_catalog.db";
 	public static final String INDEX_ATTRIBUTE_CATALOG = "index_attribute_catalog.db";
-	public static final int RELATION_RECORD_SIZE = 160;
+	public static final int RELATION_RECORD_SIZE = 168;
 	public static final long RELATION_CATALOG_ID = 1;
-	public static final int ATTRIBUTE_RECORD_SIZE = 143;
+	public static final int ATTRIBUTE_RECORD_SIZE = 151;
 	public static final long ATTRIBUTE_CATALOG_ID = 2;
-	public static final int INDEX_RECORD_SIZE = 196;
+	public static final int INDEX_RECORD_SIZE = 204;
 	public static final long INDEX_CATALOG_ID = 3;
-	public static final int INDEX_ATTRIBUTE_RECORD_SIZE = 143;
+	public static final int INDEX_ATTRIBUTE_RECORD_SIZE = 151;
 	public static final long INDEX_ATTRIBUTE_CATALOG_ID = 4;
 
 	private BufferManager bufferManager;
@@ -161,7 +161,7 @@ public class SystemCatalogManager {
 		int attributeRecordsPerPage = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * ATTRIBUTE_RECORD_SIZE));
 		long freePageNumber = bufferManager.getFreePageNumber(ATTRIBUTE_CATALOG_ID);
 		int freeRecordOffset = bufferManager.getFreeRecordOffset(ATTRIBUTE_CATALOG_ID, freePageNumber, attributeRecordsPerPage, ATTRIBUTE_RECORD_SIZE);
-		newAttribute.setAddress(freePageNumber, freeRecordOffset);
+		newAttribute.setAddress(ATTRIBUTE_CATALOG_ID, freePageNumber, freeRecordOffset);
 		bufferManager.write(ATTRIBUTE_CATALOG_ID, freePageNumber, freeRecordOffset, newAttribute.serialize());
 		int recordNumber = (freeRecordOffset - (attributeRecordsPerPage + 7) / 8) / ATTRIBUTE_RECORD_SIZE;
 		bufferManager.writeRecordBitmap(ATTRIBUTE_CATALOG_ID, freePageNumber, attributeRecordsPerPage, recordNumber, true);
@@ -179,7 +179,7 @@ public class SystemCatalogManager {
 		long freePageNumber = bufferManager.getFreePageNumber(RELATION_CATALOG_ID);
 		int freeRecordOffset = bufferManager.getFreeRecordOffset(RELATION_CATALOG_ID, freePageNumber, relationRecordsPerPage, RELATION_RECORD_SIZE);
 		int recordNumber = (freeRecordOffset - (relationRecordsPerPage + 7) / 8) / RELATION_RECORD_SIZE;
-		newRelation.setAddress(freePageNumber, freeRecordOffset);
+		newRelation.setAddress(RELATION_CATALOG_ID, freePageNumber, freeRecordOffset);
 		bufferManager.write(RELATION_CATALOG_ID, freePageNumber, freeRecordOffset, newRelation.serialize());
 		bufferManager.writeRecordBitmap(RELATION_CATALOG_ID, freePageNumber, relationRecordsPerPage, recordNumber, true);
 		totalObjectsCount++;
@@ -195,7 +195,7 @@ public class SystemCatalogManager {
 		int attributeRecordsPerPage = (int) (DiskSpaceManager.PAGE_SIZE * 8 / (1 + 8 * INDEX_ATTRIBUTE_RECORD_SIZE));
 		long freePageNumber = bufferManager.getFreePageNumber(INDEX_ATTRIBUTE_CATALOG_ID);
 		int freeRecordOffset = bufferManager.getFreeRecordOffset(INDEX_ATTRIBUTE_CATALOG_ID, freePageNumber, attributeRecordsPerPage, INDEX_ATTRIBUTE_RECORD_SIZE);
-		newAttribute.setAddress(freePageNumber, freeRecordOffset);
+		newAttribute.setAddress(INDEX_ATTRIBUTE_CATALOG_ID, freePageNumber, freeRecordOffset);
 		bufferManager.write(INDEX_ATTRIBUTE_CATALOG_ID, freePageNumber, freeRecordOffset, newAttribute.serialize());
 		int recordNumber = (freeRecordOffset - (attributeRecordsPerPage + 7) / 8) / INDEX_ATTRIBUTE_RECORD_SIZE;
 		bufferManager.writeRecordBitmap(INDEX_ATTRIBUTE_CATALOG_ID, freePageNumber, attributeRecordsPerPage, recordNumber, true);
@@ -213,7 +213,7 @@ public class SystemCatalogManager {
 		long freePageNumber = bufferManager.getFreePageNumber(INDEX_CATALOG_ID);
 		int freeRecordOffset = bufferManager.getFreeRecordOffset(INDEX_CATALOG_ID, freePageNumber, indexRecordsPerPage, INDEX_RECORD_SIZE);
 		int recordNumber = (freeRecordOffset - (indexRecordsPerPage + 7) / 8) / INDEX_RECORD_SIZE;
-		newIndex.setAddress(freePageNumber, freeRecordOffset);
+		newIndex.setAddress(INDEX_CATALOG_ID, freePageNumber, freeRecordOffset);
 		bufferManager.write(INDEX_CATALOG_ID, freePageNumber, freeRecordOffset, newIndex.serialize());
 		bufferManager.writeRecordBitmap(INDEX_CATALOG_ID, freePageNumber, indexRecordsPerPage, recordNumber, true);
 		totalObjectsCount++;
@@ -312,10 +312,10 @@ public class SystemCatalogManager {
 					addIndexAttributeToCatalog(attributes.get(i));
 				}
 				objectHolder.addObject(index);
-				index.setTree();
 				objectHolder.addObjectToRelation(index, false);
 				updateRelationCatalog(relation);
 				addIndexToCatalog(index);
+				index.setTree();
 				System.out.println("Index : " + indexName + " created successfully!");
 				// Add all records to index
 				DynamicObject recordObject = new DynamicObject(relation.getAttributes());
@@ -331,8 +331,9 @@ public class SystemCatalogManager {
 							iteratorKey.obj[i] = recordObject.obj[relation.getAttributePosition(attributes.get(i).getName())];
 						}
 						recordAddress.id = relation.getId();
-						recordAddress.offset = iterator.currentPage;
-						if (!index.insert(iteratorKey, recordAddress, iterator.position - relation.getRecordSize())) {
+						recordAddress.pageNumber = iterator.currentPage;
+						recordAddress.pageOffset = iterator.position - relation.getRecordSize();
+						if (!index.insert(iteratorKey, recordAddress)) {
 							dropIndex(indexName, relationName);
 							return false;
 						}
@@ -433,14 +434,14 @@ public class SystemCatalogManager {
 				bufferManager.write(relation.getId(), freePageNumber, recordOffset, serializedBuffer);
 				int recordNumber = (recordOffset - (relation.getRecordsPerPage() + 7) / 8) / relation.getRecordSize();
 				java.util.Iterator<Long> indices = relation.getIndices().iterator();
-				PhysicalAddress insertAddress = new PhysicalAddress(relationId, freePageNumber);
+				PhysicalAddress insertAddress = new PhysicalAddress(relationId, freePageNumber, recordOffset);
 				while (indices.hasNext()) {
 					Index currIndex = ((Index) objectHolder.getObject(indices.next()));
 					if (currIndex.setTree()) {
 						updateIndexCatalog(currIndex);
 					}
 					DynamicObject entryObject = Utility.toDynamicObject(columnList, valueList, currIndex.getAttributes());
-					if (!currIndex.insert(entryObject, insertAddress, recordOffset)) {
+					if (!currIndex.insert(entryObject, insertAddress)) {
 						System.out.println("Couldn't insert into table. Doesn't satisfy the check constraints.");
 						return false;
 					}
@@ -496,7 +497,7 @@ public class SystemCatalogManager {
 		}
 		return false;
 	}
-	
+
 	public boolean deleteRecord(long id, long pageNumber, int recordNumber, int recordsPerPage) {
 		return bufferManager.writeRecordBitmap(id, pageNumber, recordsPerPage, recordNumber, false);
 	}
@@ -520,32 +521,32 @@ public class SystemCatalogManager {
 		Relation relation = (Relation) objectHolder.getObject(id);
 		relation.updateRecordsCount(-1);
 		java.util.Iterator<Long> indices = relation.getIndices().iterator();
-		PhysicalAddress deleteAddress = new PhysicalAddress(id, pageNumber);
+		PhysicalAddress deleteAddress = new PhysicalAddress(id, pageNumber, recordOffset);
 		int recordsPerPage = relation.getRecordsPerPage();
-		int recordNumber = (recordOffset - (recordsPerPage + 7) / 8) / relation.getRecordSize();		
+		int recordNumber = (recordOffset - (recordsPerPage + 7) / 8) / relation.getRecordSize();
 		while (indices.hasNext()) {
 			Index currIndex = ((Index) objectHolder.getObject(indices.next()));
-			deleteIndexRecord(currIndex,dObj, deleteAddress, recordOffset);
+			deleteIndexRecord(currIndex, dObj, deleteAddress);
 		}
 		relation.updateRecordsCount(-1);
 		updateRelationCatalog(relation);
 		return bufferManager.writeRecordBitmap(id, pageNumber, recordsPerPage, recordNumber, false);
 	}
-	
-	private boolean deleteIndexRecord(Index index, DynamicObject dObj, PhysicalAddress deleteAddress, int recordOffset){
+
+	private boolean deleteIndexRecord(Index index, DynamicObject dObj, PhysicalAddress deleteAddress) {
 		if (index.setTree()) {
 			updateIndexCatalog(index);
 		}
-		DynamicObject entryObject = new DynamicObject(index.getAttributes());//= Utility.toDynamicObject(columnList, valueList, currIndex.getAttributes());
-		for(int i=0; i<entryObject.attributes.size();i++){
-			for(int j=0;j<index.getAttributes().size();j++){
-				if(index.getAttributes().get(j).getName().equals(entryObject.attributes.get(i).getName())){
+		DynamicObject entryObject = new DynamicObject(index.getAttributes());
+		for (int i = 0; i < entryObject.attributes.size(); i++) {
+			for (int j = 0; j < index.getAttributes().size(); j++) {
+				if (index.getAttributes().get(j).getName().equals(entryObject.attributes.get(i).getName())) {
 					entryObject.obj[i] = dObj.obj[j];
 					break;
 				}
 			}
 		}
-		return index.delete(entryObject, deleteAddress, recordOffset);
+		return index.delete(entryObject, deleteAddress);
 	}
 
 	/**
@@ -594,23 +595,23 @@ public class SystemCatalogManager {
 		serialBuffer.position(0);
 		bufferManager.write(id, pageNumber, recordOffset, serialBuffer);
 	}
-	
+
 	public void updateRecord(Relation relation, long pageNumber, int recordOffset, DynamicObject dObj) {
 		java.util.Iterator<Long> indices = relation.getIndices().iterator();
-		PhysicalAddress address = new PhysicalAddress(relation.getId(), pageNumber);
+		PhysicalAddress address = new PhysicalAddress(relation.getId(), pageNumber, recordOffset);
 		while (indices.hasNext()) {
 			Index currIndex = ((Index) objectHolder.getObject(indices.next()));
-			deleteIndexRecord(currIndex,dObj, address, recordOffset);
+			deleteIndexRecord(currIndex, dObj, address);
 			DynamicObject entryObject = new DynamicObject(currIndex.getAttributes());
-			for(int i=0; i<entryObject.attributes.size();i++){
-				for(int j=0;j<currIndex.getAttributes().size();j++){
-					if(currIndex.getAttributes().get(j).getName().equals(entryObject.attributes.get(i).getName())){
+			for (int i = 0; i < entryObject.attributes.size(); i++) {
+				for (int j = 0; j < currIndex.getAttributes().size(); j++) {
+					if (currIndex.getAttributes().get(j).getName().equals(entryObject.attributes.get(i).getName())) {
 						entryObject.obj[i] = dObj.obj[j];
 						break;
 					}
 				}
 			}
-			currIndex.insert(entryObject, address, recordOffset);
+			currIndex.insert(entryObject, address);
 		}
 		ByteBuffer serialBuffer = dObj.serialize(dObj);
 		serialBuffer.position(0);

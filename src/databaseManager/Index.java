@@ -15,10 +15,8 @@ public class Index {
 	private boolean unique;
 	private long id;
 	private long parentId;
-	private PhysicalAddress rootPage;
-	private int rootOffset;
-	private long catalogPage;
-	private int catalogRecordOffset;
+	private PhysicalAddress rootAddress;
+	private PhysicalAddress storedAddress;
 	private long pageCount;
 	private long recordsCount;
 	private int recordSize;
@@ -54,8 +52,8 @@ public class Index {
 			}
 		}
 		recordSize = nKeys * (keySize + 20) + 25;
-		rootPage = new PhysicalAddress();
-		rootOffset = -1;
+		rootAddress = new PhysicalAddress();
+		storedAddress = new PhysicalAddress();
 	}
 
 	public Index(ByteBuffer serializedBuffer) {
@@ -65,18 +63,20 @@ public class Index {
 				indexName += serializedBuffer.getChar(2 * i);
 			}
 		}
-		rootPage = new PhysicalAddress();
+		rootAddress = new PhysicalAddress();
+		storedAddress = new PhysicalAddress();
 		serializedBuffer.position(INDEX_NAME_LENGTH * 2);
 		id = serializedBuffer.getLong();
 		parentId = serializedBuffer.getLong();
 		nKeys = serializedBuffer.getInt();
 		keySize = serializedBuffer.getInt();
 		recordSize = serializedBuffer.getInt();
-		rootPage.id = serializedBuffer.getLong();
-		rootPage.offset = serializedBuffer.getLong();
-		rootOffset = serializedBuffer.getInt();
-		catalogPage = serializedBuffer.getLong();
-		catalogRecordOffset = serializedBuffer.getInt();
+		rootAddress.id = serializedBuffer.getLong();
+		rootAddress.pageNumber = serializedBuffer.getLong();
+		rootAddress.pageOffset = serializedBuffer.getInt();
+		storedAddress.id = serializedBuffer.getLong();
+		storedAddress.pageNumber = serializedBuffer.getLong();
+		storedAddress.pageOffset = serializedBuffer.getInt();
 		pageCount = serializedBuffer.getLong();
 		recordsCount = serializedBuffer.getLong();
 		creationDate = serializedBuffer.getLong();
@@ -144,11 +144,12 @@ public class Index {
 		serializedBuffer.putInt(nKeys);
 		serializedBuffer.putInt(keySize);
 		serializedBuffer.putInt(recordSize);
-		serializedBuffer.putLong(rootPage.id);
-		serializedBuffer.putLong(rootPage.offset);
-		serializedBuffer.putInt(rootOffset);
-		serializedBuffer.putLong(catalogPage);
-		serializedBuffer.putInt(catalogRecordOffset);
+		serializedBuffer.putLong(rootAddress.id);
+		serializedBuffer.putLong(rootAddress.pageNumber);
+		serializedBuffer.putInt(rootAddress.pageOffset);
+		serializedBuffer.putLong(storedAddress.id);
+		serializedBuffer.putLong(storedAddress.pageNumber);
+		serializedBuffer.putInt(storedAddress.pageOffset);
 		serializedBuffer.putLong(pageCount);
 		serializedBuffer.putLong(recordsCount);
 		serializedBuffer.putLong(creationDate);
@@ -166,34 +167,32 @@ public class Index {
 		recordSize = _recordSize;
 	}
 
-	public void setRoot(PhysicalAddress _physicalAddress, int _rootOffset) {
-		rootPage = _physicalAddress;
-		rootOffset = _rootOffset;
+	public void setRoot(PhysicalAddress _physicalAddress) {
+		rootAddress = _physicalAddress;
 	}
 
 	public boolean containsDuplicates() {
 		return !unique;
 	}
 
-	public void setAddress(long pageNumber, int _recordOffset) {
-		catalogPage = pageNumber;
-		catalogRecordOffset = _recordOffset;
+	public void setAddress(long _id, long _pageNumber, int _recordOffset) {
+		storedAddress = new PhysicalAddress(_id,_pageNumber,_recordOffset);
 	}
 
-	public PhysicalAddress getRootPageAddress() {
-		return rootPage;
+	public PhysicalAddress getRootAddress() {
+		return rootAddress;
 	}
 
-	public int getRootOffset() {
-		return rootOffset;
+	public PhysicalAddress getAddress() {
+		return storedAddress;
 	}
-
+	
 	public long getPageNumber() {
-		return catalogPage;
+		return storedAddress.pageNumber;
 	}
 
 	public int getRecordOffset() {
-		return catalogRecordOffset;
+		return storedAddress.pageOffset;
 	}
 
 	public int getKeySize() {
@@ -217,21 +216,21 @@ public class Index {
 		return false;
 	}
 
-	public boolean insert(DynamicObject object, PhysicalAddress value, int recordOffset) {
+	public boolean insert(DynamicObject object, PhysicalAddress value) {
 		if (dObject != null) {
-			return bTree.insert(object, value, recordOffset);
+			return bTree.insert(object, value);
 		}
 		return false;
 	}
 	
-	public boolean delete(DynamicObject object, PhysicalAddress value, int recordOffset) {
+	public boolean delete(DynamicObject object, PhysicalAddress value) {
 		if (dObject != null) {
-			return bTree.delete(object, value, recordOffset);
+			return bTree.delete(object, value);
 		}
 		return false;
 	}
 
-	public BPlusTree.Split search(DynamicObject object) {
+	public PhysicalAddress search(DynamicObject object) {
 		if (dObject != null) {
 			setTree();
 			return bTree.search(object);
