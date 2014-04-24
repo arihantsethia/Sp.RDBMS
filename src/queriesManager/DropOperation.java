@@ -46,6 +46,7 @@ public class DropOperation extends Operation {
 			relationName = statement.substring(0);
 			long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
 			if(newRelationId != -1){
+				System.out.println("primary key dropped successfully!");
 				return true;
 			}
 			else{
@@ -69,7 +70,8 @@ public class DropOperation extends Operation {
 		relationName = statement.substring(0).trim();
 		long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
 		if(newRelationId != -1){
-			System.out.println("relation name is valid");
+			//System.out.println("relation name is valid");
+			System.out.println("table dropped successfully!");
 			return true;
 		}
 		else{
@@ -111,6 +113,7 @@ public class DropOperation extends Operation {
 				relationName = statement.substring(0);
 				long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
 				if(newRelationId != -1){
+					System.out.println("index dropped successfully!");
 					return true;
 				}
 				else{

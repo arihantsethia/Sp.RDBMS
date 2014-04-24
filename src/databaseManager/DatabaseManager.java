@@ -115,6 +115,13 @@ public class DatabaseManager {
 		}
 	}
 
+	/**
+	 * parseCommand function splits the query statement into different parts using " " as
+	 * delimiter. This function passes query statement to the makeOperation function and 
+	 * calls the makeOperation function and executeOperation depending on the 0th part of
+	 * query statement in String[] splitCommand. 
+	 * @param query is the query statement executed by the user.
+	 */
 	public void parseCommand(String query) {
 		String[] splitCommand = query.split(" ");
 

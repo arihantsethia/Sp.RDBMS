@@ -15,6 +15,11 @@ public class QueryParser {
 
 	public static enum OperationType {
 		NATURALJOIN, CONDJOIN, EQUIJOIN, SELECT, UPDATE, CREATE, DROP, DELETE;
+		/**
+		 * toString function converts operation type to corresponding string statement.
+		 * @param opType is the operation type such as 'NATURALJOIN', 'SELECT',etc. 
+		 * @return
+		 */
 		public static String toString(OperationType opType) {
 			if (opType == QueryParser.OperationType.NATURALJOIN) {
 				return "NATURALJOIN";
@@ -38,6 +43,11 @@ public class QueryParser {
 
 	public static enum ConditionType {
 		OR, AND, SIMPLE, NULL;
+		/**
+		 * toString function converts condition type to corresponding string statement.
+		 * @param cndType is the condition type such as 'OR', 'AND',etc.
+		 * @return
+		 */
 		public static String toString(ConditionType cndType) {
 			if (cndType == QueryParser.ConditionType.OR) {
 				return "OR";
@@ -51,6 +61,13 @@ public class QueryParser {
 
 	public static enum OperatorType {
 		LESS, GREATER, LESSEQUAL, GREATEQUAL, EQUAL;
+		/**
+		 * toString function converts operation type of arithmetic operators to 
+		 * corresponding string symbol.
+		 * @param opType is the operation type of arithmetic operators such as
+		 * 'LESS', 'GREATER', etc.
+		 * @return
+		 */
 		public static String toString(OperatorType opType) {
 			if (opType == QueryParser.OperatorType.LESS) {
 				return "<";
@@ -77,7 +94,11 @@ public class QueryParser {
 		}
 
 	};
-
+	
+	/**
+	 * QueryParser constructor initializes the value of TreeMap. TreeMap while checking
+	 * the value does not consider case sensitivity.
+	 */
 	public QueryParser() {
 		tableMap = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
 	}
@@ -112,7 +133,17 @@ public class QueryParser {
 		}
 		return null;
 	}
-
+	
+	/**
+	 * isInsertStatementQuery function makes sure that the insert query is correct and it
+	 * does not miss the keywords such as 'insert' , 'into' , 'values' ,etc. This function 
+	 * also checks whether the length of column part is equal to values part. This function 
+	 * checks if the relation name used in the insert query is valid or not. This function
+	 * verifies whether the attributes in the column part belongs to the table name or not 
+	 * and whether data type of values matches that of attributes of the table. 
+	 * @param statement is the insert query executed by the user.
+	 * @return
+	 */
 	public static boolean isInsertStatementQuery(String statement) {
 		int insertIndex = statement.trim().indexOf("insert");
 		int intoIndex = statement.trim().indexOf("into");
@@ -138,6 +169,14 @@ public class QueryParser {
 						Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
 						Vector<Attribute> attributes = newRelation.getAttributes();
 
+						for(int i=0;i<columnPartSplit.length;i++){
+							System.out.println("columnPartSplit["+i+"]->"+columnPartSplit[i].trim());
+						}
+						
+						for(int i=0;i<valuePartSplit.length;i++){
+							System.out.println("valuePartSplit["+i+"]->"+valuePartSplit[i].trim());
+						}
+						
 						for (int i = 0; i < columnPartSplit.length; i++) {
 							boolean chk = true;
 							for (int k = 0; k < attributes.size(); k++) {
@@ -175,7 +214,17 @@ public class QueryParser {
 
 		return true;
 	}
-
+	
+	/**
+	 * isDeleteStatementQuery checks whether the delete query executed by the user is 
+	 * correct or not. This function checks the keywords such as 'delete' , 'from' ,etc.
+	 * This function checks whether the table name is valid or not. This function also
+	 * verifies the condition part of the where clause such as whether operands on both
+	 * sides of operator are of same data type or not and whether variable such as x.id
+	 * belongs to the table name or not.
+	 * @param statement is the delete query executed by the user.
+	 * @return
+	 */
 	public static boolean isDeleteStatementQuery(String statement) {
 		int deleteIndex = statement.trim().indexOf("delete");
 		int fromIndex = statement.trim().indexOf("from");
@@ -205,19 +254,37 @@ public class QueryParser {
 					return false;
 				}
 			} else {
-				String relationName = statement.substring(fromIndex + 4).trim();
-				long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
-				if (newRelationId != -1) {
-					return true;
-				} else {
-					print_error(2, relationName);
+				statement = statement.substring(fromIndex + 4).trim();
+				if(statement.contains("as"))
+				{
+					String relationName = statement.substring(0,statement.indexOf("as")).trim();
+					long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
+					if (newRelationId != -1) {
+						return true;
+					} else {
+						print_error(2, relationName);
+						return false;
+					}
+				}
+				else{
+					System.out.println("keyword \'as\' is missing");
 					return false;
 				}
 			}
 		}
 		return true;
 	}
-
+	
+	/**
+	 * isUpdateStatementQuery function updates the values of the table given the update
+	 * query. This function checks whether the table name is valid or not. This function 
+	 * ensures that the data type of attribute and values in the SET part is same. This
+	 * function also checks the condition in the WHERE clause and makes sure that both
+	 * the operands of the operator are of same data type and variables such as x.id
+	 * belongs to the table.
+	 * @param statement is the update query executed by the user.
+	 * @return
+	 */
 	public static boolean isUpdateStatementQuery(String statement) {
 		int updateIndex = statement.trim().indexOf("update");
 		int setIndex = statement.trim().indexOf("set");
@@ -356,7 +423,14 @@ public class QueryParser {
 		}
 		return true;
 	}
-
+	
+	/**
+	 * isNaturalJoinQuery function checks whether keyword 'naturaljoin' exists in the
+	 * query executed for naturaljoin. This function replaces the keyword 'naturaljoin'
+	 * with ',' and passes the naturaljoin query to the isSelectStatementQuery function.
+	 * @param statement is the naturaljoin query executed by the user.
+	 * @return
+	 */
 	public static boolean isNaturalJoinQuery(String statement){
 		int naturalJoinIndex = statement.indexOf(" naturaljoin ");
 		if(naturalJoinIndex != -1){
@@ -375,10 +449,17 @@ public class QueryParser {
 		}
 	}
 	
+	/**
+	 * isEquiJoinQuery function checks whether keyword 'equijoin' exists in the
+	 * query executed for equijoin. This function replaces the keyword 'equijoin'
+	 * with ',' and passes the equijoin query to the isSelectStatementQuery function.
+	 * @param statement is the equijoin query executed by the user.
+	 * @return
+	 */
 	public static boolean isEquiJoinQuery(String statement){
 		int equiJoinIndex = statement.indexOf(" equijoin ");
 		if(equiJoinIndex != -1){
-			statement = statement.replaceAll(" equijoin ", " , ").trim();
+			statement = statement.replaceAll(" equijoin ", " , ");
 			if(isSelectStatementQuery(statement)){
 				return true;
 			}
@@ -393,17 +474,36 @@ public class QueryParser {
 		}
 	}
 	
+	/**
+	 * isConditionalJoinQuery function makes sure that the keywords such as 'join' and 'on'
+	 * exists in the conditional query. This function replaces the keyword 'join' with ','
+	 * , keyword 'on' with " " and parenthesis of 'join' with " ". This function extracts 
+	 * the condition part of 'on' and combines that condition part with the condition part 
+	 * of WHERE clause and passes that statement to the isSelectStatementQuery.
+	 * @param statement is the conditional join query executed by the user.
+	 * @return
+	 */
 	public static boolean isConditionalJoinQuery(String statement){
 		int joinIndex = statement.indexOf(" join ");
-		if(joinIndex != -1){
+		int onIndex = statement.indexOf("on");
+		if(joinIndex != -1 && onIndex != -1){
 			int whereIndex = statement.indexOf("where");
 			if(whereIndex != -1){
 				int lp = statement.indexOf("(");
 				int rp = statement.indexOf(")");
 				
 				if(lp < rp && rp < whereIndex){
+					String wherePart = "", onPart = "", newWherePart = "";
 					statement = statement.replace(" join ", " , ") ;
 					statement = statement.replaceFirst("("," ").replaceFirst(")"," ").trim();
+					
+					onPart = statement.substring(onIndex + 2 , whereIndex).trim();
+					wherePart = statement.substring(whereIndex + 5).trim();
+					newWherePart = "(" + wherePart + " and " + onPart + ")";
+					
+					statement = statement.replace(" on ", " ").replace(onPart, " ").trim();
+					statement = statement.replace(wherePart, newWherePart).trim();
+							
 					if(isSelectStatementQuery(statement)){
 						return true;
 					}
@@ -421,6 +521,12 @@ public class QueryParser {
 				statement = statement.replace(" join ", ",").trim();
 				statement = statement.replace("("," ").replace(")"," ").trim();
 				
+				String wherePart = "", onPart = "";
+				onPart = statement.substring(onIndex + 2).trim();
+				wherePart = " where " + onPart;
+				
+				statement = statement.replace(" on ", " ").replace(onPart , wherePart).trim();
+				
 				if(isSelectStatementQuery(statement)){
 					return true;
 				}
@@ -431,11 +537,21 @@ public class QueryParser {
 			}
 		}
 		else{
-			System.out.println("Not a valid join syntax: keyword \'join\' is missing");
+			System.out.println("Not a valid join syntax: keywords are missing");
 			return false;
 		}
 	}
 	
+	/**
+	 * isSelectStatementQuery function checks whether the keywords such as 'select', 'from'
+	 * and 'where' exists in the select query or not. This function consists of three parts -
+	 * selectPart[B.id], fromPart[Boats as B] and wherePart. This function creates TreeMap 
+	 * of 'fromPart' - key = B and value = Boats. This function ensures that selectPart
+	 * consists of valid attributes of the table. This function also checks the correctness
+	 * of the wherePart which consists of conditions.
+	 * @param statement is the select query executed by the user.
+	 * @return
+	 */
 	public static boolean isSelectStatementQuery(String statement) {
 		int selectIndex = statement.trim().indexOf("select");
 		int fromIndex = statement.trim().indexOf("from");
@@ -564,6 +680,13 @@ public class QueryParser {
 		return true;
 	}
 
+	/**
+	 * getConditionType function checks whether the condition part of WHERE clause consists
+	 * of AND clause , OR clause or it contains neither AND nor OR clause i.e. it is a
+	 * SIMPLE condition.
+	 * @param condition is the condition part of WHERE clause.
+	 * @return
+	 */
 	static ConditionType getConditionType(String condition) {
 		int lp, rp, i;
 		if (condition == null) {
@@ -594,6 +717,14 @@ public class QueryParser {
 		}
 	}
 
+	/**
+	 * isCondititon function segregates the logical operators from arithmetic operators by
+	 * storing logical operators in 'logicalOp' vector and arithmetic operators in 
+	 * 'arithmeticOp' vector. This function checks whether the data type of both operands
+	 * of the operator is of same type or not.
+	 * @param s is the wherePart of the select statement query.
+	 * @return
+	 */
 	static boolean isCondition(String s) {
 		s = s.trim();
 		String firstPart, lastPart;
@@ -706,6 +837,12 @@ public class QueryParser {
 		return false;
 	}
 
+	/**
+	 * getOperatorType function identifies the type of operator from the parameter
+	 * statement and returns the OperatorType of the operator in the statement.
+	 * @param statement is condition statement of WHERE clause.
+	 * @return
+	 */
 	static OperatorType getOperatorType(String statement) {
 		if (statement.contains("<=")) {
 			return OperatorType.LESSEQUAL;
@@ -720,18 +857,36 @@ public class QueryParser {
 		}
 	}
 
+	/**
+	 * getLeftOperand function returns the left hand side operand of the operator.
+	 * @param statement is condition statement of WHERE clause.
+	 * @param opType is the operator type of the operator like LESSEQUAL,GREATER,etc.
+	 * @return
+	 */
 	static String getLeftOperand(String statement, OperatorType opType) {
 		String operator = OperatorType.toString(opType);
 		int index = statement.indexOf(operator);
 		return statement.substring(0, index).trim();
 	}
 
+	/**
+	 * getRightOperand function returns the right hand side operand of the operator.
+	 * @param statement is condition statement of WHERE clause.
+	 * @param opType is the operator type of the operator like LESSEQUAL,GREATER,etc.
+	 * @return
+	 */
 	static String getRightOperand(String statement, OperatorType opType) {
 		String operator = OperatorType.toString(opType);
 		int index = statement.indexOf(operator);
 		return statement.substring(index + operator.length()).trim();
 	}
 
+	/**
+	 * print_error function prints the error corresponding to various else part of the
+	 * if statement depending on the error no. 'i' and keyword 's'.
+	 * @param i is the error no.
+	 * @param s is the keyword used to indicate what is the error.
+	 */
 	public static void print_error(int i, String s) {
 		String[] t = s.split(" ");
 		switch (i) {
@@ -757,7 +912,7 @@ public class QueryParser {
 			System.out.println(" Not a valid update Syntax. \n");
 			break;
 		case 8:
-			System.out.println(" Column " + s + "does not exits. \n");
+			System.out.println(" Column " + s + " does not exits. \n");
 			break;
 		case 9:
 			System.out.println(" Keyword table does not exits. \n");

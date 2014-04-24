@@ -156,15 +156,15 @@ public class CreateOperation extends Operation {
 						for (int i = 0; i < primarykeyPartSplit.length; i++) {
 							boolean chk = true;
 							for (int k = 0; k < attributes.size(); k++) {
-								if (attributes.get(k).getName().equals(primarykeyPartSplit[i])) {
+								if (attributes.get(k).getName().equals(primarykeyPartSplit[i].trim())) {
 									chk = false;
 								}
 							}
 							if (chk) {
-								QueryParser.print_error(1, primarykeyPartSplit[i]);
+								QueryParser.print_error(1, primarykeyPartSplit[i].trim());
 								return false;
 							}
-							attributeList.add(primarykeyPartSplit[i]);
+							attributeList.add(primarykeyPartSplit[i].trim());
 						}
 					} else {
 						System.out.println("Primary key attribute is missing");
