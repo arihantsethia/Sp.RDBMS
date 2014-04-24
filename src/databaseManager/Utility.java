@@ -17,6 +17,12 @@ public class Utility {
 		return uty;
 	}
 
+	/**
+	 * Checks if two data types are same
+	 * @param type1 : The expected type
+	 * @param Type2 : The data to be checked
+	 * @return Returns true if the data is of expected type
+	 */
 	public static boolean isSameType(String type1, String Type2) {
 		if (type1.equals("int")) {
 			try {
@@ -49,6 +55,12 @@ public class Utility {
 		return false;
 	}
 
+	/**
+	 * Checks if two data types are same
+	 * @param type1 : Type of data to be matched
+	 * @param type2 : The data to be matched
+	 * @return
+	 */
 	public static boolean isSameType(Attribute.Type type1, String type2) {
 		if (type1 == Attribute.Type.Int) {
 			if (isSameType("int", type2)) {
@@ -143,6 +155,14 @@ public class Utility {
 		return dObject;
 	}
 
+	/**
+	 * Serializes the data based on to make a record entry 
+	 * @param columnList : list of column names
+	 * @param valueList : list of values in same order as that of columns
+	 * @param attributesList : list of attribute object
+	 * @param recordSize : recordsize of the record
+	 * @return
+	 */
 	public static ByteBuffer serialize(String[] columnList, String[] valueList, Vector<Attribute> attributesList, int recordSize) {
 		ByteBuffer serializedBuffer = ByteBuffer.allocate(recordSize);
 		if ((columnList.length == valueList.length) && (columnList.length <= attributesList.size())) {
@@ -160,7 +180,7 @@ public class Utility {
 				if (columnMap.containsKey(attributesList.get(i).getName())) {
 					int pos = columnMap.get(attributesList.get(i).getName());
 					if (attributesList.get(i).getType() == Attribute.Type.Int) {
-						if (Utility.getUtility().isSameType("int", valueList[pos])) {
+						if (isSameType("int", valueList[pos])) {
 							serializedBuffer.putInt(Utility.getUtility().stringToInt(valueList[pos]));
 						} else {
 							System.out.println(pos + "type mismatch : " + attributesList.get(i).getName());
@@ -202,6 +222,11 @@ public class Utility {
 		return serializedBuffer;
 	}
 
+	/**
+	 * Gets the relation name from name assigned in queries
+	 * @param s : The string from which name is to be extracted
+	 * @return returns the relation name
+	 */
 	public static String getRelationName(String s) {
 		if (s.contains("as"))
 			return s.substring(0, s.indexOf("as")).trim();
@@ -209,6 +234,11 @@ public class Utility {
 			return s.substring(0, s.indexOf(".")).trim();
 	}
 
+	/**
+	 * Gets the nick name from name assigned in queries
+	 * @param s : The string from which nickname is to be extracted 
+	 * @return returns the relation nick name
+	 */
 	public static String getNickName(String s) {
 		if (s.contains("as"))
 			return s.substring(s.indexOf("as") + 2).trim();
