@@ -246,7 +246,7 @@ public class SystemCatalogManager {
 				distinct = Boolean.valueOf(parsedData.get(i).get(4));
 				Attribute newAttribute = new Attribute(attributeName, attributeType, -1, newRelation.getId(), size, nullable, distinct);
 				if (!newRelation.addAttribute(newAttribute, true)) {
-					System.out.println("Table already contains " + attributeName + "! Duplicate entries not allowed.");
+					System.out.println("Error: Table already contains " + attributeName + "! Duplicate entries not allowed.");
 					return false;
 				}
 			}
@@ -269,10 +269,9 @@ public class SystemCatalogManager {
 					createIndex(newAttribute.getName() + "_uk", relationName, data);
 				}
 			}
-			System.out.println("Table " + relationName + " successfully created!");
 			return true;
 		}
-		System.out.println("Table " + relationName + " already exists!");
+		System.out.println("Error: Table " + relationName + " already exists!");
 		return false;
 	}
 
@@ -341,11 +340,11 @@ public class SystemCatalogManager {
 				}
 				return true;
 			} else {
-				System.out.println("Relation : " + relationName + " doesn't exists!");
+				System.out.println("Error: Relation : " + relationName + " doesn't exists!");
 				return false;
 			}
 		}
-		System.out.println("Index name already " + relationName + " already exists!");
+		System.out.println("Error: Index name already " + relationName + " already exists!");
 		return false;
 	}
 
@@ -442,7 +441,7 @@ public class SystemCatalogManager {
 					}
 					DynamicObject entryObject = Utility.toDynamicObject(columnList, valueList, currIndex.getAttributes());
 					if (!currIndex.insert(entryObject, insertAddress)) {
-						System.out.println("Couldn't insert into table. Doesn't satisfy the check constraints.");
+						System.out.println("Error: Couldn't insert into table. Doesn't satisfy the check constraints.");
 						return false;
 					}
 				}
@@ -480,7 +479,7 @@ public class SystemCatalogManager {
 				data.add(attrs);
 				data.add(params);
 				if (!createIndex(relationName + "_pk", relationName, data)) {
-					System.out.println("Contains duplicate data. Cannot create primary key!");
+					System.out.println("Error: Contains duplicate data. Cannot create primary key!");
 					for (int i = 0; i < attrs.size(); i++) {
 						Attribute attribute = relation.getAttributeByName(attrs.get(i));
 						attribute.partPK(false);
@@ -491,7 +490,7 @@ public class SystemCatalogManager {
 				relation.addPrimaryKey(attrs);
 				return true;
 			} else {
-				System.out.println("Table already has a primary key defined on it!");
+				System.out.println("Error: Table already has a primary key defined on it!");
 				return false;
 			}
 		}

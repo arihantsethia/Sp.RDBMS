@@ -49,14 +49,14 @@ public class DropOperation extends Operation {
 	private boolean parseDropPrimaryKeyQuery(String statement) {
 		statement = statement.substring(statement.indexOf("primary key") + 11).trim();
 		if(statement.length() == 0){
-			System.out.println("Keyword \'on\' is missing");
+			System.out.println("Error: Keyword \'on\' is missing");
 			return false;
 		}
 		int onIndex = statement.indexOf("on");
 		if(onIndex == 0){
 			statement = statement.substring(onIndex + 2).trim();
 			if(statement.length() == 0){
-				System.out.println("table name is missing");
+				System.out.println("Error: table name is missing");
 				return false;
 			}
 			relationName = statement.substring(0);
@@ -65,12 +65,12 @@ public class DropOperation extends Operation {
 				return true;
 			}
 			else{
-				System.out.println("Not a valid relation name");
+				System.out.println("Error: Not a valid relation name");
 				return false;
 			}
 		}
 		else{
-			System.out.println("Not a valid drop primary key syntax");
+			System.out.println("Error: Not a valid drop primary key syntax");
 		}
 		
 		return true;
@@ -84,27 +84,24 @@ public class DropOperation extends Operation {
 	private boolean parseDropTableQuery(String statement) {
 		statement = statement.substring(statement.indexOf("table") + 5).trim();
 		if (statement.length() == 0) {
-			System.out.println("Table name is missing");
+			System.out.println("Error: Table name is missing");
 			return false;
 		}
-		relationName = statement.substring(0).trim();
-		long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
-		if(newRelationId != -1){
-			System.out.println("relation name is valid");
-			return true;
-		}
-		else{
-			System.out.println("Not a valid relation name");
+		relationName = statement.trim();
+		if(relationName.length()>0){
+			long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
+			if(newRelationId != -1){
+				System.out.println("Error:  name is valid");
+				return true;
+			}
+			else{
+				System.out.println("Error: Not a valid relation name");
+				return false;
+			}
+		}else{
+			System.out.println("Error: Relation Name not present");
 			return false;
 		}
-		//relationName = statement.substring(0, statement.indexOf(" ")).trim();
-		/*if (relationName.contentEquals(statement)) {
-			System.out.println("Relation name matched");
-			return true;
-		} else {
-			System.out.println("Not a valid Relation Name");
-			return false;
-		}*/
 	}
 
 	/**
@@ -115,7 +112,7 @@ public class DropOperation extends Operation {
 	private boolean parseDropIndexQuery(String statement) {
 		statement = statement.substring(statement.indexOf("index") + 5).trim();
 		if(statement.length() == 0){
-			System.out.println("index name is missing");
+			System.out.println("Error: index name is missing");
 			return false;
 		}
 		
@@ -123,14 +120,14 @@ public class DropOperation extends Operation {
 			indexName = statement.substring(0,statement.indexOf(" ")).trim();
 			statement = statement.substring(statement.indexOf(indexName) + indexName.length()).trim();
 			if(statement.length() == 0){
-				System.out.println("Keyword \'on\' is missing");
+				System.out.println("Error: Keyword \'on\' is missing");
 				return false;
 			}
 			int onIndex = statement.indexOf("on ");
 			if(onIndex == 0){
 				statement = statement.substring(onIndex + 2).trim();
 				if(statement.length() == 0){
-					System.out.println("table name is missing");
+					System.out.println("Error: table name is missing");
 					return false;
 				}
 				relationName = statement.substring(0);
@@ -139,17 +136,17 @@ public class DropOperation extends Operation {
 					return true;
 				}
 				else{
-					System.out.println("Not a valid relation name");
+					System.out.println("Error: Not a valid relation name");
 					return false;
 				}
 			}
 			else{
-				System.out.println("Not a valid drop index syntax");
+				System.out.println("Error: Not a valid drop index syntax");
 				return false;
 			}
 		}
 		else{
-			System.out.println("Not a valid drop index syntax");
+			System.out.println("Error: Not a valid drop index syntax");
 			return false;
 		}
 	}
