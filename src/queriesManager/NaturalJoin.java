@@ -10,11 +10,13 @@ import databaseManager.Utility;
 /**
  * 
  * The instance of "NaturalJoin" class is called whenever we want to execute
- * Natural Join query. it calls instance of Select Class to evaluate final expression.
+ * Natural Join query. it calls instance of Select Class to evaluate final
+ * expression.
  * 
  */
 public class NaturalJoin extends Operation {
 	protected int tableCount;
+	protected int queryType;
 	protected Vector<String> tableList;
 	protected Relation relation;
 	protected long relationId;
@@ -29,10 +31,11 @@ public class NaturalJoin extends Operation {
 	/**
 	 * This constructor will be called when we want to create object of class
 	 * NaturalJoinOperation It takes input query as arguments and split it into
-	 * projectionPart , tablePart and newCondition. 
+	 * projectionPart , tablePart and newCondition.
 	 */
 	public NaturalJoin(String statement) {
 		setType(QueryParser.OperationType.NATURALJOIN);
+		queryType = 1;
 		Vector<String> stmtParts = QueryParser.statementParts(statement, "select");
 		projectionPart = stmtParts.elementAt(0);
 		tablePart = stmtParts.elementAt(1).replace("join", ",").trim();
@@ -41,8 +44,16 @@ public class NaturalJoin extends Operation {
 		tableCount = tableList.size();
 
 		this.getCommonAttribute();
-		this.getRestAttribute();
-		this.getProjectionParts(projectionPart);
+		if(queryType!=-1){
+			this.getRestAttribute();
+			if(queryType!=-1){
+				this.getProjectionParts(projectionPart);
+			}else{
+				return;
+			}
+		}else{
+			return;
+		}
 
 		if (stmtParts.size() == 3) {
 			this.addCondition(stmtParts.elementAt(2));
@@ -53,26 +64,36 @@ public class NaturalJoin extends Operation {
 	}
 
 	/**
-	 * It create intermediate select query to evaluate operation and 
-	 * Execute operation of that new Intermediate Class.
+	 * It create intermediate select query to evaluate operation and Execute
+	 * operation of that new Intermediate Class.
 	 */
 	public boolean executeOperation() {
-
-		if (newCondition == null || newCondition.equals("")) {
-			intermediateOP = Operation.makeOperation("select " + projectionPart + " from " + tablePart);
-		} else {
-			intermediateOP = Operation.makeOperation("select " + projectionPart + " from " + tablePart + " where " + newCondition);
-		}
-		if (intermediateOP.executeOperation()) {
-			return true;
-		} else {
+		if(queryType!=-1){
+			String fQuery = "";
+			if (newCondition == null || newCondition.equals("")) {
+				fQuery = "select " + projectionPart + " from " + tablePart;
+			} else {
+				fQuery = "select " + projectionPart + " from " + tablePart + " where " + newCondition;
+			}
+			if (QueryParser.isSelectStatementQuery(fQuery)) {
+				intermediateOP = Operation.makeOperation(fQuery);
+				if (intermediateOP.executeOperation()) {
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				return false;
+			}
+		}else{
+			System.out.println("Error: Table doesn't exist");
 			return false;
 		}
 	}
 
 	/**
-	 * It updates commonAttribute Vector which contains name of attributes which are common
-	 * in all relations that are used.
+	 * It updates commonAttribute Vector which contains name of attributes which
+	 * are common in all relations that are used.
 	 */
 	void getCommonAttribute() {
 
@@ -84,39 +105,43 @@ public class NaturalJoin extends Operation {
 
 			nickName = Utility.getNickName(tableList.get(i));
 			relationId = ObjectHolder.getObjectHolder().getRelationId(Utility.getRelationName(tableList.elementAt(i)));
-			relation = (Relation) ObjectHolder.getObjectHolder().getObject(relationId);
+			if (relationId != -1) {
+				relation = (Relation) ObjectHolder.getObjectHolder().getObject(relationId);
+				if (i == 0) {
+					for (int j = 0; j < relation.getAttributesCount(); j++) {
+						commonAttribute.addElement(nickName + "." + relation.getAttributes().get(j).getName());
+						commonAttributeType.addElement(relation.getAttributes().get(j).getType());
+						commonAttributeSize.addElement(relation.getAttributes().get(j).getAttributeSize());
+					}
+				} else {
 
-			if (i == 0) {
-				for (int j = 0; j < relation.getAttributesCount(); j++) {
-					commonAttribute.addElement(nickName + "." + relation.getAttributes().get(j).getName());
-					commonAttributeType.addElement(relation.getAttributes().get(j).getType());
-					commonAttributeSize.addElement(relation.getAttributes().get(j).getAttributeSize());
-				}
-			} else {
-
-				for (int j = 0; j < commonAttribute.size(); j++) {
-					boolean isExist = false;
-					for (int k = 0; k < relation.getAttributes().size(); k++) {
-						if (Utility.getNickName(commonAttribute.get(j)).equals(relation.getAttributes().get(k).getName())
-								&& commonAttributeType.get(j).equals(relation.getAttributes().get(k).getType())
-								&& commonAttributeSize.get(j).equals(relation.getAttributes().get(k).getAttributeSize())) {
-							isExist = true;
+					for (int j = 0; j < commonAttribute.size(); j++) {
+						boolean isExist = false;
+						for (int k = 0; k < relation.getAttributes().size(); k++) {
+							if (Utility.getNickName(commonAttribute.get(j)).equals(relation.getAttributes().get(k).getName())
+									&& commonAttributeType.get(j).equals(relation.getAttributes().get(k).getType())
+									&& commonAttributeSize.get(j).equals(relation.getAttributes().get(k).getAttributeSize())) {
+								isExist = true;
+							}
+						}
+						if (!isExist) {
+							commonAttribute.remove(j);
+							commonAttributeType.remove(j);
+							commonAttributeSize.remove(j);
+							j--;
 						}
 					}
-					if (!isExist) {
-						commonAttribute.remove(j);
-						commonAttributeType.remove(j);
-						commonAttributeSize.remove(j);
-						j--;
-					}
 				}
+			}else{
+				queryType =-1;
+				return ;
 			}
 		}
 	}
 
 	/**
-	 * It updates restAttribute Vector which contains name of attributes which are not in 
-	 * commonAttributes Vector and Contain in any one of relations.
+	 * It updates restAttribute Vector which contains name of attributes which
+	 * are not in commonAttributes Vector and Contain in any one of relations.
 	 */
 
 	void getRestAttribute() {
@@ -127,21 +152,28 @@ public class NaturalJoin extends Operation {
 		}
 		for (int i = 0; i < tableList.size(); i++) {
 			relationId = ObjectHolder.getObjectHolder().getRelationId(Utility.getRelationName(tableList.elementAt(i)));
-			relation = (Relation) ObjectHolder.getObjectHolder().getObject(relationId);
-			for (int j = 0; j < relation.getAttributesCount(); j++) {
-				int index = commonAttribute.indexOf(nickName + "." + relation.getAttributes().get(j).getName());
-				if (index != -1 && commonAttributeType.get(index).equals(relation.getAttributes().get(j).getType())
-						&& commonAttributeSize.get(index).equals(relation.getAttributes().get(j).getAttributeSize())) {
-				} else {
-					restAttribute.addElement(Utility.getNickName(tableList.get(i)) + "." + relation.getAttributes().get(j).getName());
+			if(relationId!=-1){
+				relation = (Relation) ObjectHolder.getObjectHolder().getObject(relationId);
+				for (int j = 0; j < relation.getAttributesCount(); j++) {
+					int index = commonAttribute.indexOf(nickName + "." + relation.getAttributes().get(j).getName());
+					if (index != -1 && commonAttributeType.get(index).equals(relation.getAttributes().get(j).getType())
+							&& commonAttributeSize.get(index).equals(relation.getAttributes().get(j).getAttributeSize())) {
+					} else {
+						restAttribute.addElement(Utility.getNickName(tableList.get(i)) + "." + relation.getAttributes().get(j).getName());
+					}
 				}
+			}else{
+				queryType=-1;
+				return;
 			}
 		}
 
 	}
 
 	/**
-	 * It adds extra equality conditions to previous condition to evaluate expressions.
+	 * It adds extra equality conditions to previous condition to evaluate
+	 * expressions.
+	 * 
 	 * @param condition
 	 */
 	void addCondition(String condition) {
@@ -167,6 +199,7 @@ public class NaturalJoin extends Operation {
 
 	/**
 	 * create projectionPart for select Query.
+	 * 
 	 * @param statement
 	 */
 	void getProjectionParts(String statement) {

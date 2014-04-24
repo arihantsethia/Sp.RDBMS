@@ -48,12 +48,18 @@ public class CondJoin extends Operation {
 	 * Execute operation of that new Intermediate Class.
 	 */
 	public boolean executeOperation() {
-		if (newCondition != null && !newCondition.equals("")) {
-			intermediateOP = Operation.makeOperation("select " + projectionPart + " from " + tablePart + " where " + newCondition);
+		String fQuery = "";
+		if (newCondition == null || newCondition.equals("")) {
+			fQuery = "select " + projectionPart + " from " + tablePart + " where " + newCondition;
 		}
-		if (intermediateOP.executeOperation()) {
-			return true;
-		} else {
+		if(QueryParser.isSelectStatementQuery(fQuery)){
+			intermediateOP = Operation.makeOperation(fQuery);
+			if (intermediateOP.executeOperation()) {
+				return true;
+			} else {
+				return false;
+			}
+		}else{
 			return false;
 		}
 	}

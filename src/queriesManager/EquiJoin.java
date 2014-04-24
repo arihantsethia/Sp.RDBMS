@@ -9,12 +9,14 @@ import databaseManager.Utility;
 /**
  * 
  * The instance of "EquiOperation" class is called whenever we want to execute
- * Equip Join query. it calls instance of Select Class to evaluate final expression.
+ * Equip Join query. it calls instance of Select Class to evaluate final
+ * expression.
  * 
  */
 public class EquiJoin extends Operation {
 	protected Projection projection;
 	protected int tableCount;
+	protected int queryType;
 	protected Vector<String> tableList;
 	protected Relation relation;
 	protected long relationId;
@@ -29,7 +31,7 @@ public class EquiJoin extends Operation {
 	/**
 	 * This constructor will be called when we want to create object of class
 	 * EquiJoinOperation It takes input query as arguments and split it into
-	 * projectionPart , tablePart and newCondition. 
+	 * projectionPart , tablePart and newCondition.
 	 */
 	public EquiJoin(String statement) {
 		setType(QueryParser.OperationType.EQUIJOIN);
@@ -53,25 +55,36 @@ public class EquiJoin extends Operation {
 	}
 
 	/**
-	 * It create intermediate select query to evaluate operation and 
-	 * Execute operation of that new Intermediate Class.
+	 * It create intermediate select query to evaluate operation and Execute
+	 * operation of that new Intermediate Class.
 	 */
 	public boolean executeOperation() {
-		if (newCondition == null || newCondition.equals("")) {
-			intermediateOP = Operation.makeOperation("select " + projectionPart + " from " + tablePart);
-		} else {
-			intermediateOP = Operation.makeOperation("select " + projectionPart + " from " + tablePart + " where " + newCondition);
-		}
-		if (intermediateOP.executeOperation()) {
-			return true;
-		} else {
+		if(queryType!=-1){
+			String fQuery = "";
+			if (newCondition == null || newCondition.equals("")) {
+				fQuery = "select " + projectionPart + " from " + tablePart;
+			} else {
+				fQuery = "select " + projectionPart + " from " + tablePart + " where " + newCondition;
+			}
+			if (QueryParser.isSelectStatementQuery(fQuery)) {
+				intermediateOP = Operation.makeOperation(fQuery);
+				if (intermediateOP.executeOperation()) {
+					return true;
+				} else {
+					return false;
+				}
+			} else {
+				return false;
+			}
+		}else{
+			System.out.println("Error: Table doesn't exist");
 			return false;
 		}
 	}
 
 	/**
-	 * It updates commonAttribute Vector which contains name of attributes which are common
-	 * in all relations that are used.
+	 * It updates commonAttribute Vector which contains name of attributes which
+	 * are common in all relations that are used.
 	 */
 	void getCommonAttribute() {
 
@@ -83,37 +96,42 @@ public class EquiJoin extends Operation {
 
 			nickName = Utility.getNickName(tableList.get(i));
 			relationId = ObjectHolder.getObjectHolder().getRelationId(Utility.getRelationName(tableList.elementAt(i)));
-			relation = (Relation) ObjectHolder.getObjectHolder().getObject(relationId);
+			if (relationId != -1) {
+				relation = (Relation) ObjectHolder.getObjectHolder().getObject(relationId);
 
-			if (i == 0) {
-				for (int j = 0; j < relation.getAttributesCount(); j++) {
-					commonAttribute.addElement(nickName + "." + relation.getAttributes().get(j).getName());
-					commonAttributeType.addElement(relation.getAttributes().get(j).getType());
-					commonAttributeSize.addElement(relation.getAttributes().get(j).getAttributeSize());
-				}
-			}
-
-			for (int j = 0; j < commonAttribute.size(); j++) {
-				boolean isExist = false;
-				for (int k = 0; k < relation.getAttributes().size(); k++) {
-					if (Utility.getNickName(commonAttribute.get(j)).equals(relation.getAttributes().get(k).getName())
-							&& commonAttributeType.get(j).equals(relation.getAttributes().get(k).getType())
-							&& commonAttributeSize.get(j).equals(relation.getAttributes().get(k).getAttributeSize())) {
-						isExist = true;
+				if (i == 0) {
+					for (int j = 0; j < relation.getAttributesCount(); j++) {
+						commonAttribute.addElement(nickName + "." + relation.getAttributes().get(j).getName());
+						commonAttributeType.addElement(relation.getAttributes().get(j).getType());
+						commonAttributeSize.addElement(relation.getAttributes().get(j).getAttributeSize());
 					}
 				}
-				if (!isExist) {
-					commonAttribute.remove(j);
-					commonAttributeType.remove(j);
-					j--;
+
+				for (int j = 0; j < commonAttribute.size(); j++) {
+					boolean isExist = false;
+					for (int k = 0; k < relation.getAttributes().size(); k++) {
+						if (Utility.getNickName(commonAttribute.get(j)).equals(relation.getAttributes().get(k).getName())
+								&& commonAttributeType.get(j).equals(relation.getAttributes().get(k).getType())
+								&& commonAttributeSize.get(j).equals(relation.getAttributes().get(k).getAttributeSize())) {
+							isExist = true;
+						}
+					}
+					if (!isExist) {
+						commonAttribute.remove(j);
+						commonAttributeType.remove(j);
+						j--;
+					}
 				}
+			} else {
+				queryType = -1;
+				return;
 			}
 		}
 	}
 
 	/**
-	 * It updates restAttribute Vector which contains name of attributes which are not in 
-	 * commonAttributes Vector and Contain in any one of relations.
+	 * It updates restAttribute Vector which contains name of attributes which
+	 * are not in commonAttributes Vector and Contain in any one of relations.
 	 */
 	void getRestAttribute() {
 
@@ -123,19 +141,25 @@ public class EquiJoin extends Operation {
 
 			nickName = Utility.getNickName(tableList.get(i));
 			relationId = ObjectHolder.getObjectHolder().getRelationId(Utility.getRelationName(tableList.elementAt(i)));
-			relation = (Relation) ObjectHolder.getObjectHolder().getObject(relationId);
-
-			for (int j = 0; j < relation.getAttributesCount(); j++) {
-				if (!commonAttribute.contains(nickName + "." + relation.getAttributes().get(j).getName())) {
-					restAttribute.addElement(nickName + "." + relation.getAttributes().get(j).getName());
+			if (relationId != -1) {
+				relation = (Relation) ObjectHolder.getObjectHolder().getObject(relationId);
+				for (int j = 0; j < relation.getAttributesCount(); j++) {
+					if (!commonAttribute.contains(nickName + "." + relation.getAttributes().get(j).getName())) {
+						restAttribute.addElement(nickName + "." + relation.getAttributes().get(j).getName());
+					}
 				}
+			} else {
+				queryType = -1;
+				return;
 			}
 		}
 
 	}
 
 	/**
-	 * It adds extra equality conditions to previous condition to evaluate expressions.
+	 * It adds extra equality conditions to previous condition to evaluate
+	 * expressions.
+	 * 
 	 * @param condition
 	 */
 	void addCondition(String condition) {
