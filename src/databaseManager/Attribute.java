@@ -74,8 +74,7 @@ public class Attribute {
 	private boolean nullable;
 	private boolean distinctEntries;
 	private boolean isPartPK;
-	private long pageNumber;
-	private int recordOffset;
+	private PhysicalAddress storedAddress;
 
 	/**
 	 * Constructor function to create an object of Attribute Class
@@ -175,8 +174,10 @@ public class Attribute {
 			}
 		}
 		serializedBuffer.position(ATTRIBUTE_NAME_LENGTH * 2);
-		pageNumber = serializedBuffer.getLong();
-		recordOffset = serializedBuffer.getInt();
+		storedAddress = new PhysicalAddress();
+		storedAddress.id = serializedBuffer.getLong();
+		storedAddress.pageNumber = serializedBuffer.getLong();
+		storedAddress.pageOffset = serializedBuffer.getInt();
 		id = serializedBuffer.getLong();
 		parentId = serializedBuffer.getLong();
 		size = serializedBuffer.getInt();
@@ -261,8 +262,9 @@ public class Attribute {
 				serializedBuffer.putChar('\0');
 			}
 		}
-		serializedBuffer.putLong(pageNumber);
-		serializedBuffer.putInt(recordOffset);
+		serializedBuffer.putLong(storedAddress.id);
+		serializedBuffer.putLong(storedAddress.pageNumber);
+		serializedBuffer.putInt(storedAddress.pageOffset);
 		serializedBuffer.putLong(id);
 		serializedBuffer.putLong(parentId);
 		serializedBuffer.putInt(size);
@@ -333,17 +335,20 @@ public class Attribute {
 		return nullable;
 	}
 
-	public void setAddress(long _pageNumber, int _pageOffset) {
-		pageNumber = _pageNumber;
-		recordOffset = _pageOffset;
+	public void setAddress(long _id,long _pageNumber, int _pageOffset) {
+		storedAddress = new PhysicalAddress(_id,_pageNumber,_pageOffset);
+	}
+	
+	public PhysicalAddress getAddress() {
+		return storedAddress;
 	}
 
 	public long getPageNumber() {
-		return pageNumber;
+		return storedAddress.pageNumber;
 	}
 
 	public int getRecordOffset() {
-		return recordOffset;
+		return storedAddress.pageOffset;
 	}
 
 	public boolean isDistinct() {

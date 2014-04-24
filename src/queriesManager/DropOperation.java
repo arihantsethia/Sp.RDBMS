@@ -5,6 +5,11 @@ import java.util.StringTokenizer;
 import databaseManager.DatabaseManager;
 import databaseManager.ObjectHolder;
 
+/**
+ * 
+ * The instance of "DropOperation" class is called whenever we want to execute
+ * Create query. 
+ */
 public class DropOperation extends Operation {
 
 	protected String indexName;
@@ -12,6 +17,12 @@ public class DropOperation extends Operation {
 	protected String dbName;
 	protected int queryType;
 
+	/**
+	 * 
+	 * The instance of "DropOperation" class is called whenever we want to execute
+	 * Drop query.
+	 * 
+	 */
 	DropOperation(String statement) {
 		queryType = -1;
 		setType(QueryParser.OperationType.DROP);
@@ -30,6 +41,11 @@ public class DropOperation extends Operation {
 		}
 	}
 
+	/**
+	 * It parse drop primary key query and give result true or false according to that. 
+	 * @param statement
+	 * @return
+	 */
 	private boolean parseDropPrimaryKeyQuery(String statement) {
 		statement = statement.substring(statement.indexOf("primary key") + 11).trim();
 		if(statement.length() == 0){
@@ -61,6 +77,11 @@ public class DropOperation extends Operation {
 		return true;
 	}
 
+	/**
+	 * It parse the drop statement query given as input and return true or false according to that.
+	 * @param statement
+	 * @return
+	 */
 	private boolean parseDropTableQuery(String statement) {
 		statement = statement.substring(statement.indexOf("table") + 5).trim();
 		if (statement.length() == 0) {
@@ -88,6 +109,11 @@ public class DropOperation extends Operation {
 		}*/
 	}
 
+	/**
+	 * It parse drop index key query and give result true or false according to that. 
+	 * @param statement
+	 * @return
+	 */
 	private boolean parseDropIndexQuery(String statement) {
 		statement = statement.substring(statement.indexOf("index") + 5).trim();
 		if(statement.length() == 0){
@@ -97,13 +123,12 @@ public class DropOperation extends Operation {
 		
 		if(statement.contains(" ")){
 			indexName = statement.substring(0,statement.indexOf(" ")).trim();
-			//System.out.println("indexName->"+indexName);
 			statement = statement.substring(statement.indexOf(indexName) + indexName.length()).trim();
 			if(statement.length() == 0){
 				System.out.println("Keyword \'on\' is missing");
 				return false;
 			}
-			int onIndex = statement.indexOf("on");
+			int onIndex = statement.indexOf("on ");
 			if(onIndex == 0){
 				statement = statement.substring(onIndex + 2).trim();
 				if(statement.length() == 0){
@@ -130,35 +155,13 @@ public class DropOperation extends Operation {
 			System.out.println("Not a valid drop index syntax");
 			return false;
 		}
-		
-		/*StringTokenizer tokens = new StringTokenizer(statement, " ");
-		if (tokens.countTokens() == 3) {
-			indexName = tokens.nextToken().trim();
-			if (tokens.nextToken().trim().equalsIgnoreCase("ON")) {
-				//if (tokens.nextToken().trim().equalsIgnoreCase("TABLE")) {
-					relationName = tokens.nextToken().trim();
-					long newRelationId = ObjectHolder.getObjectHolder().getRelationId(relationName);
-					if(newRelationId != -1){
-						return true;
-					}
-					else{
-						System.out.println("Not a valid relation name");
-						return false;
-					}
-					
-				//} else {
-					//return false;
-				//}
-			} else {
-				System.out.println("keyword \'on\' is missing");
-				return false;
-			}
-		} else {
-			System.out.println("Not a valid drop index query");
-			return false;
-		}*/
 	}
 
+	/**
+	 * parser for delete database query.
+	 * @param statement
+	 * @return
+	 */
 	private boolean parseDropDBQuery(String statement) {
 		if (statement.length() >= 8) {
 			statement = statement.substring(8).trim();
@@ -173,6 +176,10 @@ public class DropOperation extends Operation {
 		return false;
 	}
 
+	/**
+	 * This method will execute delete query and will reply true if query
+	 * successfully executed. It evaluates according to query type whether it is delete index or primary key.
+	 */
 	public boolean executeOperation() {
 		if (queryType == 0) {
 			return DatabaseManager.getSystemCatalog().dropTable(relationName);

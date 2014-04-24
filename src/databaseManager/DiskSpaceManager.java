@@ -73,7 +73,7 @@ public class DiskSpaceManager {
 	}
 
 	public boolean deleteFile(String fileName) {
-		File file = new File(fileName);
+		File file = new File(System.getProperty("user.dir") + "/" +fileName);
 		return file.delete();
 	}
 

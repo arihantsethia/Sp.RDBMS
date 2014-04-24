@@ -8,6 +8,12 @@ import databaseManager.Utility;
 import queriesManager.QueryParser.DataType;
 import queriesManager.QueryParser.OperatorType;
 
+/**
+ * 
+ * The instance of "SimpleCondition" class is called by Condition Class whenever we want 
+ * to evaluate condition query. It is a leaf Class which evaluates the expression.
+ *
+ */
 public class SimpleCondition extends Condition {
 	private String leftOperand, rightOperand;
 	private DataType leftData, rightData;
@@ -17,6 +23,11 @@ public class SimpleCondition extends Condition {
 	private int attributeIndexLeft, attributeIndexRight;
 	private String leftValue, rightValue;
 
+	/**
+	 * Constructor of SimpleCondition Class it takes where expression as argument and
+	 * divide it in leftOperand and rightOperand accordingly.
+	 * @param statement	 takes where condition as argument.
+	 */
 	public SimpleCondition(String statement) {
 		statement = statement.trim().substring(1, statement.trim().length() - 1).trim();
 		operator = QueryParser.getOperatorType(statement);
@@ -24,6 +35,10 @@ public class SimpleCondition extends Condition {
 		rightOperand = QueryParser.getRightOperand(statement, operator);
 	}
 
+	/**
+	 * it takes as argument list of record and table tuples that will be use to
+	 * evaluate that condition.
+	 */
 	public boolean compare(Vector<DynamicObject> recordObjects, Vector<String> tableList) {
 		getLeftOperandData(recordObjects, tableList);
 		getRightOperandData(recordObjects, tableList);
@@ -65,6 +80,12 @@ public class SimpleCondition extends Condition {
 		return false;
 	}
 
+	/**
+	 * It return value of leftOperand in String Data Type. 
+	 * It checks whether leftOperand is any relation column name , constant number or string literal.
+	 * @param recordObjects
+	 * @param tableList
+	 */
 	void getLeftOperandData(Vector<DynamicObject> recordObjects, Vector<String> tableList) {
 		if (leftOperand.contains(".")) {
 			leftNickName = Utility.getRelationName(leftOperand).trim();
@@ -100,6 +121,12 @@ public class SimpleCondition extends Condition {
 		}
 	}
 
+	/**
+	 * It return value of rightOperand in String Data Type. 
+	 * It checks whether rightOperand is any relation column name , constant number or string literal.
+	 * @param recordObjects
+	 * @param tableList
+	 */
 	void getRightOperandData(Vector<DynamicObject> recordObjects, Vector<String> tableList) {
 		if (rightOperand.contains(".")) {
 			rightNickName = Utility.getRelationName(rightOperand).trim();

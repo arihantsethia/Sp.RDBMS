@@ -7,6 +7,12 @@ import databaseManager.ObjectHolder;
 import databaseManager.Relation;
 import databaseManager.Utility;
 
+/**
+ * 
+ * The instance of "NaturalJoin" class is called whenever we want to execute
+ * Natural Join query. it calls instance of Select Class to evaluate final expression.
+ * 
+ */
 public class NaturalJoin extends Operation {
 	protected int tableCount;
 	protected Vector<String> tableList;
@@ -20,6 +26,11 @@ public class NaturalJoin extends Operation {
 	protected Vector<Attribute.Type> commonAttributeType;
 	protected String newCondition, projectionPart, tablePart;
 
+	/**
+	 * This constructor will be called when we want to create object of class
+	 * NaturalJoinOperation It takes input query as arguments and split it into
+	 * projectionPart , tablePart and newCondition. 
+	 */
 	public NaturalJoin(String statement) {
 		setType(QueryParser.OperationType.NATURALJOIN);
 		Vector<String> stmtParts = QueryParser.statementParts(statement, "select");
@@ -41,6 +52,10 @@ public class NaturalJoin extends Operation {
 
 	}
 
+	/**
+	 * It create intermediate select query to evaluate operation and 
+	 * Execute operation of that new Intermediate Class.
+	 */
 	public boolean executeOperation() {
 
 		if (newCondition == null || newCondition.equals("")) {
@@ -55,6 +70,10 @@ public class NaturalJoin extends Operation {
 		}
 	}
 
+	/**
+	 * It updates commonAttribute Vector which contains name of attributes which are common
+	 * in all relations that are used.
+	 */
 	void getCommonAttribute() {
 
 		commonAttribute = new Vector<String>();
@@ -95,6 +114,11 @@ public class NaturalJoin extends Operation {
 		}
 	}
 
+	/**
+	 * It updates restAttribute Vector which contains name of attributes which are not in 
+	 * commonAttributes Vector and Contain in any one of relations.
+	 */
+
 	void getRestAttribute() {
 
 		restAttribute = new Vector<String>();
@@ -116,6 +140,10 @@ public class NaturalJoin extends Operation {
 
 	}
 
+	/**
+	 * It adds extra equality conditions to previous condition to evaluate expressions.
+	 * @param condition
+	 */
 	void addCondition(String condition) {
 		String prev, cur, prevResult, attributeName;
 		prevResult = condition;
@@ -137,6 +165,10 @@ public class NaturalJoin extends Operation {
 		newCondition = prevResult;
 	}
 
+	/**
+	 * create projectionPart for select Query.
+	 * @param statement
+	 */
 	void getProjectionParts(String statement) {
 		projectionPart = "";
 		String[] tokens = statement.split(",");
@@ -155,6 +187,9 @@ public class NaturalJoin extends Operation {
 		projectionPart = " " + projectionPart + " ";
 	}
 
+	/**
+	 * if '*' is given then add all restAttributes and commonAttributes.
+	 */
 	void addallTableNames() {
 		for (int i = 0; i < commonAttribute.size(); i++) {
 			if (projectionPart.equals("")) {

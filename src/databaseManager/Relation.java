@@ -26,8 +26,7 @@ public class Relation {
 	private int recordSize;
 	private long creationDate;
 	private long lastModified;
-	private long pageNumber;
-	private int recordOffset;
+	private PhysicalAddress storedAddress;
 
 	public Relation(String _relationName, long _id) {
 		relationName = _relationName;
@@ -53,6 +52,7 @@ public class Relation {
 			}
 		}
 		serializedBuffer.position(RELATION_NAME_LENGTH * 2);
+		storedAddress = new PhysicalAddress();
 		id = serializedBuffer.getLong();
 		int attributesCount = serializedBuffer.getInt();
 		recordSize = serializedBuffer.getInt();
@@ -60,8 +60,9 @@ public class Relation {
 		recordsCount = serializedBuffer.getLong();
 		creationDate = serializedBuffer.getLong();
 		lastModified = serializedBuffer.getLong();
-		pageNumber = serializedBuffer.getLong();
-		recordOffset = serializedBuffer.getInt();
+		storedAddress.id = serializedBuffer.getLong();
+		storedAddress.pageNumber = serializedBuffer.getLong();
+		storedAddress.pageOffset = serializedBuffer.getInt();
 		fileName = relationName + ".db";
 		attributes = new Vector<Attribute>(attributesCount);
 		attributesNames = new HashMap<String, Integer>();
@@ -177,12 +178,15 @@ public class Relation {
 		return recordSize;
 	}
 
+	public PhysicalAddress getAddress(){
+		return storedAddress;
+	}
 	public int getRecordOffset() {
-		return recordOffset;
+		return storedAddress.pageOffset;
 	}
 
 	public long getPageNumber() {
-		return pageNumber;
+		return storedAddress.pageNumber;
 	}
 
 	public Vector<Attribute> getAttributes() {
@@ -205,8 +209,9 @@ public class Relation {
 		serializedBuffer.putLong(recordsCount);
 		serializedBuffer.putLong(creationDate);
 		serializedBuffer.putLong(lastModified);
-		serializedBuffer.putLong(pageNumber);
-		serializedBuffer.putInt(recordOffset);
+		serializedBuffer.putLong(storedAddress.id);
+		serializedBuffer.putLong(storedAddress.pageNumber);
+		serializedBuffer.putInt(storedAddress.pageOffset);
 		return serializedBuffer;
 	}
 
@@ -223,9 +228,8 @@ public class Relation {
 		return recordsCount;
 	}
 
-	public void setAddress(long page, int offset) {
-		pageNumber = page;
-		recordOffset = offset;
+	public void setAddress(long id,long page, int offset) {
+		storedAddress = new PhysicalAddress(id,page,offset);
 	}
 
 	public Map<String, Integer> getAttributesNames() {

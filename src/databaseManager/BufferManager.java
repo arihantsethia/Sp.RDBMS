@@ -298,7 +298,7 @@ public class BufferManager {
 					openFiles.put(physicalAddress.id, newFileChannel);
 				}
 				pagePool[logicalPageNumber].position(0);
-				diskSpaceManager.write(openFiles.get(physicalAddress.id), physicalAddress.offset / DiskSpaceManager.PAGE_SIZE, pagePool[logicalPageNumber]);
+				diskSpaceManager.write(openFiles.get(physicalAddress.id), physicalAddress.pageNumber / DiskSpaceManager.PAGE_SIZE, pagePool[logicalPageNumber]);
 			}
 			isDirty[logicalPageNumber] = false;
 			return true;
