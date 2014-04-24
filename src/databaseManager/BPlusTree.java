@@ -9,8 +9,8 @@ public class BPlusTree {
 	 * must be > 2
 	 */
 
-	private static int M;
-	private static int N;
+	private int M;
+	private int N;
 	private int recordSize;
 	private Index index;
 	private Node rootNode;

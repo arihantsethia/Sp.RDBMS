@@ -105,6 +105,7 @@ public class EquiJoin extends Operation {
 				if (!isExist) {
 					commonAttribute.remove(j);
 					commonAttributeType.remove(j);
+					j--;
 				}
 			}
 		}

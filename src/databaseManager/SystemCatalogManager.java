@@ -440,7 +440,6 @@ public class SystemCatalogManager {
 	 */
 	public boolean insertRecord(String query) {
 		String relationName = query.split(" ")[2].trim();
-		ObjectHolder objectHolder = ObjectHolder.getObjectHolder();
 		long relationId = objectHolder.getRelationId(relationName);
 		if (relationId != -1) {
 			Relation relation = (Relation) objectHolder.getObject(relationId);

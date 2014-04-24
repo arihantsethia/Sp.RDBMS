@@ -45,13 +45,13 @@ public class Index {
 		}
 		nKeys = 64;
 		while (nKeys > 0) {
-			if ((DiskSpaceManager.PAGE_SIZE * 8 - 7) / (1 + 8 * (nKeys * (20 + keySize) + 25)) >= 1) {
+			if ((DiskSpaceManager.PAGE_SIZE * 8 - 7) / (1 + 8 * (nKeys * (20 + keySize) + 28)) >= 1) {
 				break;
 			} else {
 				nKeys--;
 			}
 		}
-		recordSize = nKeys * (keySize + 20) + 25;
+		recordSize = nKeys * (keySize + 20) + 28;
 		rootAddress = new PhysicalAddress();
 		storedAddress = new PhysicalAddress();
 	}
