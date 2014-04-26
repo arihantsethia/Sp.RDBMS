@@ -93,6 +93,10 @@ public class Utility {
 	public int stringToInt(String s) {
 		return Integer.parseInt(s);
 	}
+	
+	public float stringToFloat(String s) {
+		return Float.parseFloat(s);
+	}
 
 	public char stringToChar(String s) {
 		return s.charAt(1);
@@ -182,6 +186,13 @@ public class Utility {
 					if (attributesList.get(i).getType() == Attribute.Type.Int) {
 						if (isSameType("int", valueList[pos])) {
 							serializedBuffer.putInt(Utility.getUtility().stringToInt(valueList[pos]));
+						} else {
+							System.out.println(pos + "type mismatch : " + attributesList.get(i).getName());
+							return null;
+						}
+					} else if (attributesList.get(i).getType() == Attribute.Type.Float) {
+						if (isSameType("float", valueList[pos])) {
+							serializedBuffer.putFloat(Utility.getUtility().stringToFloat(valueList[pos]));
 						} else {
 							System.out.println(pos + "type mismatch : " + attributesList.get(i).getName());
 							return null;

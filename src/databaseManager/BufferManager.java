@@ -83,7 +83,7 @@ public class BufferManager {
 		}
 		lookUpMap.clear();
 		for (Map.Entry<Long, FileChannel> entry : openFiles.entrySet()) {
-			diskSpaceManager.closeFile(openFiles.get(entry.getKey()));
+			DiskSpaceManager.closeFile(openFiles.get(entry.getKey()));
 		}
 		openFiles.clear();
 	}
@@ -399,7 +399,7 @@ public class BufferManager {
 			}
 		}
 		if (openFiles.containsKey(indexId)) {
-			diskSpaceManager.closeFile(openFiles.get(indexId));
+			DiskSpaceManager.closeFile(openFiles.get(indexId));
 			openFiles.remove(indexId);
 		}
 	}

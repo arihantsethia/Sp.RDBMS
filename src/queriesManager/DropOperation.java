@@ -1,7 +1,5 @@
 package queriesManager;
 
-import java.util.StringTokenizer;
-
 import databaseManager.DatabaseManager;
 import databaseManager.ObjectHolder;
 

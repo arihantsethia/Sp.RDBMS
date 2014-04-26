@@ -28,6 +28,8 @@ public class DynamicObject implements Comparable<Object> {
 				obj[i] = new String();
 			} else if (attributes.get(i).getType() == Attribute.Type.Int) {
 				obj[i] = new Integer(0);
+			} else if (attributes.get(i).getType() == Attribute.Type.Float) {
+				obj[i] = new Float(0.0);
 			}
 			size += attributes.get(i).getAttributeSize();
 		}
@@ -47,6 +49,8 @@ public class DynamicObject implements Comparable<Object> {
 					}
 				}
 				temp.obj[i] = str;
+			} else if (attributes.get(i).getType() == Attribute.Type.Float) {
+				temp.obj[i] = serializedBuffer.getFloat();
 			} else {
 				temp.obj[i] = serializedBuffer.getInt();
 			}
@@ -66,9 +70,15 @@ public class DynamicObject implements Comparable<Object> {
 						serializedBuffer.putChar('\0');
 					}
 				}
-			} else {
+			} else if (attributes.get(i).getType() == Attribute.Type.Float) {
 				if (temp.obj[i] == null) {
-					serializedBuffer.putInt(0);
+					serializedBuffer.putFloat(Float.MIN_VALUE);
+				} else {
+					serializedBuffer.putFloat((Float) temp.obj[i]);
+				}
+			} else if (attributes.get(i).getType() == Attribute.Type.Int) {
+				if (temp.obj[i] == null) {
+					serializedBuffer.putInt(Integer.MIN_VALUE);
 				} else {
 					serializedBuffer.putInt((Integer) temp.obj[i]);
 				}
@@ -84,6 +94,20 @@ public class DynamicObject implements Comparable<Object> {
 				obj[i] = (String) values[i];
 			} else if (values[i] instanceof Integer) {
 				obj[i] = (Integer) values[i];
+			} else if (values[i] instanceof Float) {
+				obj[i] = (Float) values[i];
+			}
+		}
+	}
+
+	public void reset() {
+		for (int i = 0; i < obj.length; i++) {
+			if (obj[i] instanceof String) {
+				obj[i] = (String) "";
+			} else if (obj[i] instanceof Integer) {
+				obj[i] = (Integer) Integer.MIN_VALUE;
+			} else if (obj[i] instanceof Float) {
+				obj[i] = (Float) Float.MIN_VALUE;
 			}
 		}
 	}
@@ -94,6 +118,8 @@ public class DynamicObject implements Comparable<Object> {
 				System.out.printf("%-" + (attributes.get(i).getAttributeSize() + 1) / 2 + "s | ", (String) obj[i]);
 			} else if (attributes.get(i).getType() == Attribute.Type.Int) {
 				System.out.printf("%-10s | ", ((Integer) obj[i]).toString());
+			} else if (attributes.get(i).getType() == Attribute.Type.Float) {
+				System.out.printf("%-10s | ", ((Float) obj[i]).toString());
 			}
 		}
 	}
@@ -104,6 +130,8 @@ public class DynamicObject implements Comparable<Object> {
 				System.out.printf("%-" + (attributes.get(i).getAttributeSize() + 1) / 2 + "s | ", (String) obj[i]);
 			} else if (attributes.get(i).getType() == Attribute.Type.Int && attributes.get(i).getName().equals(s)) {
 				System.out.printf("%-10s | ", ((Integer) obj[i]).toString());
+			} else if (attributes.get(i).getType() == Attribute.Type.Float && attributes.get(i).getName().equals(s)) {
+				System.out.printf("%-10s | ", ((Float) obj[i]).toString());
 			}
 		}
 	}
@@ -119,9 +147,15 @@ public class DynamicObject implements Comparable<Object> {
 					return -1;
 				}
 			} else if (obj[i] instanceof Integer) {
-				if (((Integer) obj[i]) > (Integer) newObj.obj[i]) {
+				if (((Integer) obj[i]).compareTo((Integer) newObj.obj[i])>0) {
 					return 1;
-				} else if ((Integer) obj[i] < (Integer) newObj.obj[i]) {
+				} else if (((Integer) obj[i]).compareTo((Integer) newObj.obj[i])<0) {
+					return -1;
+				}
+			} else if (obj[i] instanceof Float) {
+				if (((Float) obj[i]).compareTo((Float) newObj.obj[i])>0) {
+					return 1;
+				} else if (((Float) obj[i]).compareTo((Float) newObj.obj[i])<0) {
 					return -1;
 				}
 			}
@@ -134,15 +168,15 @@ public class DynamicObject implements Comparable<Object> {
 		DynamicObject newObj = (DynamicObject) o;
 		for (int i = 0; i < obj.length; i++) {
 			if (obj[i] instanceof String) {
-				if (((String) obj[i]).compareTo((String) newObj.obj[i]) > 0) {
-					return false;
-				} else if (((String) obj[i]).compareTo((String) newObj.obj[i]) < 0) {
+				if (!((String) obj[i]).equals((String) newObj.obj[i])) {
 					return false;
 				}
 			} else if (obj[i] instanceof Integer) {
-				if (((Integer) obj[i]) > (Integer) newObj.obj[i]) {
+				if (!((Integer) obj[i]).equals((Integer) newObj.obj[i])) {
 					return false;
-				} else if ((Integer) obj[i] < (Integer) newObj.obj[i]) {
+				}
+			} else if (obj[i] instanceof Float) {
+				if (!((Float) obj[i]).equals((Float) newObj.obj[i])) {
 					return false;
 				}
 			}

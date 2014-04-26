@@ -451,13 +451,25 @@ public class SystemCatalogManager {
 			if (serializedBuffer != null) {
 				bufferManager.write(relation.getId(), freePageNumber, recordOffset, serializedBuffer);
 				int recordNumber = (recordOffset - (relation.getRecordsPerPage() + 7) / 8) / relation.getRecordSize();
-				java.util.Iterator<Long> indices = relation.getIndices().iterator();
 				PhysicalAddress insertAddress = new PhysicalAddress(relationId, freePageNumber, recordOffset);
+				java.util.Iterator<Long> indices = relation.getIndices().iterator();
 				while (indices.hasNext()) {
 					Index currIndex = ((Index) objectHolder.getObject(indices.next()));
 					if (currIndex.setTree()) {
 						updateIndexCatalog(currIndex);
 					}
+					if(!currIndex.containsDuplicates()){
+						DynamicObject entryObject = Utility.toDynamicObject(columnList, valueList, currIndex.getAttributes());
+						PhysicalAddress result = currIndex.search(entryObject); 
+						if(!(result==null || result.pageOffset<0)){
+							System.out.println("Error: Couldn't insert into table. Doesn't satisfy the check constraints.");
+							return false;
+						}
+					}
+				}
+				indices = relation.getIndices().iterator();
+				while (indices.hasNext()) {
+					Index currIndex = ((Index) objectHolder.getObject(indices.next()));
 					DynamicObject entryObject = Utility.toDynamicObject(columnList, valueList, currIndex.getAttributes());
 					if (!currIndex.insert(entryObject, insertAddress)) {
 						System.out.println("Error: Couldn't insert into table. Doesn't satisfy the check constraints.");
@@ -644,6 +656,10 @@ public class SystemCatalogManager {
 		bufferManager.unPinAll();
 		bufferManager.initializeTable();
 	}
+	
+	public void commit(){
+		bufferManager.flush();
+	}
 
 	/**
 	 * Shows the list of tables in current database
@@ -700,7 +716,9 @@ public class SystemCatalogManager {
 						System.out.printf("%-12s | ", relation.getAttributes().get(i).getName());
 						if (Attribute.Type.toString(relation.getAttributes().get(i).getType()).equals("int")) {
 							System.out.printf("%-12s | \n", Attribute.Type.toString(relation.getAttributes().get(i).getType()));
-						} else {
+						} else if (Attribute.Type.toString(relation.getAttributes().get(i).getType()).equals("float")) {
+							System.out.printf("%-12s | \n", Attribute.Type.toString(relation.getAttributes().get(i).getType()));
+						}else {
 							System.out.printf("%-12s | \n", Attribute.Type.toString(relation.getAttributes().get(i).getType()) + "("
 									+ (relation.getAttributes().get(i).getAttributeSize() + 1) / 2 + ")");
 						}

@@ -108,6 +108,12 @@ public class DatabaseManager {
 	public static SystemCatalogManager getSystemCatalog() {
 		return systemCatalog;
 	}
+	
+	public void commit(){
+		if(systemCatalog !=null){
+			systemCatalog.commit();
+		}
+	}
 
 	public void close() {
 		if (systemCatalog != null) {
@@ -157,8 +163,6 @@ public class DatabaseManager {
 				if (QueryParser.isInsertStatementQuery(query)) {
 					if (systemCatalog.insertRecord(query) == true) {
 						System.out.println(" Successfully inserted into table : " + splitCommand[2].trim());
-					} else {
-						System.out.println("Can not insert table : " + splitCommand[2].trim());
 					}
 				}
 			} else if (splitCommand[0].equals("show")) {

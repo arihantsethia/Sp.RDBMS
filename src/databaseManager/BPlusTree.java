@@ -70,6 +70,7 @@ public class BPlusTree {
 					return true;
 				}
 			} else {
+				searchNode.keys[resultLocation-1].reset();
 				searchNode.childrens[resultLocation] = new PhysicalAddress(-2, -2,-2);
 				bufferManager.write(index.getId(), prevAddress.pageNumber, prevAddress.pageOffset, searchNode.serialize());
 				return true;
@@ -85,9 +86,6 @@ public class BPlusTree {
 		while (true) {
 			currentLocation = node.getLocation(key);
 			if (node.isLeaf) {
-				if (!node.keys[currentLocation-1].equals(key)) {
-					currentLocation = 0;
-				}
 				break;
 			}
 			prevAddress = node.childrens[currentLocation];
@@ -95,6 +93,9 @@ public class BPlusTree {
 			node = new Node(serializedBuffer, node.childrens[currentLocation].pageOffset);
 		}
 		if (currentLocation == 0) {
+			return null;
+		}
+		if (!node.keys[currentLocation-1].equals(key)) {
 			return null;
 		}
 		currentBucketPtr = 0;
@@ -300,7 +301,7 @@ public class BPlusTree {
 			bufferManager.write(node.childrens[i].id, node.childrens[i].pageNumber, node.childrens[i].pageOffset, bucket.serialize());
 			int recordNumber = (node.childrens[i].pageOffset - (index.getRecordsPerPage() + 7) / 8) / index.getRecordSize();
 			bufferManager.writeRecordBitmap(index.getId(), node.childrens[i].pageNumber, index.getRecordsPerPage(), recordNumber, true);
-		} else {
+		} else if(node.isLeaf) {
 			split.error = 1;
 		}
 

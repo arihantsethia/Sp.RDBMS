@@ -2,10 +2,8 @@ package queriesManager;
 
 import java.nio.ByteBuffer;
 import java.util.Vector;
-
 import databaseManager.DatabaseManager;
 import databaseManager.DynamicObject;
-import databaseManager.Index;
 import databaseManager.Iterator;
 import databaseManager.ObjectHolder;
 import databaseManager.Relation;

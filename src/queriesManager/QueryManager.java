@@ -17,7 +17,12 @@ public class QueryManager {
 			System.out.print("Sp.Sql-> ");
 			input = inputScanner.next().trim();
 			if (!input.equals("exit")) {
-				databaseManager.parseCommand(input+" ");
+				if(input.equals("commit")){
+					databaseManager.commit();
+					System.out.println("Database Successfully Committed.");
+				}else{
+					databaseManager.parseCommand(input+" ");
+				}
 			} else {
 				System.out.println("Byee!");
 				databaseManager.close();

@@ -169,14 +169,6 @@ public class QueryParser {
 						Relation newRelation = (Relation) ObjectHolder.getObjectHolder().getObject(newRelationId);
 						Vector<Attribute> attributes = newRelation.getAttributes();
 
-						/*for(int i=0;i<columnPartSplit.length;i++){
-							System.out.println("columnPartSplit["+i+"]->"+columnPartSplit[i].trim());
-						}*/
-						
-						/*for(int i=0;i<valuePartSplit.length;i++){
-							System.out.println("valuePartSplit["+i+"]->"+valuePartSplit[i].trim());
-						}*/
-						
 						for (int i = 0; i < columnPartSplit.length; i++) {
 							boolean chk = true;
 							for (int k = 0; k < attributes.size(); k++) {
