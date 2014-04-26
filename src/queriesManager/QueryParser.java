@@ -555,7 +555,7 @@ public class QueryParser {
 	public static boolean isSelectStatementQuery(String statement) {
 		int selectIndex = statement.trim().indexOf("select");
 		int fromIndex = statement.trim().indexOf("from");
-
+		
 		tableMap = new TreeMap<String, String>(String.CASE_INSENSITIVE_ORDER);
 
 		if (selectIndex == 0 && fromIndex != -1) {
